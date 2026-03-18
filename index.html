@@ -7410,44 +7410,54 @@ function selChip(el) {
 
 
 
+
+
 // ══════════════════════════════════════════════════════════════
-// SHEET DRAG v7  —  Smooth dismiss, rubber-band spring
+// SHEET DRAG — Apple UISheetPresentationController değerleri
 //
-// Temel fark: dismiss sırasında close() fonksiyonu çağrılmaz.
-// Panel aşağı kayarken backdrop da eş zamanlı fade-out yapar.
-// Böylece "aniden yok olma" sorunu ortadan kalkar.
+// Kaynak: UIKit spring(response:dampingFraction:) analizi
+//   • 1:1 tracking: RUBBER=1.0, gecikme yok
+//   • Dismiss: velocity-matched, cubic-bezier(.32,0,.67,0) — ease-in
+//   • Spring geri: damping~0.86, response~0.35s
+//     CSS karşılığı: cubic-bezier(.34,1.2,.64,1)
+//   • Backdrop: panel ile eş zamanlı, opacity 1→0
 //
-// iOS Safari için touchstart passive:false — elementi üzerinde bağlı.
+// Kapsam: .sheet · .op-sheet-inner · .modal — 14 overlay
 // ══════════════════════════════════════════════════════════════
 (function () {
 
-  var DISMISS_DIST = 80;
-  var DISMISS_VEL  = 0.3;
-  var RUBBER       = 1.0;  // 1:1 — parmakla birebir, direnç yok
+  // ── Apple değerleri ──────────────────────────────────────────
+  var DISMISS_DIST = 72;    // px — bu kadar çekilirse kapat (Apple ~1/6 ekran yüksekliği)
+  var DISMISS_VEL  = 0.28;  // px/ms — yavaş fırlat eşiği
+  var RUBBER       = 1.0;   // 1:1 — parmakla birebir
 
-  // Overlay'ı temizle — close fn çağırmadan, panel zaten aşağıdayken
+  // ── Overlay temizleme ────────────────────────────────────────
+  // close fn çağırmıyoruz — panel zaten aşağıda, rawClose yeterli
   function rawClose(overlay) {
     if (!overlay) return;
-    // CRITICAL: style.display='' — inline style'ı temizle, CSS class'a bırak
-    // style.display='none' yazmak CSS class'ı ezer ve bir daha açılmaz
+
+    var isClass = overlay.classList.contains('sheet-overlay') ||
+                  overlay.classList.contains('modal-overlay');
+
     overlay.classList.remove('open', 'closing');
-    overlay.style.display    = '';   // CSS'e bırak (base: display:none)
-    overlay.style.opacity    = '';
-    overlay.style.transition = '';
     overlay.style.animation  = '';
-    // inline-style overlay'lar (display:flex ile açılanlar) için none yaz
-    // bunların base CSS'i yok, sadece inline style ile kontrol ediliyorlar
-    var isInlineOverlay = !overlay.classList.contains('sheet-overlay') &&
-                          !overlay.classList.contains('modal-overlay');
-    if (isInlineOverlay) {
+    overlay.style.transition = '';
+    overlay.style.opacity    = '';
+
+    if (isClass) {
+      // CSS class yönetimli: inline display'i temizle, CSS'e bırak
+      overlay.style.display = '';
+    } else {
+      // Inline-style yönetimli: none yaz
       overlay.style.display = 'none';
     }
-    // _activeKayitSheet sıfırla
-    if (typeof _activeKayitSheet !== 'undefined' &&
-        _activeKayitSheet === overlay.id) {
-      _activeKayitSheet = null;
-    }
-    // Panel inline style'larını temizle
+
+    // _activeKayitSheet global'ini sıfırla
+    try {
+      if (_activeKayitSheet === overlay.id) _activeKayitSheet = null;
+    } catch(e) {}
+
+    // Panel inline style'larını sıfırla
     var panel = overlay.querySelector('.sheet, .op-sheet-inner, .modal');
     if (panel) {
       panel.style.transform  = '';
@@ -7457,9 +7467,10 @@ function selChip(el) {
     }
   }
 
+  // ── Yardımcılar ──────────────────────────────────────────────
   function getTouchY(e) {
     var t = e.touches || e.changedTouches;
-    return t && t.length ? t[0].clientY : e.clientY;
+    return (t && t.length) ? t[0].clientY : e.clientY;
   }
 
   function isVisible(overlay) {
@@ -7474,50 +7485,42 @@ function selChip(el) {
     return panel.querySelector('.sheet-scroll, .op-sheet-scroll');
   }
 
+  // ── Aktif sürükleme ──────────────────────────────────────────
   var S = null;
 
-  // ─────────────────────────────────────────────────────────────
   function onStart(e) {
     var panel   = e.currentTarget;
     var overlay = panel.parentElement;
-    if (!isVisible(overlay)) return;
+    if (!overlay || !isVisible(overlay)) return;
 
+    // Scroll alanının içindeyse drag başlatma
     var scroller = getScroller(panel);
-    var y0 = getTouchY(e);
-
-    // Eğer dokunulan yer scroll alanının içindeyse drag başlatma
-    // (scroll en üstte bile olsa — kullanıcı scroll yapmak istiyor olabilir)
-    // Drag sadece handle ve header bölgesinden başlar
     if (scroller) {
-      var target = e.target;
-      if (scroller === target || scroller.contains(target)) return;
+      var t = e.target || e.srcElement;
+      if (t && (scroller === t || scroller.contains(t))) return;
     }
 
     S = {
-      panel:    panel,
-      overlay:  overlay,
-      y0:       y0,
-      yp:       y0,
-      tp:       Date.now(),
-      vel:      0,
-      dy:       0,
-      live:     false,
+      panel:   panel,
+      overlay: overlay,
+      y0:      getTouchY(e),
+      yp:      getTouchY(e),
+      tp:      Date.now(),
+      vel:     0,
+      dy:      0,
+      live:    false,
     };
-    // stopPropagation YOK — sheet içi click'leri engellemesin
   }
 
-  // ─────────────────────────────────────────────────────────────
   function onMove(e) {
     if (!S) return;
     var cy  = getTouchY(e);
     var raw = cy - S.y0;
+    if (raw < 0) raw = 0; // sadece aşağı; yukarı harekette dy=0 ama drag devam
 
-    // Yukarı hareket → dy=0, drag devam ediyor (iptal etme)
-    if (raw < 0) raw = 0;
-
-    // 6px eşiği geçince drag modu aktif
+    // 5px eşiği geçince canlı drag
     if (!S.live) {
-      if (raw < 6) return;
+      if (raw < 5) return;
       S.live = true;
       S.panel.style.transition  = 'none';
       S.panel.style.willChange  = 'transform';
@@ -7525,22 +7528,22 @@ function selChip(el) {
 
     S.dy = raw;
 
-    // Rubber-band direnç
-    var vis = raw * RUBBER;
-    S.panel.style.transform = 'translateY(' + vis + 'px)';
+    // 1:1 takip
+    S.panel.style.transform = 'translateY(' + raw + 'px)';
 
-    // Backdrop eş zamanlı soluklaştır
-    var progress = Math.min(raw / 220, 1);
-    S.overlay.style.opacity = String(1 - progress * 0.6);
+    // Backdrop eş zamanlı: 200px'de %55 solar
+    var progress = Math.min(raw / 200, 1);
+    S.overlay.style.opacity = String(1 - progress * 0.55);
 
+    // Hız hesapla (px/ms)
     var now = Date.now(), dt = now - S.tp;
     if (dt > 0) S.vel = (cy - S.yp) / dt;
-    S.yp = cy; S.tp = now;
+    S.yp = cy;
+    S.tp = now;
 
     e.preventDefault();
   }
 
-  // ─────────────────────────────────────────────────────────────
   function onEnd() {
     if (!S) return;
     if (!S.live) { S = null; return; }
@@ -7551,25 +7554,32 @@ function selChip(el) {
     var vel     = S.vel;
     S = null;
 
-    panel.style.willChange = '';
-    overlay.style.opacity  = '';   // sıfırla
+    panel.style.willChange  = '';
+    overlay.style.opacity   = '';
+    overlay.style.transition = '';
 
     var dismiss = (dy > DISMISS_DIST) || (vel > DISMISS_VEL);
 
     if (dismiss) {
-      // Parmak hızına göre süre hesapla — hızlı fırlatınca anında kapanır
-      // Kalan mesafe: panel şu an vis konumunda, 100% aşağıya gitmeli
-      var currentPos = S ? 0 : (dy * RUBBER);
-      var remaining  = window.innerHeight - currentPos;
-      // vel px/ms cinsinden — süre = mesafe / hız, min 80ms max 200ms
-      var duration = vel > 0.1
-        ? Math.min(Math.max(remaining / (vel * 1000), 0.08), 0.20)
-        : 0.18;
-      var durationMs = Math.round(duration * 1000);
+      // ── Apple dismiss: velocity-matched süre ─────────────────
+      // Kalan yol: ekran yüksekliği - şu anki konum
+      var screenH  = window.innerHeight || 852;
+      var current  = dy; // panel şu anda burada
+      var remaining = screenH - current;
 
-      panel.style.transition   = 'transform ' + duration + 's cubic-bezier(.4,0,1,1)';
-      panel.style.transform    = 'translateY(105%)';
-      overlay.style.transition = 'opacity ' + duration + 's ease';
+      // Süre = kalan / hız — min 80ms, max 220ms
+      // Apple ortalaması hızlı fırlatmada ~120ms, yavaşta ~200ms
+      var dur = vel > 0.1
+        ? Math.min(Math.max((remaining / (vel * 1000)), 0.08), 0.22)
+        : 0.18;
+      var durMs = Math.round(dur * 1000);
+
+      // ease-in: başlangıç hızına sahip, sona hızlanıyor
+      panel.style.transition   = 'transform ' + dur + 's cubic-bezier(.32,0,.67,0)';
+      panel.style.transform    = 'translateY(110%)';
+
+      // Backdrop: panel ile eş zamanlı solar
+      overlay.style.transition = 'opacity ' + dur + 's cubic-bezier(.32,0,.67,0)';
       overlay.style.opacity    = '0';
 
       setTimeout(function () {
@@ -7578,13 +7588,15 @@ function selChip(el) {
         overlay.style.transition = '';
         overlay.style.opacity    = '';
         rawClose(overlay);
-      }, durationMs + 20);
+      }, durMs + 16); // +16ms: bir frame buffer
 
     } else {
-      // Spring: hızlı geri fırlat
-      panel.style.transition = 'transform .2s cubic-bezier(.2,1.4,.35,1)';
+      // ── Apple spring geri dönüş ──────────────────────────────
+      // response ~0.35s, dampingFraction ~0.86
+      // CSS: cubic-bezier(.34,1.2,.64,1) → hafif overshoot, hızlı oturma
+      panel.style.transition = 'transform .32s cubic-bezier(.34,1.2,.64,1)';
       panel.style.transform  = 'translateY(0)';
-      setTimeout(function () { panel.style.transition = ''; }, 200);
+      setTimeout(function () { panel.style.transition = ''; }, 320);
     }
   }
 
@@ -7593,63 +7605,60 @@ function selChip(el) {
     var panel = S.panel;
     S = null;
     panel.style.willChange = '';
-    panel.style.transition = 'transform .22s cubic-bezier(.2,1.4,.35,1)';
+    panel.style.transition = 'transform .32s cubic-bezier(.34,1.2,.64,1)';
     panel.style.transform  = 'translateY(0)';
-    setTimeout(function () { panel.style.transition = ''; }, 220);
+    setTimeout(function () { panel.style.transition = ''; }, 320);
   }
 
-  // ─────────────────────────────────────────────────────────────
+  // ── Binding ──────────────────────────────────────────────────
   function bindPanel(panel) {
-    if (panel._v7) return;
-    panel._v7 = true;
-
-    // touchstart: non-passive — iOS Safari'de zorunlu
-    panel.addEventListener('touchstart',  onStart,  { passive: false });
-    panel.addEventListener('touchmove',   onMove,   { passive: false });
-    panel.addEventListener('touchend',    onEnd,    { passive: true  });
-    panel.addEventListener('touchcancel', onCancel, { passive: true  });
-
-    // Mouse (desktop test)
-    panel.addEventListener('mousedown', onStart);
+    if (panel._appleSheet) return;
+    panel._appleSheet = true;
+    panel.addEventListener('touchstart',   onStart,   { passive: false });
+    panel.addEventListener('touchmove',    onMove,    { passive: false });
+    panel.addEventListener('touchend',     onEnd,     { passive: true  });
+    panel.addEventListener('touchcancel',  onCancel,  { passive: true  });
+    panel.addEventListener('mousedown',    onStart);
   }
 
-  // Desktop mouse global
+  // Desktop mouse (iMac test)
   document.addEventListener('mousemove', function (e) {
     if (!S) return;
     var raw = e.clientY - S.y0;
-    if (raw <= 0) { S = null; return; }
+    if (raw < 0) raw = 0;
     if (!S.live) {
-      if (raw < 6) return;
+      if (raw < 5) return;
       S.live = true;
       S.panel.style.transition = 'none';
+      S.panel.style.willChange = 'transform';
     }
     S.dy = raw;
-    S.panel.style.transform = 'translateY(' + (raw * RUBBER) + 'px)';
-    var progress = Math.min(raw / 220, 1);
-    S.overlay.style.opacity = String(1 - progress * 0.6);
+    S.panel.style.transform = 'translateY(' + raw + 'px)';
+    var progress = Math.min(raw / 200, 1);
+    S.overlay.style.opacity = String(1 - progress * 0.55);
     var now = Date.now(), dt = now - S.tp;
     if (dt > 0) S.vel = (e.clientY - S.yp) / dt;
     S.yp = e.clientY; S.tp = now;
   });
   document.addEventListener('mouseup', onEnd);
 
-  // ─────────────────────────────────────────────────────────────
+  // ── İlk bind + MutationObserver ──────────────────────────────
   function bindAll() {
     document.querySelectorAll('.sheet, .op-sheet-inner, .modal').forEach(bindPanel);
   }
 
   bindAll();
+
   new MutationObserver(function (muts) {
     muts.forEach(function (m) {
       m.addedNodes.forEach(function (node) {
         if (node.nodeType !== 1) return;
-        if (node.classList && (
-          node.classList.contains('sheet') ||
-          node.classList.contains('op-sheet-inner') ||
-          node.classList.contains('modal')
-        )) bindPanel(node);
+        var cls = node.classList;
+        if (cls && (cls.contains('sheet') ||
+                    cls.contains('op-sheet-inner') ||
+                    cls.contains('modal'))) bindPanel(node);
         if (node.querySelectorAll)
-          node.querySelectorAll('.sheet,.op-sheet-inner,.modal').forEach(bindPanel);
+          node.querySelectorAll('.sheet, .op-sheet-inner, .modal').forEach(bindPanel);
       });
     });
   }).observe(document.body, { childList: true, subtree: true });
