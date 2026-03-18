@@ -2192,7 +2192,6 @@ body {
           </div>
           <div style="flex:1"></div>
           <div class="op-sheet-cost" id="hks-cost"></div>
-          <button class="op-sheet-close" onclick="closeKayitSheetBtn()">✕</button>
         </div>
         <div class="op-sheet-scroll" id="hks-body"></div>
       </div>
@@ -2210,7 +2209,6 @@ body {
             <div class="op-sheet-title">Hava Durumu Uyarısı</div>
             <div class="op-sheet-meta">Manisa · Bugün</div>
           </div>
-          <button class="op-sheet-close" onclick="closeHavaSheetBtn()">✕</button>
         </div>
         <div class="op-sheet-scroll">
           <!-- Uyarı banner -->
@@ -2437,7 +2435,6 @@ body {
           <div>
             <div class="op-sheet-cost" id="op-sh-cost"></div>
           </div>
-          <button class="op-sheet-close" onclick="closeOpSheet()">✕</button>
         </div>
         <div class="op-sheet-scroll" id="op-sh-body"></div>
       </div>
@@ -2793,7 +2790,6 @@ body {
             <div class="op-sheet-title" id="sz-title"></div>
             <div class="op-sheet-meta" id="sz-meta"></div>
           </div>
-          <button class="op-sheet-close" onclick="closeSezonSheetBtn()">✕</button>
         </div>
         <div class="op-sheet-scroll" id="sz-body"></div>
       </div>
@@ -2806,7 +2802,6 @@ body {
         <div class="op-sheet-head">
           <div class="op-sheet-title">Konum Seç</div>
           <div style="flex:1"></div>
-          <button class="op-sheet-close" onclick="closeKonumPickerBtn()">✕</button>
         </div>
         <div style="padding:0 20px 36px;display:flex;flex-direction:column;gap:12px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -2835,7 +2830,6 @@ body {
         <div class="op-sheet-head">
           <div class="op-sheet-title" id="pes-title"></div>
           <div style="flex:1"></div>
-          <button class="op-sheet-close" onclick="closeProfilSheetBtn()">✕</button>
         </div>
         <div style="padding:0 20px 36px;display:flex;flex-direction:column;gap:12px;">
           <input class="form-input" id="pes-input" style="font-size:16px;padding:14px 16px;" placeholder="">
@@ -2851,7 +2845,6 @@ body {
         <div class="op-sheet-head">
           <div class="op-sheet-title">Geri Bildirim</div>
           <div style="flex:1"></div>
-          <button class="op-sheet-close" onclick="closeGbSheetBtn()">✕</button>
         </div>
         <div style="padding:0 20px 36px;display:flex;flex-direction:column;gap:12px;">
           <textarea id="gb-metin" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;resize:none;height:110px;-webkit-appearance:none;" placeholder="Görüşlerini, önerilerini veya karşılaştığın sorunları buraya yaz..."></textarea>
@@ -3127,7 +3120,6 @@ body {
         <div class="op-sheet-head">
           <div class="op-sheet-title">Sezon Seç</div>
           <div style="flex:1"></div>
-          <button class="op-sheet-close" onclick="closeKasaSezonSecBtn()">✕</button>
         </div>
         <div style="padding:0 0 28px;">
           <div class="op-detail-grup" style="margin:0 20px;">
@@ -3161,7 +3153,6 @@ body {
             <div class="op-sheet-meta" id="kys-meta"></div>
           </div>
           <div class="op-sheet-cost" id="kys-cost"></div>
-          <button class="op-sheet-close" onclick="closeKasaYilSheetBtn()">✕</button>
         </div>
         <div class="op-sheet-scroll" id="kys-body"></div>
       </div>
@@ -3178,7 +3169,6 @@ body {
             <div class="op-sheet-meta" id="kas-meta"></div>
           </div>
           <div class="op-sheet-cost" id="kas-cost"></div>
-          <button class="op-sheet-close" onclick="closeKasaSheetBtn()">✕</button>
         </div>
         <div class="op-sheet-scroll" id="kas-body"></div>
       </div>
@@ -3230,7 +3220,6 @@ body {
           </div>
           <div style="flex:1"></div>
           <div class="op-sheet-cost" id="ks-cost"></div>
-          <button class="op-sheet-close" onclick="closeKayitSheetBtn()">✕</button>
         </div>
         <div class="op-sheet-scroll" id="ks-body"></div>
       </div>
@@ -3245,7 +3234,6 @@ body {
       <div class="sheet-handle"></div>
       <div class="sheet-header">
         <div class="sheet-title">Kayıt Gir</div>
-        <button class="sheet-close" onclick="closeKayit()">✕</button>
       </div>
       <div class="sheet-scroll" id="kayit-scroll">
 
@@ -3439,7 +3427,6 @@ body {
       <div class="sheet-handle"></div>
       <div class="sheet-header">
         <div class="sheet-title">Yeni Tarla</div>
-        <button class="sheet-close" onclick="closeSheet()">✕</button>
       </div>
       <div class="sheet-scroll">
 
@@ -7396,170 +7383,144 @@ function selChip(el) {
 
 
 
-// ═══════════════════════════════════════════════════════════════
-// EVRENSEL DRAG-TO-DISMISS v2
-// Handle → direkt parentElement = beyaz panel (.sheet / .op-sheet-inner / .modal)
-// Overlay = panel.parentElement (backdrop)
-// ═══════════════════════════════════════════════════════════════
-(function() {
 
-  var DISMISS_DIST = 90;   // px
-  var DISMISS_VEL  = 0.45; // px/ms
 
-  var state = null; // { panel, overlay, startY, lastY, lastT, vel, curY }
+// ══════════════════════════════════════════════════
+// DRAG-TO-DISMISS v3  — sürükle-kapat
+// Her handle: parentElement = beyaz panel
+//             panel.parentElement = overlay/backdrop
+// ══════════════════════════════════════════════════
+(function () {
+  'use strict';
 
-  // Beyaz panel: handle'ın ilk element parent'ı
-  function getPanel(handle) {
-    return handle.parentElement || null;
-  }
+  var DIST = 88;   // px — bu kadar aşağı çekince kapat
+  var VEL  = 0.4;  // px/ms — bu hızda kapat
 
-  // Overlay (backdrop): panel'in parent'ı ya da panel kendisi
-  function getOverlay(panel) {
-    if (!panel) return null;
-    var p = panel.parentElement;
-    return p || null;
-  }
+  // overlay id → close fonksiyon adı haritası
+  var CLOSE_MAP = {
+    'kayit-sheet':          'closeKayit',
+    'tarla-sheet':          'closeSheet',
+    'modal':                'closeModal',
+    'home-kayit-sheet':     'closeKayitSheetBtn',
+    'kayit-sheet-overlay':  'closeKayitSheetBtn',
+    'kasa-sheet-overlay':   'closeKasaSheet',
+    'kasa-yil-sheet':       'closeKasaYilSheetBtn',
+    'kasa-sezon-sheet':     'closeKasaSezonSheet',
+    'sezon-sheet':          'closeSezonSheet',
+    'profil-edit-sheet':    'closeProfilSheetBtn',
+    'profil-gb-sheet':      'closeGbSheetBtn',
+    'op-sheet':             'closeOpSheet',
+  };
 
-  // Mevcut close fonksiyonlarını çağır
-  function doClose(overlay) {
+  function callClose(overlay) {
     if (!overlay) return;
-    var id = overlay.id;
-
-    if (id === 'kayit-sheet')         { typeof closeKayit          === 'function' && closeKayit();           return; }
-    if (id === 'tarla-sheet')         { typeof closeSheet           === 'function' && closeSheet();           return; }
-    if (id === 'home-kayit-sheet')    { typeof closeKayitSheetBtn   === 'function' && closeKayitSheetBtn();   return; }
-    if (id === 'kayit-sheet-overlay') { typeof closeKayitSheetBtn   === 'function' && closeKayitSheetBtn();   return; }
-    if (id === 'kasa-sheet-overlay')  { typeof closeKasaSheet       === 'function' && closeKasaSheet();       return; }
-    if (id === 'kasa-yil-sheet')      { typeof closeKasaYilSheetBtn === 'function' && closeKasaYilSheetBtn(); return; }
-    if (id === 'kasa-sezon-sheet')    { typeof closeKasaSezonSheet  === 'function' && closeKasaSezonSheet();  return; }
-    if (id === 'profil-edit-sheet')   { typeof closeProfilSheetBtn  === 'function' && closeProfilSheetBtn();  return; }
-    if (id === 'profil-gb-sheet')     { typeof closeGbSheetBtn      === 'function' && closeGbSheetBtn();      return; }
-    if (id === 'op-sheet')            { typeof closeOpSheet         === 'function' && closeOpSheet();         return; }
-
-    // modal-overlay
-    if (overlay.classList && overlay.classList.contains('modal-overlay')) {
-      typeof closeModal === 'function' && closeModal(); return;
-    }
-    if (overlay.classList && overlay.classList.contains('sheet-overlay')) {
-      if (typeof closeSheet === 'function') { closeSheet(); return; }
-    }
-
-    // Fallback animasyonla kapat
+    var fn = CLOSE_MAP[overlay.id];
+    if (fn && typeof window[fn] === 'function') { window[fn](); return; }
+    // fallback
     overlay.style.animation = 'overlayOut .2s ease both';
-    setTimeout(function() { overlay.style.display = 'none'; }, 200);
+    setTimeout(function () { overlay.style.display = 'none'; }, 200);
   }
 
-  function getClientY(e) {
-    return e.touches ? e.touches[0].clientY : e.clientY;
+  var drag = null;
+
+  function y(e) {
+    return e.changedTouches ? e.changedTouches[0].clientY
+         : e.touches        ? e.touches[0].clientY
+         : e.clientY;
   }
 
-  function onStart(e) {
-    var handle = e.currentTarget;
-    var panel  = getPanel(handle);
-    if (!panel) return;
+  function start(e) {
+    var handle  = e.currentTarget;
+    var panel   = handle.parentElement;   // beyaz kutu
+    var overlay = panel  && panel.parentElement; // backdrop
 
-    var overlay = getOverlay(panel);
+    if (!panel || !overlay) return;
 
-    // Eğer overlay görünür değilse (display:none veya kapalı) başlama
-    if (overlay) {
-      var disp = overlay.style.display || window.getComputedStyle(overlay).display;
-      if (disp === 'none') return;
-    }
+    // Sheet kapalıysa başlama
+    var disp = overlay.style.display;
+    var hasOpen = overlay.classList.contains('open');
+    // 'none' veya hiç display ayarlanmamış + open sınıfı da yoksa → kapalı
+    if ((disp === 'none') || (disp === '' && !hasOpen)) return;
 
-    var y = getClientY(e);
-    state = {
+    drag = {
       panel:   panel,
       overlay: overlay,
-      startY:  y,
-      lastY:   y,
-      lastT:   Date.now(),
+      y0:      y(e),
+      yLast:   y(e),
+      tLast:   Date.now(),
       vel:     0,
-      curY:    0
+      dy:      0,
     };
 
-    panel.style.transition  = 'none';
-    panel.style.willChange  = 'transform';
+    panel.style.transition = 'none';
     handle.style.background = 'var(--text3)';
-
     e.preventDefault();
   }
 
-  function onMove(e) {
-    if (!state) return;
-    var y  = getClientY(e);
-    var dy = y - state.startY;
-    state.curY = Math.max(0, dy); // sadece aşağı
+  function move(e) {
+    if (!drag) return;
+    var cy  = y(e);
+    var raw = cy - drag.y0;
+    drag.dy = raw < 0 ? 0 : raw; // sadece aşağı
 
-    // Direnç 80px sonra
-    var visual = state.curY > 80
-      ? 80 + (state.curY - 80) * 0.5
-      : state.curY;
+    // 80px'den sonra direnç
+    var vis = drag.dy > 80 ? 80 + (drag.dy - 80) * 0.45 : drag.dy;
+    drag.panel.style.transform = 'translateY(' + vis + 'px)';
 
-    state.panel.style.transform = 'translateY(' + visual + 'px)';
-
-    var now = Date.now();
-    var dt  = now - state.lastT;
-    if (dt > 0) state.vel = (y - state.lastY) / dt;
-    state.lastY = y;
-    state.lastT = now;
-
+    var now = Date.now(), dt = now - drag.tLast;
+    if (dt > 0) drag.vel = (cy - drag.yLast) / dt;
+    drag.yLast = cy; drag.tLast = now;
     e.preventDefault();
   }
 
-  function onEnd() {
-    if (!state) return;
+  function end(e) {
+    if (!drag) return;
 
     // Handle rengini sıfırla
     document.querySelectorAll('.sheet-handle,.op-sheet-handle,.modal-handle')
-      .forEach(function(h) { h.style.background = ''; });
+      .forEach(function (h) { h.style.background = ''; });
 
-    var panel   = state.panel;
-    var overlay = state.overlay;
-    var curY    = state.curY;
-    var vel     = state.vel;
-    state = null;
+    var panel   = drag.panel;
+    var overlay = drag.overlay;
+    var dy      = drag.dy;
+    var vel     = drag.vel;
+    drag = null;
 
-    panel.style.willChange = '';
-
-    var dismiss = curY > DISMISS_DIST || vel > DISMISS_VEL;
-
-    if (dismiss) {
-      panel.style.transition = 'transform .22s cubic-bezier(.55,.06,.68,.19)';
+    if (dy > DIST || vel > VEL) {
+      // Kapat — önce aşağı fırlat, sonra close fonksiyonunu çağır
+      panel.style.transition = 'transform .22s cubic-bezier(.4,0,1,1)';
       panel.style.transform  = 'translateY(110%)';
-      setTimeout(function() {
+      setTimeout(function () {
         panel.style.transition = '';
         panel.style.transform  = '';
-        doClose(overlay);
-      }, 215);
+        callClose(overlay);
+      }, 220);
     } else {
-      panel.style.transition = 'transform .3s cubic-bezier(.34,1.4,.64,1)';
+      // Yerine geri dön
+      panel.style.transition = 'transform .28s cubic-bezier(.34,1.4,.64,1)';
       panel.style.transform  = 'translateY(0)';
-      setTimeout(function() {
-        panel.style.transition = '';
-      }, 300);
+      setTimeout(function () { panel.style.transition = ''; }, 280);
     }
   }
 
-  function bindHandles() {
+  function bind() {
     document.querySelectorAll('.sheet-handle,.op-sheet-handle,.modal-handle')
-      .forEach(function(h) {
-        if (h._dragBound) return;
-        h._dragBound = true;
-        h.addEventListener('touchstart', onStart, { passive: false });
-        h.addEventListener('mousedown',  onStart);
+      .forEach(function (h) {
+        if (h._d3) return;
+        h._d3 = true;
+        h.addEventListener('touchstart', start, { passive: false });
+        h.addEventListener('mousedown',  start, { passive: false });
       });
   }
 
-  document.addEventListener('touchmove', onMove, { passive: false });
-  document.addEventListener('touchend',  onEnd,  { passive: true });
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup',   onEnd);
+  document.addEventListener('touchmove',  move, { passive: false });
+  document.addEventListener('mousemove',  move, { passive: false });
+  document.addEventListener('touchend',   end,  { passive: true  });
+  document.addEventListener('mouseup',    end,  { passive: true  });
 
-  // İlk bind + DOM değişikliklerini izle
-  bindHandles();
-  new MutationObserver(bindHandles).observe(document.body, { childList: true, subtree: true });
-
-})();
+  bind();
+  new MutationObserver(bind).observe(document.body, { childList: true, subtree: true });
+}());
 
 </script>
 </body>
