@@ -1564,11 +1564,13 @@ body {
 }
 .cift-bar {
   flex: 1; border-radius: 4px 4px 0 0;
-  min-height: 3px;
-  transition: height .55s cubic-bezier(.34,1.2,.64,1);
+  min-height: 4px;
+  transition: height .55s cubic-bezier(.34,1.2,.64,1), opacity .2s;
 }
-.cift-bar.g { background: var(--green); }
-.cift-bar.e { background: var(--gold); opacity: .65; border: none; }
+.cift-bar.g     { background: var(--green); }
+.cift-bar.g.sel { background: var(--green-mid); }
+.cift-bar.e     { background: #C68B0A; opacity: .85; }
+.cift-bar.e.sel { background: #B07808; opacity: 1; }
 .cift-ay {
   font-size: 9px; font-weight: 700;
   color: var(--text3); text-align: center;
@@ -2212,9 +2214,9 @@ body {
       <!-- SON İŞLEMLER -->
       <div class="sec"><div class="sec-title">Son İşlemler</div><div class="sec-link" onclick="navTo('kayitlarim')">Tümü →</div></div>
       <div class="recents">
-        <div class="ri fu" onclick="openKayitSheet(1)"><div class="ri-ic" style="background:var(--sky-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 11.5c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 8V5.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M5.5 7L8 4.5l2.5 2.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ri-body"><div class="ri-title">İlaçlama — Kuzey Tarla</div><div class="ri-sub">Teldor 50 WG · 0.8 g/lt · 200 lt</div></div><div class="ri-right"><div class="ri-cost">−₺2.400</div><div class="ri-date">Bugün</div></div></div>
-        <div class="ri fu" onclick="openKayitSheet(2)"><div class="ri-ic" style="background:var(--gold-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5.5 13V6.5l2.5-4 2.5 4V13" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 13h9" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="ri-body"><div class="ri-title">Gübreleme — Doğu Parsel</div><div class="ri-sub">Üre 46 · 25 kg/dönüm · 750 kg</div></div><div class="ri-right"><div class="ri-cost">−₺3.750</div><div class="ri-date">Dün</div></div></div>
-        <div class="ri fu" onclick="openKayitSheet(3)"><div class="ri-ic" style="background:var(--green-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1.5 4.5h9L9 9.5H3.5l-2-5z" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5" cy="12.5" r="1.3" stroke="var(--green)" stroke-width="1.3"/><circle cx="9.5" cy="12.5" r="1.3" stroke="var(--green)" stroke-width="1.3"/></svg></div><div class="ri-body"><div class="ri-title">Satış — Güney Tarla</div><div class="ri-sub">Buğday · 12 ton · ₺1.500/ton</div></div><div class="ri-right"><div class="ri-cost pos">+₺18.000</div><div class="ri-date">2 gün önce</div></div></div>
+        <div class="ri fu" onclick="openKayitSheet(1)"><div class="ri-ic" style="background:var(--sky-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="5.5" width="5" height="7" rx="1.3" stroke="var(--sky)" stroke-width="1.3"/><path d="M5.8 5.5V4.2h2.4v1.3" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 7.5H10" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><circle cx="11.2" cy="6.5" r=".7" fill="var(--sky)" opacity=".7"/><circle cx="12" cy="8" r=".7" fill="var(--sky)" opacity=".55"/><circle cx="11.5" cy="9.5" r=".7" fill="var(--sky)" opacity=".4"/></svg></div><div class="ri-body"><div class="ri-title">İlaçlama — Kuzey Tarla</div><div class="ri-sub">Teldor 50 WG · 0.8 g/lt · 200 lt</div></div><div class="ri-right"><div class="ri-cost">−₺2.400</div><div class="ri-date">Bugün</div></div></div>
+        <div class="ri fu" onclick="openKayitSheet(2)"><div class="ri-ic" style="background:var(--gold-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 12V7.5L6.2 5h3.6L11 7.5V12" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 12h7" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/><circle cx="8" cy="14.5" r=".7" fill="var(--gold)" opacity=".5"/><circle cx="9.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/></svg></div><div class="ri-body"><div class="ri-title">Gübreleme — Doğu Parsel</div><div class="ri-sub">Üre 46 · 25 kg/dönüm · 750 kg</div></div><div class="ri-right"><div class="ri-cost">−₺3.750</div><div class="ri-date">Dün</div></div></div>
+        <div class="ri fu" onclick="openKayitSheet(3)"><div class="ri-ic" style="background:var(--green-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 11L7.5 6.5l1.5 1.5 1.8-1.8 1 1" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 5v2.5h-2.5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 14h11" stroke="var(--green)" stroke-width="1.2" stroke-linecap="round" opacity=".4"/><circle cx="4.5" cy="4.5" r="2" stroke="var(--green)" stroke-width="1.2"/><path d="M4.5 3.3v2.4M3.7 4.5h1.6" stroke="var(--green)" stroke-width=".95" stroke-linecap="round"/></svg></div><div class="ri-body"><div class="ri-title">Satış — Güney Tarla</div><div class="ri-sub">Buğday · 12 ton · ₺1.500/ton</div></div><div class="ri-right"><div class="ri-cost pos">+₺18.000</div><div class="ri-date">2 gün önce</div></div></div>
       </div>
     </div>
 
@@ -2735,7 +2737,7 @@ body {
         </div>
         <div class="profil-row" onclick="toggleProfil(this)">
           <div class="profil-row-ic" style="background:#FEF9EC">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 13h12" stroke="#B45309" stroke-width="1.3" stroke-linecap="round"/><path d="M4 13V8l4-5 4 5v5" stroke="#B45309" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 13v-3h4v3" stroke="#B45309" stroke-width="1.3" stroke-linejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12h12" stroke="#B45309" stroke-width="1.3" stroke-linecap="round"/><path d="M8 12V7" stroke="#B45309" stroke-width="1.3" stroke-linecap="round"/><path d="M8 8.5C8 8.5 6 7.5 5.7 5.5c1.3-.2 3 .7 2.3 3z" fill="#B45309" fill-opacity=".6"/><path d="M8 8.5C8 8.5 10 7.5 10.3 5.5c-1.3-.2-3 .7-2.3 3z" fill="#B45309" fill-opacity=".4"/><path d="M3.5 9C4.3 7.2 6.2 6 8 6" stroke="#B45309" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg>
           </div>
           <div class="profil-row-body">
             <div class="profil-row-lbl">Hasat tahmini</div>
@@ -2968,7 +2970,7 @@ body {
             Gelir
           </div>
           <div class="cift-legend-item">
-            <div class="cift-legend-dot" style="background:var(--gold-lt);border:1px solid var(--gold)"></div>
+            <div class="cift-legend-dot" style="background:#C68B0A"></div>
             Gider
           </div>
         </div>
@@ -2981,7 +2983,7 @@ body {
       <div class="gider-kart" id="kasa-gider-kart">
         <div class="gider-row" onclick="openKasaSheet('gider','ilac')">
           <div class="gider-ic" style="background:var(--sky-lt)">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 11.5c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 8V5.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M5.5 7L8 4.5l2.5 2.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="5.5" width="5" height="7" rx="1.3" stroke="var(--sky)" stroke-width="1.3"/><path d="M5.8 5.5V4.2h2.4v1.3" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 7.5H10" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><circle cx="11.2" cy="6.5" r=".7" fill="var(--sky)" opacity=".7"/><circle cx="12" cy="8" r=".7" fill="var(--sky)" opacity=".55"/><circle cx="11.5" cy="9.5" r=".7" fill="var(--sky)" opacity=".4"/></svg>
           </div>
           <div class="gider-body">
             <div class="gider-ad">İlaç</div>
@@ -2994,7 +2996,7 @@ body {
         </div>
         <div class="gider-row" onclick="openKasaSheet('gider','gubre')">
           <div class="gider-ic" style="background:var(--gold-lt)">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5.5 13V6.5l2.5-4 2.5 4V13" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 13h9" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 12V7.5L6.2 5h3.6L11 7.5V12" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 12h7" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/><circle cx="8" cy="14.5" r=".7" fill="var(--gold)" opacity=".5"/><circle cx="9.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/></svg>
           </div>
           <div class="gider-body">
             <div class="gider-ad">Gübre</div>
@@ -3007,7 +3009,7 @@ body {
         </div>
         <div class="gider-row" onclick="openKasaSheet('gider','tohum')">
           <div class="gider-ic" style="background:var(--green-lt)">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="9" rx="3.5" ry="2.5" stroke="var(--green)" stroke-width="1.3"/><path d="M8 6.5V3.5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M5.5 5l2.5-2.5L10.5 5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 12V7" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M8 7C8 7 5.8 5.8 5.5 4c1.4-.2 3 .7 2.5 3z" fill="var(--green)" fill-opacity=".55"/><path d="M8 7C8 7 10.2 5.8 10.5 4c-1.4-.2-3 .7-2.5 3z" fill="var(--green)" fill-opacity=".38"/><path d="M4 13h8" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" opacity=".5"/></svg>
           </div>
           <div class="gider-body">
             <div class="gider-ad">Tohum</div>
@@ -3020,7 +3022,7 @@ body {
         </div>
         <div class="gider-row" onclick="openKasaSheet('gider','yakit')">
           <div class="gider-ic" style="background:var(--bg2)">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="12" r="2" stroke="var(--text2)" stroke-width="1.3"/><circle cx="12" cy="12" r="2" stroke="var(--text2)" stroke-width="1.3"/><path d="M2.5 9h3l1.5-3h3.5l1.5 1.5H14" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 9.5l2.5-4.5 2.5 2.5 2.5-2.5 1.5 4.5" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 12.5h13" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/><path d="M4 12.5v-1" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M7.5 12.5v-1.5" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M11 12.5v-1" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg>
           </div>
           <div class="gider-body">
             <div class="gider-ad">Yakıt & Makine</div>
@@ -3290,9 +3292,13 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'ekim')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <ellipse cx="10" cy="11" rx="4.5" ry="3.5" stroke="var(--green)" stroke-width="1.5"/>
-                  <path d="M10 7.5V4" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M7.5 6l2.5-2.5L12.5 6" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Tohum oval + filiz + toprak çizgisi -->
+                  <path d="M10 14V9" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M10 9C10 9 7 7.5 6.5 5c1.8-.3 4 1 3.5 4z" fill="var(--green)" fill-opacity=".55"/>
+                  <path d="M10 9C10 9 13 7.5 13.5 5c-1.8-.3-4 1-3.5 4z" fill="var(--green)" fill-opacity=".38"/>
+                  <path d="M5 16h10" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+                  <path d="M7.5 16v-2" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" opacity=".35"/>
+                  <path d="M12.5 16v-2" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" opacity=".35"/>
                 </svg>
               </div>
               <div class="islem-lbl">Ekim</div>
@@ -3301,10 +3307,14 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'ilac')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M5 14c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M10 9V6" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M7 8l3-3 3 3" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M3 16h14" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" opacity=".4"/>
+                  <!-- Sprey şişesi + püskürme yelpazesi -->
+                  <rect x="5" y="7" width="6" height="9" rx="1.5" stroke="var(--sky)" stroke-width="1.4"/>
+                  <path d="M8 7V5.5h2V7" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M11 9.5h1.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/>
+                  <!-- Püskürme damlacıkları -->
+                  <circle cx="14" cy="8"   r=".8" fill="var(--sky)" opacity=".7"/>
+                  <circle cx="15.2" cy="9.8" r=".8" fill="var(--sky)" opacity=".55"/>
+                  <circle cx="14.5" cy="11.5" r=".8" fill="var(--sky)" opacity=".4"/>
                 </svg>
               </div>
               <div class="islem-lbl">İlaçlama</div>
@@ -3313,9 +3323,14 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'gubre')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M7 16V8l3-5 3 5v8" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M5 16h10" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M10 8v8" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round" opacity=".35"/>
+                  <!-- Gübre torbası + granül saçılması -->
+                  <path d="M6 15V8.5L8 5h4l2 3.5V15" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5.5 15h9" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M8.5 5h3" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+                  <!-- Granül noktaları - tarlanın altına dökülüyor -->
+                  <circle cx="8"  cy="17.2" r=".8" fill="var(--gold)" opacity=".6"/>
+                  <circle cx="10" cy="17.8" r=".8" fill="var(--gold)" opacity=".5"/>
+                  <circle cx="12" cy="17.2" r=".8" fill="var(--gold)" opacity=".6"/>
                 </svg>
               </div>
               <div class="islem-lbl">Gübreleme</div>
@@ -3324,9 +3339,13 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'hasat')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M3 16h14" stroke="#B45309" stroke-width="1.4" stroke-linecap="round"/>
-                  <path d="M5 16V10l5-7 5 7v6" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M8 16v-4h4v4" stroke="#B45309" stroke-width="1.4" stroke-linejoin="round"/>
+                  <!-- Biçerdöver bıçağı + başak -->
+                  <path d="M3 14h14" stroke="#B45309" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M10 14V7" stroke="#B45309" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M10 10.5C10 10.5 7.5 9 7 6.5c1.6-.25 3.5.9 3 4z" fill="#B45309" fill-opacity=".6"/>
+                  <path d="M10 10.5C10 10.5 12.5 9 13 6.5c-1.6-.25-3.5.9-3 4z" fill="#B45309" fill-opacity=".4"/>
+                  <!-- Orak yayı - hasat eylemi -->
+                  <path d="M4.5 10.5C5.5 8 8 6.5 10 6.5" stroke="#B45309" stroke-width="1.3" stroke-linecap="round" opacity=".45"/>
                 </svg>
               </div>
               <div class="islem-lbl">Hasat</div>
@@ -3335,7 +3354,20 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'sulama')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 2C10 2 5 8.5 5 13a5 5 0 0010 0C15 8.5 10 2 10 2z" stroke="var(--sky)" stroke-width="1.5" stroke-linejoin="round"/>
+                  <!-- Sulama kafası + su akışı damlaları -->
+                  <path d="M4 7h8a2 2 0 012 2v1" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M4 7V5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M4 5h3" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/>
+                  <!-- Sulama delikleri / damla akışları -->
+                  <path d="M8  11v2.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M10 11v3"   stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M12 11v2.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M14 10v2"   stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/>
+                  <!-- Damla uçları -->
+                  <circle cx="8"  cy="14.5" r="1" fill="var(--sky)" opacity=".6"/>
+                  <circle cx="10" cy="15.5" r="1" fill="var(--sky)" opacity=".5"/>
+                  <circle cx="12" cy="14.5" r="1" fill="var(--sky)" opacity=".6"/>
+                  <circle cx="14" cy="12.5" r="1" fill="var(--sky)" opacity=".45"/>
                 </svg>
               </div>
               <div class="islem-lbl">Sulama</div>
@@ -3344,9 +3376,12 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'surum')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <circle cx="5" cy="14" r="2.5" stroke="var(--text2)" stroke-width="1.4"/>
-                  <circle cx="15" cy="14" r="2.5" stroke="var(--text2)" stroke-width="1.4"/>
-                  <path d="M3 10h4l2-4h4l2 2h2" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Pulluk ucu + toprak çizgileri - sürüm eylemi -->
+                  <path d="M3 12l4-7 4 4 4-4 2 7" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M2 15h16" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M5 15v-2" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" opacity=".4"/>
+                  <path d="M10 15v-3" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" opacity=".4"/>
+                  <path d="M15 15v-2" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" opacity=".4"/>
                 </svg>
               </div>
               <div class="islem-lbl">Sürüm</div>
@@ -3355,10 +3390,13 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'satis')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M2 5h12l-2 7H4L2 5z" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="6.5" cy="15.5" r="1.5" stroke="var(--green)" stroke-width="1.4"/>
-                  <circle cx="12.5" cy="15.5" r="1.5" stroke="var(--green)" stroke-width="1.4"/>
-                  <path d="M14 5l1.5-3H17" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/>
+                  <!-- Fiyat etiketi + yukarı ok (kazanç/satış) -->
+                  <path d="M4 13.5L9.5 8l1.5 1.5 2-2 1 1" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M14 6.5V9.5h-3" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M3.5 16.5h13" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" opacity=".4"/>
+                  <!-- Para göstergesi -->
+                  <circle cx="5.5" cy="5.5" r="2.5" stroke="var(--green)" stroke-width="1.3"/>
+                  <path d="M5.5 4.2v2.6M4.5 5h2" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round"/>
                 </svg>
               </div>
               <div class="islem-lbl">Satış</div>
@@ -3367,10 +3405,14 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'satin')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 4h13l-1.5 8H5.5L4 4z" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="8" cy="17" r="1.5" stroke="var(--gold)" stroke-width="1.4"/>
-                  <circle cx="14" cy="17" r="1.5" stroke="var(--gold)" stroke-width="1.4"/>
-                  <path d="M2 2h2l.5 2" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+                  <!-- Makbuz/fatura - satın alma (sepetten farklı) -->
+                  <path d="M5 3h10a1 1 0 011 1v11l-2 2H5a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="var(--gold)" stroke-width="1.4"/>
+                  <path d="M7 7h6" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M7 10h6" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M7 13h3" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+                  <!-- Küçük indirim/fiyat etiketi -->
+                  <circle cx="14" cy="13" r="2.5" fill="var(--bg)" stroke="var(--gold)" stroke-width="1.2"/>
+                  <path d="M13.2 12.2l1.6 1.6" stroke="var(--gold)" stroke-width="1" stroke-linecap="round"/>
                 </svg>
               </div>
               <div class="islem-lbl">Satın Alma</div>
@@ -3379,9 +3421,13 @@ body {
             <div class="islem-btn" onclick="selIslem(this,'not')">
               <div class="islem-ic">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M5 3h10a1 1 0 011 1v10l-4 4H5a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="var(--text2)" stroke-width="1.4"/>
-                  <path d="M7 7h6M7 10h4" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round"/>
-                  <path d="M14 14v4M14 14h4" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round"/>
+                  <!-- Kağıt + kalem ucu -->
+                  <path d="M5 3.5h7l3.5 3.5V17a1 1 0 01-1 1H5a1 1 0 01-1-1V4.5a1 1 0 011-1z" stroke="var(--text2)" stroke-width="1.4"/>
+                  <path d="M12 3.5V7h3.5" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>
+                  <path d="M7 10h6" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M7 13h4" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/>
+                  <!-- Kalem nib işareti -->
+                  <path d="M7 7l.8-.8" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
                 </svg>
               </div>
               <div class="islem-lbl">Not</div>
@@ -4451,7 +4497,7 @@ function renderBugünNeYapmali() {
   const kararlar = [
     {
       lbl: 'İlaçlama',
-      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 10c0-1.7 1.3-3 3-3s3 1.3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 7V5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 6l2-2 2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="3" y="5" width="4.5" height="6.5" rx="1.2" stroke="currentColor" stroke-width="1.2"/><path d="M5 5V4h2V5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 7h1.3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="9.8" cy="6.2"  r=".65" fill="currentColor" opacity=".7"/><circle cx="10.5" cy="7.5"  r=".65" fill="currentColor" opacity=".55"/><circle cx="10"   cy="8.8"  r=".65" fill="currentColor" opacity=".4"/></svg>`,
       karar: (() => {
         if (['yagmurlu','firtina'].includes(kosul)) return { s:'no', txt:'Yapma' };
         if (kosul === 'yagmur_once') return { s:'warn', txt:'Bugün yap' };
@@ -4466,7 +4512,7 @@ function renderBugünNeYapmali() {
     },
     {
       lbl: 'Gübreleme',
-      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 12V6l2-3.5 2 3.5V12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`,
+      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4.5 11V7L5.5 5h3l1 2v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 11h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="12.8" r=".65" fill="currentColor" opacity=".6"/><circle cx="7"   cy="13.2" r=".65" fill="currentColor" opacity=".5"/><circle cx="8.5" cy="12.8" r=".65" fill="currentColor" opacity=".6"/></svg>`,
       karar: (() => {
         if (['yagmurlu','firtina'].includes(kosul)) return { s:'no', txt:'Yapma' };
         if (kosul === 'yagmur_once' && bugun.yagmurMm >= 10) return { s:'no', txt:'Yıkanma riski' };
@@ -4481,7 +4527,7 @@ function renderBugünNeYapmali() {
     },
     {
       lbl: 'Ekim',
-      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="8.5" rx="3" ry="2" stroke="currentColor" stroke-width="1.3"/><path d="M7 6.5V4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 5l2-2 2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 11V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M7 7C7 7 5 6 4.7 4.2c1.3-.2 2.8.6 2.3 2.8z" fill="currentColor" fill-opacity=".5"/><path d="M7 7C7 7 9 6 9.3 4.2c-1.3-.2-2.8.6-2.3 2.8z" fill="currentColor" fill-opacity=".35"/><path d="M3.5 12.5h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".45"/></svg>`,
       karar: (() => {
         if (['firtina'].includes(kosul)) return { s:'no', txt:'Yapma' };
         if (kosul === 'yagmur_once') return { s:'warn', txt:'Yağmur sonrası' };
@@ -4495,7 +4541,7 @@ function renderBugünNeYapmali() {
     },
     {
       lbl: 'Sulama',
-      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2C7 2 3.5 6 3.5 9a3.5 3.5 0 007 0C10.5 6 7 2 7 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`,
+      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 5.5h5.5a1.5 1.5 0 011.5 1.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M2.5 5.5V4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M2.5 4h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M5.5 8v2"   stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M7.5 8v2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M9.5 7.5v2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="5.5" cy="10.7" r=".75" fill="currentColor" opacity=".6"/><circle cx="7.5" cy="11.2" r=".75" fill="currentColor" opacity=".5"/><circle cx="9.5" cy="10.2" r=".75" fill="currentColor" opacity=".55"/></svg>`,
       karar: (() => {
         if (['yagmurlu','firtina'].includes(kosul)) return { s:'no', txt:'Gerek yok' };
         if (kosul === 'yagmur_once') return { s:'warn', txt:'Azalt' };
@@ -4508,7 +4554,7 @@ function renderBugünNeYapmali() {
     },
     {
       lbl: 'Hasat',
-      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12V5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 8C7 8 5 7 4.5 5c1.2-.2 2.8.8 2.5 3z" fill="currentColor" fill-opacity=".5"/><path d="M7 8C7 8 9 7 9.5 5c-1.2-.2-2.8.8-2.5 3z" fill="currentColor" fill-opacity=".35"/><path d="M5 12h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".4"/></svg>`,
+      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M7 11V6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M7 8.2C7 8.2 5.2 7.2 5 5.4c1.2-.18 2.6.6 2 2.8z" fill="currentColor" fill-opacity=".5"/><path d="M7 8.2C7 8.2 8.8 7.2 9 5.4c-1.2-.18-2.6.6-2 2.8z" fill="currentColor" fill-opacity=".35"/><path d="M3.5 9C4.2 7.5 5.8 6.5 7 6.5" stroke="currentColor" stroke-width="1.05" stroke-linecap="round" opacity=".4"/></svg>`,
       karar: (() => {
         if (['yagmurlu','firtina'].includes(kosul)) return { s:'no', txt:'Bekle' };
         if (kosul === 'yagmur_once') return { s:'warn', txt:'Bugün bitir' };
@@ -4520,7 +4566,7 @@ function renderBugünNeYapmali() {
     },
     {
       lbl: 'Tarla İşi',
-      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="11" r="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="11" r="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 8h3l1.5-3h3l1.5 2H13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      ic: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 9.5l2.5-4.5 2.5 2.5 2.5-2.5 1.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 12h11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M4 12v-1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M7 12v-1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M10 12v-1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg>`,
       karar: (() => {
         if (['yagmurlu','firtina'].includes(kosul)) return { s:'no', txt:'Yapma' };
         if (kosul === 'yagmur_sonrasi') return { s:'warn', txt:'Toprak ağır' };
@@ -4752,13 +4798,13 @@ function getStage(urun, ekimStr) {
 
 const isimler = ['Ekim & Çimlenme','Büyüme & Bakım','Olgunlaşma','Hasat'];
 const ikons = {
-  ilac:   { bg:'var(--sky-lt)',   ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 11.5c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 8V5.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M5.5 7L8 4.5l2.5 2.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-  gubre:  { bg:'var(--gold-lt)', ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5.5 13V6.5l2.5-4 2.5 4V13" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 13h9" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/></svg>' },
-  sulama: { bg:'#EAF2F8',         ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C8 1.5 4 6.5 4 10a4 4 0 008 0c0-3.5-4-8.5-4-8.5z" stroke="var(--sky)" stroke-width="1.3" stroke-linejoin="round"/></svg>' },
-  ekim:   { bg:'var(--green-lt)', ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="9" rx="3.5" ry="2.5" stroke="var(--green)" stroke-width="1.3"/><path d="M8 6.5V3.5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M5.5 5l2.5-2.5L10.5 5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-  hasat:  { bg:'#FEF9EC',         ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 13h12" stroke="#B45309" stroke-width="1.3" stroke-linecap="round"/><path d="M4 13V8l4-5 4 5v5" stroke="#B45309" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 13v-3h4v3" stroke="#B45309" stroke-width="1.3" stroke-linejoin="round"/></svg>' },
-  satis:  { bg:'var(--green-lt)', ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1.5 4.5h9L9 9.5H3.5l-2-5z" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5" cy="12.5" r="1.3" stroke="var(--green)" stroke-width="1.3"/><circle cx="9.5" cy="12.5" r="1.3" stroke="var(--green)" stroke-width="1.3"/></svg>' },
-  surum:  { bg:'var(--bg2)',      ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="12" r="2" stroke="var(--text2)" stroke-width="1.3"/><circle cx="12" cy="12" r="2" stroke="var(--text2)" stroke-width="1.3"/><path d="M2.5 9h3l1.5-3h3.5l1.5 1.5H14" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>' }
+  ilac:   { bg:'var(--sky-lt)',   ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="5.5" width="5" height="7" rx="1.3" stroke="var(--sky)" stroke-width="1.3"/><path d="M5.8 5.5V4.2h2.4v1.3" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 7.5H10" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><circle cx="11.2" cy="6.5"  r=".7" fill="var(--sky)" opacity=".7"/><circle cx="12"   cy="8"    r=".7" fill="var(--sky)" opacity=".55"/><circle cx="11.5" cy="9.5"  r=".7" fill="var(--sky)" opacity=".4"/></svg>' },
+  gubre:  { bg:'var(--gold-lt)', ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 12V7.5L6.2 5h3.6L11 7.5V12" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 12h7" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/><circle cx="8"   cy="14.5" r=".7" fill="var(--gold)" opacity=".5"/><circle cx="9.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/></svg>' },
+  sulama: { bg:'var(--sky-lt)',  ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 5.5h6a1.5 1.5 0 011.5 1.5v.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M3 5.5V3.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M3 3.5h2" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><path d="M6 8.5v2"   stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><path d="M8 8.5v2.5" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><path d="M10 8v2" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><circle cx="6"  cy="11.2" r=".8" fill="var(--sky)" opacity=".6"/><circle cx="8"  cy="11.8" r=".8" fill="var(--sky)" opacity=".5"/><circle cx="10" cy="10.8" r=".8" fill="var(--sky)" opacity=".55"/></svg>' },
+  ekim:   { bg:'var(--green-lt)', ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 12V7" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M8 7C8 7 5.8 5.8 5.5 4c1.4-.2 3 .7 2.5 3z" fill="var(--green)" fill-opacity=".55"/><path d="M8 7C8 7 10.2 5.8 10.5 4c-1.4-.2-3 .7-2.5 3z" fill="var(--green)" fill-opacity=".38"/><path d="M4 13h8" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" opacity=".5"/></svg>' },
+  hasat:  { bg:'#FEF9EC',         ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12h12" stroke="#B45309" stroke-width="1.3" stroke-linecap="round"/><path d="M8 12V7" stroke="#B45309" stroke-width="1.3" stroke-linecap="round"/><path d="M8 8.5C8 8.5 6 7.5 5.7 5.5c1.3-.2 3 .7 2.3 3z" fill="#B45309" fill-opacity=".6"/><path d="M8 8.5C8 8.5 10 7.5 10.3 5.5c-1.3-.2-3 .7-2.3 3z" fill="#B45309" fill-opacity=".4"/><path d="M3.5 9C4.3 7.2 6.2 6 8 6" stroke="#B45309" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg>' },
+  satis:  { bg:'var(--green-lt)', ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 11L7.5 6.5l1.5 1.5 1.8-1.8 1 1" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 5v2.5h-2.5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 14h11" stroke="var(--green)" stroke-width="1.2" stroke-linecap="round" opacity=".4"/><circle cx="4.5" cy="4.5" r="2" stroke="var(--green)" stroke-width="1.2"/><path d="M4.5 3.3v2.4M3.7 4.5h1.6" stroke="var(--green)" stroke-width=".95" stroke-linecap="round"/></svg>' },
+  surum:  { bg:'var(--bg2)',      ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 10l3-5 3 3 3-3 2 5" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 13h12" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/><path d="M4.5 13v-1.2" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M8 13v-1.5" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M11.5 13v-1.2" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg>' }
 };
 
 function buildDetail(key) {
@@ -5145,15 +5191,15 @@ const kayitlar = [
 
 // ── TİP BİLGİLERİ ──
 const tipBilgi = {
-  ilac:   { ad: 'İlaçlama',   renk: 'var(--sky)',      bg: 'var(--sky-lt)',   ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round"/><path d="M9 8.5V6" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 7.5l2.5-2.5 2.5 2.5" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-  gubre:  { ad: 'Gübreleme',  renk: 'var(--gold)',    bg: 'var(--gold-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M6 15V7l3-5 3 5v8" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15h10" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  ekim:   { ad: 'Ekim',       renk: 'var(--green)',    bg: 'var(--green-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><ellipse cx="9" cy="11" rx="4" ry="3" stroke="var(--green)" stroke-width="1.5"/><path d="M9 8V5" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 6.5L9 4l2.5 2.5" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-  hasat:  { ad: 'Hasat',      renk: '#B45309',         bg: '#FEF9EC',         ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 15h14" stroke="#B45309" stroke-width="1.4" stroke-linecap="round"/><path d="M4 15V9l5-7 5 7v6" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 15v-4h4v4" stroke="#B45309" stroke-width="1.4" stroke-linejoin="round"/></svg>' },
-  sulama: { ad: 'Sulama',     renk: '#38BDF8',         bg: '#E0F2FE',         ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2C9 2 4.5 7.5 4.5 11.5a4.5 4.5 0 009 0C13.5 7.5 9 2 9 2z" stroke="#38BDF8" stroke-width="1.4" stroke-linejoin="round"/></svg>' },
-  surum:  { ad: 'Sürüm',      renk: 'var(--text2)',    bg: 'var(--bg2)',      ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="4.5" cy="13" r="2.2" stroke="var(--text2)" stroke-width="1.4"/><circle cx="13.5" cy="13" r="2.2" stroke="var(--text2)" stroke-width="1.4"/><path d="M2.5 9h3.5l2-3.5h3.5l2 2H15" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-  satis:  { ad: 'Satış',      renk: 'var(--green-mid)',bg: 'var(--green-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5h11l-2 7H4L2 4.5z" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="14.5" r="1.5" stroke="var(--green)" stroke-width="1.3"/><circle cx="11" cy="14.5" r="1.5" stroke="var(--green)" stroke-width="1.3"/></svg>' },
-  satin:  { ad: 'Satın Alma', renk: 'var(--gold)',    bg: 'var(--gold-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.5 3.5h11l-1.5 8H5L3.5 3.5z" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="15.5" r="1.5" stroke="var(--gold)" stroke-width="1.3"/><circle cx="13" cy="15.5" r="1.5" stroke="var(--gold)" stroke-width="1.3"/></svg>' },
-  not:    { ad: 'Not',        renk: 'var(--text2)',    bg: 'var(--bg2)',      ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 2h10a1 1 0 011 1v10l-4 4H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="var(--text2)" stroke-width="1.4"/><path d="M6 6h6M6 9h4" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round"/></svg>' }
+  ilac:   { ad: 'İlaçlama',   renk: 'var(--sky)',      bg: 'var(--sky-lt)',   ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="4" y="6" width="5.5" height="8" rx="1.5" stroke="var(--sky)" stroke-width="1.4"/><path d="M6.5 6V4.5h2.5V6" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 8.5h1.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><circle cx="12.5" cy="7.2"  r=".75" fill="var(--sky)" opacity=".7"/><circle cx="13.5" cy="9"    r=".75" fill="var(--sky)" opacity=".55"/><circle cx="13" cy="10.8" r=".75" fill="var(--sky)" opacity=".4"/></svg>' },
+  gubre:  { ad: 'Gübreleme',  renk: 'var(--gold)',    bg: 'var(--gold-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5.5 13.5V8L7 5h4l1.5 3v5.5" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13.5h8" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/><circle cx="7.5"  cy="16" r=".8" fill="var(--gold)" opacity=".6"/><circle cx="9"    cy="16.5" r=".8" fill="var(--gold)" opacity=".5"/><circle cx="10.5" cy="16" r=".8" fill="var(--gold)" opacity=".6"/></svg>' },
+  ekim:   { ad: 'Ekim',       renk: 'var(--green)',    bg: 'var(--green-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 13V8" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round"/><path d="M9 8C9 8 6.5 6.5 6 4.5c1.6-.25 3.5.8 3 3.5z" fill="var(--green)" fill-opacity=".55"/><path d="M9 8C9 8 11.5 6.5 12 4.5c-1.6-.25-3.5.8-3 3.5z" fill="var(--green)" fill-opacity=".38"/><path d="M4.5 14.5h9" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" opacity=".5"/></svg>' },
+  hasat:  { ad: 'Hasat',      renk: '#B45309',         bg: '#FEF9EC',         ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 13h13" stroke="#B45309" stroke-width="1.4" stroke-linecap="round"/><path d="M9 13V7" stroke="#B45309" stroke-width="1.4" stroke-linecap="round"/><path d="M9 9.5C9 9.5 6.8 8.2 6.5 6c1.5-.2 3.2.8 2.5 3.5z" fill="#B45309" fill-opacity=".6"/><path d="M9 9.5C9 9.5 11.2 8.2 11.5 6c-1.5-.2-3.2.8-2.5 3.5z" fill="#B45309" fill-opacity=".4"/><path d="M4 10C5 8 7 6.5 9 6.5" stroke="#B45309" stroke-width="1.2" stroke-linecap="round" opacity=".4"/></svg>' },
+  sulama: { ad: 'Sulama',     renk: 'var(--sky)',      bg: 'var(--sky-lt)',   ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.5 6.5h7a2 2 0 012 2v.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M3.5 6.5V4.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M3.5 4.5h2.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M7 10v2.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M9 10v3" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M11 10v2.5" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M12.5 9v2" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><circle cx="7"    cy="13.8" r=".9" fill="var(--sky)" opacity=".6"/><circle cx="9"    cy="14.5" r=".9" fill="var(--sky)" opacity=".5"/><circle cx="11"   cy="13.8" r=".9" fill="var(--sky)" opacity=".6"/><circle cx="12.5" cy="11.5" r=".9" fill="var(--sky)" opacity=".45"/></svg>' },
+  surum:  { ad: 'Sürüm',      renk: 'var(--text2)',    bg: 'var(--bg2)',      ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 11l3.5-6 3.5 3.5 3.5-3.5 2 6" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h14" stroke="var(--text2)" stroke-width="1.4" stroke-linecap="round"/><path d="M5 14v-1.5" stroke="var(--text2)" stroke-width="1.2" stroke-linecap="round" opacity=".4"/><path d="M9 14v-2" stroke="var(--text2)" stroke-width="1.2" stroke-linecap="round" opacity=".4"/><path d="M13 14v-1.5" stroke="var(--text2)" stroke-width="1.2" stroke-linecap="round" opacity=".4"/></svg>' },
+  satis:  { ad: 'Satış',      renk: 'var(--green-mid)',bg: 'var(--green-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.5 12.5L8.5 7.5l1.5 1.5 2-2 1 1" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 6v2.8h-2.8" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15.5h12" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" opacity=".4"/><circle cx="5" cy="5" r="2.2" stroke="var(--green)" stroke-width="1.2"/><path d="M5 3.8v2.4M4.2 5h1.6" stroke="var(--green)" stroke-width="1" stroke-linecap="round"/></svg>' },
+  satin:  { ad: 'Satın Alma', renk: 'var(--gold)',    bg: 'var(--gold-lt)', ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4.5 2.5h9a1 1 0 011 1v10l-2 2h-8a1 1 0 01-1-1V3.5a1 1 0 011-1z" stroke="var(--gold)" stroke-width="1.4"/><path d="M6.5 6.5h5" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 9h5" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 11.5h3" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><circle cx="13" cy="11.5" r="2.2" fill="var(--bg)" stroke="var(--gold)" stroke-width="1.2"/><path d="M12.3 10.8l1.4 1.4" stroke="var(--gold)" stroke-width=".9" stroke-linecap="round"/></svg>' },
+  not:    { ad: 'Not',        renk: 'var(--text2)',    bg: 'var(--bg2)',      ic: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4.5 3h6.5l3.5 3.5V15.5a1 1 0 01-1 1h-9a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="var(--text2)" stroke-width="1.4"/><path d="M11 3v3.5h3.5" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M6.5 9h5" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 12h3.5" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/></svg>' }
 };
 
 // ── LİSTE RENDER ──
@@ -5867,19 +5913,46 @@ let secilenAy = null;
 
 function renderBarChart() {
   const area = document.getElementById('bar-area');
-  const veri = barExpanded ? aylikVeri : aylikVeri.slice(0, 5);
-  const maxVal = Math.max(...aylikVeri.map(d => Math.max(d.gelir, d.gider)));
+  if (!area) return;
+
+  let veri;
+  if (barExpanded) {
+    veri = aylikVeri;
+  } else {
+    // "Son 5 Ay": verisi olan (gelir>0 veya gider>0) ayları bul,
+    // son 5 tanesini göster. Hiç yoksa ilk 5'i göster.
+    const aktifIndeksler = aylikVeri
+      .map((d, i) => ({ d, i }))
+      .filter(x => x.d.gelir > 0 || x.d.gider > 0)
+      .map(x => x.i);
+
+    if (aktifIndeksler.length === 0) {
+      veri = aylikVeri.slice(0, 5);
+    } else {
+      // Son aktif aydan geriye doğru 5 ay al (boş olanlar dahil)
+      const sonAktif = aktifIndeksler[aktifIndeksler.length - 1];
+      const baslangic = Math.max(0, sonAktif - 4);
+      veri = aylikVeri.slice(baslangic, sonAktif + 1);
+      // 5'ten azsa başa doldur
+      while (veri.length < 5 && baslangic > 0) {
+        veri = aylikVeri.slice(Math.max(0, baslangic - (5 - veri.length)), baslangic).concat(veri);
+      }
+    }
+  }
+
+  // maxVal: sadece görüntülenen aylara göre (büyük değerler küçükleri ezmesin)
+  const maxVal = Math.max(...veri.map(d => Math.max(d.gelir, d.gider)), 1);
 
   area.innerHTML = veri.map((d, i) => {
-    const gH = maxVal > 0 ? Math.max(4, Math.round(d.gelir / maxVal * 90)) : 4;
-    const eH = maxVal > 0 ? Math.max(4, Math.round(d.gider / maxVal * 90)) : 4;
+    const gH = Math.max(4, Math.round(d.gelir / maxVal * 80));
+    const eH = Math.max(4, Math.round(d.gider / maxVal * 80));
     const isAktif = d.ay === (secilenAy?.ay);
     const isEmpty = d.gelir === 0 && d.gider === 0;
     return `
       <div class="cift-col${isEmpty ? ' fade' : ''}" onclick="selectAy(${i})">
-        <div class="cift-bars" style="height:90px;align-items:flex-end;">
-          <div class="cift-bar g" style="height:${gH}px"></div>
-          <div class="cift-bar e" style="height:${eH}px"></div>
+        <div class="cift-bars" style="height:88px;align-items:flex-end;gap:3px;">
+          <div class="cift-bar g${isAktif ? ' sel' : ''}" style="height:${gH}px"></div>
+          <div class="cift-bar e${isAktif ? ' sel' : ''}" style="height:${eH}px"></div>
         </div>
         <div class="cift-ay${isAktif ? ' aktif' : ''}">${d.ay}</div>
       </div>`;
@@ -5887,11 +5960,31 @@ function renderBarChart() {
 }
 
 function selectAy(idx) {
-  const veri = barExpanded ? aylikVeri : aylikVeri.slice(0, 5);
+  // renderBarChart ile aynı veri hesaplama
+  let veri;
+  if (barExpanded) {
+    veri = aylikVeri;
+  } else {
+    const aktifIndeksler = aylikVeri
+      .map((d, i) => ({ d, i }))
+      .filter(x => x.d.gelir > 0 || x.d.gider > 0)
+      .map(x => x.i);
+    if (aktifIndeksler.length === 0) {
+      veri = aylikVeri.slice(0, 5);
+    } else {
+      const sonAktif = aktifIndeksler[aktifIndeksler.length - 1];
+      const baslangic = Math.max(0, sonAktif - 4);
+      veri = aylikVeri.slice(baslangic, sonAktif + 1);
+      while (veri.length < 5 && baslangic > 0) {
+        veri = aylikVeri.slice(Math.max(0, baslangic - (5 - veri.length)), baslangic).concat(veri);
+      }
+    }
+  }
   const d = veri[idx];
+  if (!d) return;
   secilenAy = d;
   const info = document.getElementById('bar-sel-info');
-  info.classList.add('show');
+  if (info) info.classList.add('show');
   document.getElementById('bar-sel-ay').textContent = d.ay;
   document.getElementById('bar-sel-g').textContent = d.gelir > 0 ? '+₺' + d.gelir.toLocaleString('tr-TR') : '₺0 gelir';
   document.getElementById('bar-sel-e').textContent = d.gider > 0 ? '−₺' + d.gider.toLocaleString('tr-TR') : '₺0 gider';
@@ -6729,12 +6822,12 @@ function renderKasaEkrani(yil, v) {
     <div class="gider-row" onclick="openKasaSheet('gider','${g.key}')">
       <div class="gider-ic" style="background:${g.key==='ilac'?'var(--sky-lt)':g.key==='gubre'?'var(--gold-lt)':g.key==='tohum'?'var(--green-lt)':'var(--bg2)'}">
         ${g.key==='ilac'
-          ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 11.5c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 8V5.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M5.5 7L8 4.5l2.5 2.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="5.5" width="5" height="7" rx="1.3" stroke="var(--sky)" stroke-width="1.3"/><path d="M5.8 5.5V4.2h2.4v1.3" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 7.5H10" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><circle cx="11.2" cy="6.5" r=".7" fill="var(--sky)" opacity=".7"/><circle cx="12" cy="8" r=".7" fill="var(--sky)" opacity=".55"/><circle cx="11.5" cy="9.5" r=".7" fill="var(--sky)" opacity=".4"/></svg>'
           : g.key==='gubre'
-          ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5.5 13V6.5l2.5-4 2.5 4V13" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 13h9" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/></svg>'
+          ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 12V7.5L6.2 5h3.6L11 7.5V12" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 12h7" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/><circle cx="8" cy="14.5" r=".7" fill="var(--gold)" opacity=".5"/><circle cx="9.5" cy="14" r=".7" fill="var(--gold)" opacity=".6"/></svg>'
           : g.key==='tohum'
-          ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="9" rx="3.5" ry="2.5" stroke="var(--green)" stroke-width="1.3"/><path d="M8 6.5V3.5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M5.5 5l2.5-2.5L10.5 5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-          : '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="12" r="2" stroke="var(--text2)" stroke-width="1.3"/><circle cx="12" cy="12" r="2" stroke="var(--text2)" stroke-width="1.3"/><path d="M2.5 9h3l1.5-3h3.5l1.5 1.5H14" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+          ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 12V7" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M8 7C8 7 5.8 5.8 5.5 4c1.4-.2 3 .7 2.5 3z" fill="var(--green)" fill-opacity=".55"/><path d="M8 7C8 7 10.2 5.8 10.5 4c-1.4-.2-3 .7-2.5 3z" fill="var(--green)" fill-opacity=".38"/><path d="M4 13h8" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" opacity=".5"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 10l3-5 3 3 3-3 2 5" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 13h12" stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/><path d="M4.5 13v-1.2" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M8 13v-1.5" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/><path d="M11.5 13v-1.2" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg>'}
       </div>
       <div class="gider-body">
         <div class="gider-ad">${g.ad}</div>
