@@ -7557,25 +7557,31 @@ function selChip(el) {
     if (!S) return;
     var cy  = getY(e);
     var raw = cy - S.y0;
-    if (raw < 0) raw = 0;
+
+    // Yukarı hareket (raw < 0): hafif direnç — tam serbest ama biraz zorlanıyor
+    // iOS'ta da sheet başlangıç pozisyonunun üstüne geçince direnç hissedilir
+    var visual;
+    if (raw < 0) {
+      visual = raw * 0.25; // %25 takip — direnç var ama gidiyor
+    } else {
+      visual = raw; // 1:1 takip
+    }
 
     if (!S.live) {
-      if (raw < 5) return;
+      if (Math.abs(raw) < 5) return;
       S.live = true;
       S.panel.style.transition  = 'none';
       S.panel.style.willChange  = 'transform';
     }
 
-    S.dy = raw;
+    S.dy = raw; // gerçek mesafe (negatif de olabilir — yukarı fırlatma tespiti için)
 
-    // 1:1 parmak takibi
-    S.panel.style.transform = 'translateY(' + raw + 'px)';
+    // Parmakla birebir (direnç uygulanmış görsel pozisyon)
+    S.panel.style.transform = 'translateY(' + visual + 'px)';
 
-    // Backdrop: panel ile orantılı
-    var prog = Math.min(raw / 220, 1);
+    // Backdrop ve scale: sadece aşağı harekette değişir
+    var prog = Math.min(Math.max(raw, 0) / 220, 1);
     S.overlay.style.opacity = String(1 - prog * 0.55);
-
-    // Arkadaki ekran: drag ilerledikçe geri geliyor
     presentingProgress(prog);
 
     var now = Date.now(), dt = now - S.tp;
@@ -7599,7 +7605,8 @@ function selChip(el) {
     overlay.style.opacity    = '';
     overlay.style.transition = '';
 
-    var dismiss = (dy > DISMISS_DIST) || (vel > DISMISS_VEL);
+    // Dismiss sadece AŞAĞI harekette — yukarı fırlatma her zaman spring geri
+    var dismiss = (dy > DISMISS_DIST && vel >= -0.1) || (vel > DISMISS_VEL);
 
     if (dismiss) {
       // ── DISMISS: velocity-matched ──────────────────────────
@@ -7678,16 +7685,16 @@ function selChip(el) {
   document.addEventListener('mousemove', function (e) {
     if (!S) return;
     var raw = e.clientY - S.y0;
-    if (raw < 0) raw = 0;
+    var visual = raw < 0 ? raw * 0.25 : raw;
     if (!S.live) {
-      if (raw < 5) return;
+      if (Math.abs(raw) < 5) return;
       S.live = true;
       S.panel.style.transition = 'none';
       S.panel.style.willChange = 'transform';
     }
     S.dy = raw;
-    S.panel.style.transform = 'translateY(' + raw + 'px)';
-    var prog = Math.min(raw / 220, 1);
+    S.panel.style.transform = 'translateY(' + visual + 'px)';
+    var prog = Math.min(Math.max(raw, 0) / 220, 1);
     S.overlay.style.opacity = String(1 - prog * 0.55);
     presentingProgress(prog);
     var now = Date.now(), dt = now - S.tp;
