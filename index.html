@@ -527,7 +527,7 @@ body {
 .sheet-close  { width:30px; height:30px; border-radius:50%; background:var(--bg2); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text2); font-size:16px; transition:background .15s; }
 .sheet-close:active { background:var(--border); }
 
-.sheet-scroll { flex:1; overflow-y:auto; padding:18px 20px 32px; display:flex; flex-direction:column; gap:18px; }
+.sheet-scroll { flex:1; overflow-y:auto; padding:18px 20px 32px; display:flex; flex-direction:column; gap:18px; touch-action:pan-y; }
 .sheet-scroll::-webkit-scrollbar { display:none; }
 
 .sheet-lbl { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.7px; margin-bottom:7px; }
@@ -1655,6 +1655,7 @@ body {
   flex: 1; overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 18px 20px 36px;
+  touch-action: pan-y;
 }
 .op-sheet-scroll::-webkit-scrollbar { display: none; }
 
@@ -7407,44 +7408,53 @@ function selChip(el) {
 
 
 
+
+
 // ══════════════════════════════════════════════════════════════
-// SHEET DRAG v6  —  iOS Maps / Spotify mantığı
+// SHEET DRAG v7  —  Smooth dismiss, rubber-band spring
 //
-// • Tüm beyaz panel (sheet) sürüklenebilir — sadece handle değil
-// • Scroll içeriği varsa: en üste gelince drag başlar
-// • Rubber-band: aşağı çek → direnç + sallanma, bırak → yerine yay
-// • Kapat eşiği: 110px+ VEYA 0.5px/ms+ hız
-// • İçerideki scrollable alan scroll yaparken drag tetiklenmez
+// Temel fark: dismiss sırasında close() fonksiyonu çağrılmaz.
+// Panel aşağı kayarken backdrop da eş zamanlı fade-out yapar.
+// Böylece "aniden yok olma" sorunu ortadan kalkar.
+//
+// iOS Safari için touchstart passive:false — elementi üzerinde bağlı.
 // ══════════════════════════════════════════════════════════════
 (function () {
 
-  // ── Ayarlar ──────────────────────────────────────────────────
-  var DISMISS_DIST = 110;   // px — kapatma mesafesi
-  var DISMISS_VEL  = 0.50;  // px/ms — kapatma hızı
-  var RUBBER       = 0.38;  // direnç katsayısı (0=hiç direnç, 1=tam serbest)
+  var DISMISS_DIST = 100;
+  var DISMISS_VEL  = 0.45;
+  var RUBBER       = 0.55;  // direnç: düşükse daha sert, yüksekse daha yumuşak
 
-  // ── Overlay → close fn haritası ──────────────────────────────
-  var CLOSE = {
-    'kayit-sheet':         'closeKayit',
-    'tarla-sheet':         'closeSheet',
-    'modal':               'closeModal',
-    'home-kayit-sheet':    'closeKayitSheetBtn',
-    'kayit-sheet-overlay': 'closeKayitSheetBtn',
-    'kasa-sheet-overlay':  'closeKasaSheet',
-    'kasa-yil-sheet':      'closeKasaYilSheetBtn',
-    'kasa-sezon-sheet':    'closeKasaSezonSheet',
-    'sezon-sheet':         'closeSezonSheet',
-    'profil-edit-sheet':   'closeProfilSheetBtn',
-    'profil-gb-sheet':     'closeGbSheetBtn',
-    'op-sheet':            'closeOpSheet',
-  };
-
-  function doClose(overlay) {
+  // Overlay'ı temizle — close fn çağırmadan, panel zaten aşağıdayken
+  function rawClose(overlay) {
     if (!overlay) return;
-    var fn = CLOSE[overlay.id];
-    if (fn && typeof window[fn] === 'function') { window[fn](); return; }
-    overlay.style.animation = 'overlayOut .2s ease both';
-    setTimeout(function () { overlay.style.display = 'none'; }, 200);
+    // CRITICAL: style.display='' — inline style'ı temizle, CSS class'a bırak
+    // style.display='none' yazmak CSS class'ı ezer ve bir daha açılmaz
+    overlay.classList.remove('open', 'closing');
+    overlay.style.display    = '';   // CSS'e bırak (base: display:none)
+    overlay.style.opacity    = '';
+    overlay.style.transition = '';
+    overlay.style.animation  = '';
+    // inline-style overlay'lar (display:flex ile açılanlar) için none yaz
+    // bunların base CSS'i yok, sadece inline style ile kontrol ediliyorlar
+    var isInlineOverlay = !overlay.classList.contains('sheet-overlay') &&
+                          !overlay.classList.contains('modal-overlay');
+    if (isInlineOverlay) {
+      overlay.style.display = 'none';
+    }
+    // _activeKayitSheet sıfırla
+    if (typeof _activeKayitSheet !== 'undefined' &&
+        _activeKayitSheet === overlay.id) {
+      _activeKayitSheet = null;
+    }
+    // Panel inline style'larını temizle
+    var panel = overlay.querySelector('.sheet, .op-sheet-inner, .modal');
+    if (panel) {
+      panel.style.transform  = '';
+      panel.style.transition = '';
+      panel.style.willChange = '';
+      panel.style.opacity    = '';
+    }
   }
 
   function getTouchY(e) {
@@ -7452,7 +7462,6 @@ function selChip(el) {
     return t && t.length ? t[0].clientY : e.clientY;
   }
 
-  // Overlay açık mı?
   function isVisible(overlay) {
     if (!overlay) return false;
     var d = overlay.style.display;
@@ -7461,93 +7470,80 @@ function selChip(el) {
     return overlay.classList.contains('open');
   }
 
-  // Panel'in scrollable iç alanı (varsa)
   function getScroller(panel) {
     return panel.querySelector('.sheet-scroll, .op-sheet-scroll');
   }
 
-  // ── Aktif sürükleme durumu ────────────────────────────────────
   var S = null;
 
-  // ── touchstart: panel üzerinde ───────────────────────────────
-  function onPanelStart(e) {
+  // ─────────────────────────────────────────────────────────────
+  function onStart(e) {
     var panel   = e.currentTarget;
     var overlay = panel.parentElement;
     if (!isVisible(overlay)) return;
 
     var scroller = getScroller(panel);
-    var touchY   = getTouchY(e);
+    var y0 = getTouchY(e);
 
-    // Eğer dokunulan yer scrollable alandaysa VE içerik yukarıda değilse → drag başlatma
+    // Eğer dokunulan yer scroll alanının içindeyse drag başlatma
+    // (scroll en üstte bile olsa — kullanıcı scroll yapmak istiyor olabilir)
+    // Drag sadece handle ve header bölgesinden başlar
     if (scroller) {
       var target = e.target;
-      // Hedef scroller'ın içindeyse kontrol et
-      if (scroller.contains(target) || target === scroller) {
-        if (scroller.scrollTop > 2) return; // kullanıcı scroll yapıyordur
-      }
+      if (scroller === target || scroller.contains(target)) return;
     }
 
     S = {
       panel:    panel,
       overlay:  overlay,
-      scroller: scroller,
-      y0:       touchY,
-      yp:       touchY,
+      y0:       y0,
+      yp:       y0,
       tp:       Date.now(),
       vel:      0,
       dy:       0,
-      started:  false,   // 8px eşiği geçince true
+      live:     false,
     };
-
-    // Transition'ı kesmiyoruz henüz — eşik geçince keseceğiz
-    e.stopPropagation(); // backdrop onclick'i tetiklemesin
+    // stopPropagation YOK — sheet içi click'leri engellemesin
   }
 
-  // ── touchmove ────────────────────────────────────────────────
-  function onPanelMove(e) {
+  // ─────────────────────────────────────────────────────────────
+  function onMove(e) {
     if (!S) return;
-
     var cy  = getTouchY(e);
     var raw = cy - S.y0;
 
-    // Yukarı çekince (negatif) → scroll yapmaya bırak
-    if (raw < 0) {
-      S = null;
-      return;
-    }
+    // Yukarı hareket → dy=0, drag devam ediyor (iptal etme)
+    if (raw < 0) raw = 0;
 
-    // 8px eşiği: drag modu aktif
-    if (!S.started) {
-      if (raw < 8) return;
-      S.started = true;
-      S.panel.style.transition = 'none';
-      S.panel.style.willChange = 'transform';
+    // 6px eşiği geçince drag modu aktif
+    if (!S.live) {
+      if (raw < 6) return;
+      S.live = true;
+      S.panel.style.transition  = 'none';
+      S.panel.style.willChange  = 'transform';
     }
 
     S.dy = raw;
 
-    // Rubber-band: ne kadar çekilirse o kadar direnç artar
-    // Formül: sqrt(dy) * katsayı — sonsuz çekişe karşı doğal sınır
-    var vis = Math.sqrt(S.dy) * (RUBBER * 22);
-    // Aynı zamanda doğrusal bileşen ekle — ilk harekette hissettirsin
-    vis = S.dy * 0.55 + vis * 0.45;
-    // Maksimum görsel kayma
-    vis = Math.min(vis, S.dy);
-
+    // Rubber-band direnç
+    var vis = raw * RUBBER;
     S.panel.style.transform = 'translateY(' + vis + 'px)';
 
-    // Hız hesapla
+    // Backdrop eş zamanlı soluklaştır
+    var progress = Math.min(raw / 220, 1);
+    S.overlay.style.opacity = String(1 - progress * 0.6);
+
     var now = Date.now(), dt = now - S.tp;
     if (dt > 0) S.vel = (cy - S.yp) / dt;
     S.yp = cy; S.tp = now;
 
     e.preventDefault();
-    e.stopPropagation();
   }
 
-  // ── touchend ─────────────────────────────────────────────────
-  function onPanelEnd(e) {
-    if (!S || !S.started) { S = null; return; }
+  // ─────────────────────────────────────────────────────────────
+  function onEnd() {
+    if (!S) return;
+    if (!S.live) { S = null; return; }
 
     var panel   = S.panel;
     var overlay = S.overlay;
@@ -7556,77 +7552,79 @@ function selChip(el) {
     S = null;
 
     panel.style.willChange = '';
+    overlay.style.opacity  = '';   // sıfırla
 
     var dismiss = (dy > DISMISS_DIST) || (vel > DISMISS_VEL);
 
     if (dismiss) {
-      // ── KAPAT: aşağı fırlat ──────────────────────────────────
-      panel.style.transition = 'transform .24s cubic-bezier(.4,0,.8,.6)';
-      panel.style.transform  = 'translateY(105%)';
+      // Panel aşağı kayar, backdrop eş zamanlı solar
+      panel.style.transition   = 'transform .28s cubic-bezier(.3,0,.8,.6)';
+      panel.style.transform    = 'translateY(105%)';
+      overlay.style.transition = 'opacity .25s ease';
+      overlay.style.opacity    = '0';
+
       setTimeout(function () {
-        panel.style.transition = '';
-        panel.style.transform  = '';
-        doClose(overlay);
-      }, 230);
+        panel.style.transition   = '';
+        panel.style.transform    = '';
+        overlay.style.transition = '';
+        overlay.style.opacity    = '';
+        rawClose(overlay);
+      }, 280);
+
     } else {
-      // ── GERİ DON: spring + sallanma ──────────────────────────
-      // cubic-bezier ile overshoot — "makara" hissi
-      panel.style.transition = 'transform .42s cubic-bezier(.2,1.4,.4,1)';
+      // Spring: yerine geri fırlat + hafif sallanma
+      panel.style.transition = 'transform .38s cubic-bezier(.2,1.5,.35,1)';
       panel.style.transform  = 'translateY(0)';
-      setTimeout(function () {
-        panel.style.transition = '';
-      }, 420);
+      setTimeout(function () { panel.style.transition = ''; }, 380);
     }
   }
 
-  // ── touchcancel ──────────────────────────────────────────────
-  function onPanelCancel() {
+  function onCancel() {
     if (!S) return;
     var panel = S.panel;
     S = null;
     panel.style.willChange = '';
-    panel.style.transition = 'transform .3s cubic-bezier(.2,1.4,.4,1)';
+    panel.style.transition = 'transform .3s cubic-bezier(.2,1.5,.35,1)';
     panel.style.transform  = 'translateY(0)';
     setTimeout(function () { panel.style.transition = ''; }, 300);
   }
 
-  // ── Her panele listener ekle ──────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   function bindPanel(panel) {
-    if (panel._sdv6) return;
-    panel._sdv6 = true;
-    panel.addEventListener('touchstart', onPanelStart,  { passive: true  });
-    panel.addEventListener('touchmove',  onPanelMove,   { passive: false });
-    panel.addEventListener('touchend',   onPanelEnd,    { passive: true  });
-    panel.addEventListener('touchcancel',onPanelCancel, { passive: true  });
-    // Mouse (iMac test için)
-    panel.addEventListener('mousedown',  function(e) {
-      onPanelStart(e);
-    });
+    if (panel._v7) return;
+    panel._v7 = true;
+
+    // touchstart: non-passive — iOS Safari'de zorunlu
+    panel.addEventListener('touchstart',  onStart,  { passive: false });
+    panel.addEventListener('touchmove',   onMove,   { passive: false });
+    panel.addEventListener('touchend',    onEnd,    { passive: true  });
+    panel.addEventListener('touchcancel', onCancel, { passive: true  });
+
+    // Mouse (desktop test)
+    panel.addEventListener('mousedown', onStart);
   }
 
-  // Mouse move/up global (mouse sadece test amaçlı)
-  document.addEventListener('mousemove', function(e) {
-    if (!S || !S.started) {
-      if (!S) return;
-      var raw = e.clientY - S.y0;
-      if (raw < 8) return;
-      S.started = true;
+  // Desktop mouse global
+  document.addEventListener('mousemove', function (e) {
+    if (!S) return;
+    var raw = e.clientY - S.y0;
+    if (raw <= 0) { S = null; return; }
+    if (!S.live) {
+      if (raw < 6) return;
+      S.live = true;
       S.panel.style.transition = 'none';
     }
-    var cy = e.clientY, raw = cy - S.y0;
-    if (raw < 0) { S = null; return; }
     S.dy = raw;
-    var vis = S.dy * 0.55 + Math.sqrt(S.dy) * (RUBBER*22) * 0.45;
-    vis = Math.min(vis, S.dy);
-    S.panel.style.transform = 'translateY('+vis+'px)';
-    var now=Date.now(), dt=now-S.tp;
-    if(dt>0) S.vel=(cy-S.yp)/dt;
-    S.yp=cy; S.tp=now;
+    S.panel.style.transform = 'translateY(' + (raw * RUBBER) + 'px)';
+    var progress = Math.min(raw / 220, 1);
+    S.overlay.style.opacity = String(1 - progress * 0.6);
+    var now = Date.now(), dt = now - S.tp;
+    if (dt > 0) S.vel = (e.clientY - S.yp) / dt;
+    S.yp = e.clientY; S.tp = now;
   });
-  document.addEventListener('mouseup', onPanelEnd);
+  document.addEventListener('mouseup', onEnd);
 
-  // ── Hangi elementler panel? ───────────────────────────────────
-  // .sheet (kayit-sheet, tarla-sheet), .op-sheet-inner, .modal
+  // ─────────────────────────────────────────────────────────────
   function bindAll() {
     document.querySelectorAll('.sheet, .op-sheet-inner, .modal').forEach(bindPanel);
   }
