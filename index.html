@@ -7557,10 +7557,10 @@ function selChip(el) {
     var dismiss = (dy > DISMISS_DIST) || (vel > DISMISS_VEL);
 
     if (dismiss) {
-      // Panel aşağı kayar, backdrop eş zamanlı solar
-      panel.style.transition   = 'transform .28s cubic-bezier(.3,0,.8,.6)';
+      // Panel hızlıca aşağı kayar, backdrop eş zamanlı solar
+      panel.style.transition   = 'transform .18s cubic-bezier(.4,0,1,1)';
       panel.style.transform    = 'translateY(105%)';
-      overlay.style.transition = 'opacity .25s ease';
+      overlay.style.transition = 'opacity .16s ease';
       overlay.style.opacity    = '0';
 
       setTimeout(function () {
@@ -7569,13 +7569,13 @@ function selChip(el) {
         overlay.style.transition = '';
         overlay.style.opacity    = '';
         rawClose(overlay);
-      }, 280);
+      }, 180);
 
     } else {
-      // Spring: yerine geri fırlat + hafif sallanma
-      panel.style.transition = 'transform .38s cubic-bezier(.2,1.5,.35,1)';
+      // Spring: hızlı geri fırlat
+      panel.style.transition = 'transform .22s cubic-bezier(.2,1.4,.35,1)';
       panel.style.transform  = 'translateY(0)';
-      setTimeout(function () { panel.style.transition = ''; }, 380);
+      setTimeout(function () { panel.style.transition = ''; }, 220);
     }
   }
 
@@ -7584,9 +7584,9 @@ function selChip(el) {
     var panel = S.panel;
     S = null;
     panel.style.willChange = '';
-    panel.style.transition = 'transform .3s cubic-bezier(.2,1.5,.35,1)';
+    panel.style.transition = 'transform .22s cubic-bezier(.2,1.4,.35,1)';
     panel.style.transform  = 'translateY(0)';
-    setTimeout(function () { panel.style.transition = ''; }, 300);
+    setTimeout(function () { panel.style.transition = ''; }, 220);
   }
 
   // ─────────────────────────────────────────────────────────────
