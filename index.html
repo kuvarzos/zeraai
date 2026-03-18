@@ -7421,9 +7421,9 @@ function selChip(el) {
 // ══════════════════════════════════════════════════════════════
 (function () {
 
-  var DISMISS_DIST = 100;
-  var DISMISS_VEL  = 0.45;
-  var RUBBER       = 0.55;  // direnç: düşükse daha sert, yüksekse daha yumuşak
+  var DISMISS_DIST = 80;
+  var DISMISS_VEL  = 0.3;
+  var RUBBER       = 1.0;  // 1:1 — parmakla birebir, direnç yok
 
   // Overlay'ı temizle — close fn çağırmadan, panel zaten aşağıdayken
   function rawClose(overlay) {
@@ -7557,10 +7557,19 @@ function selChip(el) {
     var dismiss = (dy > DISMISS_DIST) || (vel > DISMISS_VEL);
 
     if (dismiss) {
-      // Panel hızlıca aşağı kayar, backdrop eş zamanlı solar
-      panel.style.transition   = 'transform .18s cubic-bezier(.4,0,1,1)';
+      // Parmak hızına göre süre hesapla — hızlı fırlatınca anında kapanır
+      // Kalan mesafe: panel şu an vis konumunda, 100% aşağıya gitmeli
+      var currentPos = S ? 0 : (dy * RUBBER);
+      var remaining  = window.innerHeight - currentPos;
+      // vel px/ms cinsinden — süre = mesafe / hız, min 80ms max 200ms
+      var duration = vel > 0.1
+        ? Math.min(Math.max(remaining / (vel * 1000), 0.08), 0.20)
+        : 0.18;
+      var durationMs = Math.round(duration * 1000);
+
+      panel.style.transition   = 'transform ' + duration + 's cubic-bezier(.4,0,1,1)';
       panel.style.transform    = 'translateY(105%)';
-      overlay.style.transition = 'opacity .16s ease';
+      overlay.style.transition = 'opacity ' + duration + 's ease';
       overlay.style.opacity    = '0';
 
       setTimeout(function () {
@@ -7569,13 +7578,13 @@ function selChip(el) {
         overlay.style.transition = '';
         overlay.style.opacity    = '';
         rawClose(overlay);
-      }, 180);
+      }, durationMs + 20);
 
     } else {
       // Spring: hızlı geri fırlat
-      panel.style.transition = 'transform .22s cubic-bezier(.2,1.4,.35,1)';
+      panel.style.transition = 'transform .2s cubic-bezier(.2,1.4,.35,1)';
       panel.style.transform  = 'translateY(0)';
-      setTimeout(function () { panel.style.transition = ''; }, 220);
+      setTimeout(function () { panel.style.transition = ''; }, 200);
     }
   }
 
