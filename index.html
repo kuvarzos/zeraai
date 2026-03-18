@@ -4,14 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Zeraai</title>
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Zeraai">
-<meta name="theme-color" content="#227F83">
-<link rel="apple-touch-icon" href="icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -86,7 +78,7 @@ body {
   padding: 0 18px;
   display: flex; justify-content: space-between; align-items: center;
   flex-shrink: 0; height: 68px;
-  background: var(--card);
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
   position: relative; z-index: 30;
   backdrop-filter: blur(12px);
@@ -101,9 +93,9 @@ body {
 }
 .app-logo-mark {
   width: 34px; height: 34px; border-radius: 9px;
-  background: white; display:flex; align-items:center; justify-content:center;
+  background: var(--card); display:flex; align-items:center; justify-content:center;
   flex-shrink:0;
-  box-shadow: 0 1px 4px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.06);
+  box-shadow: 0 1px 6px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.05);
 }
 .app-logo-name {
   font-family: 'Fraunces', serif;
@@ -186,7 +178,7 @@ body {
 /* BOTTOM NAV */
 .bnav {
   position:absolute; bottom:0; left:0; right:0;
-  background:var(--card); border-top:1px solid var(--border);
+  background:var(--bg); border-top:1px solid var(--border);
   padding:8px 0 26px; display:flex; justify-content:space-around; align-items:flex-end; z-index:10;
 }
 .bnav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 10px; color:var(--text3); transition:color .25s cubic-bezier(.16,1,.3,1), transform .2s cubic-bezier(.34,1.56,.64,1); }
@@ -315,108 +307,8 @@ body {
    TARLALARIM LİSTESİ
 ═══════════════════════════════ */
 .field-list { padding:0 16px; display:flex; flex-direction:column; gap:10px; }
-.fl-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; cursor:pointer; box-shadow:var(--shadow-md); transition:transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s; position:relative; }
+.fl-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; cursor:pointer; box-shadow:var(--shadow-md); transition:transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s; }
 .fl-card:active { transform:scale(.982); box-shadow:var(--shadow); }
-
-/* ── SÜRÜKLE-BIRAK ─────────────────────────────── */
-.fl-card.dragging {
-  opacity: .55;
-  transform: scale(.97);
-  box-shadow: 0 8px 32px rgba(50,50,50,.18);
-  z-index: 100;
-  cursor: grabbing;
-}
-.fl-card.drag-over {
-  border: 2px dashed var(--green);
-  background: var(--green-lt);
-}
-.fl-card.drag-over .fl-banner { opacity: .7; }
-
-/* sıralama modu aktifken kartlar hafif titreşir */
-.field-list.sort-mode .fl-card {
-  cursor: grab;
-  animation: jiggle .5s ease-in-out infinite alternate;
-}
-.field-list.sort-mode .fl-card.pinned {
-  animation: none;
-  cursor: default;
-}
-@keyframes jiggle {
-  from { transform: rotate(-.4deg); }
-  to   { transform: rotate(.4deg); }
-}
-
-/* sıralama modu header */
-.sort-mode-bar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background: var(--green-lt);
-  border-bottom: 1px solid rgba(34,127,131,.2);
-  flex-shrink: 0;
-}
-.sort-mode-bar.active { display: flex; }
-.sort-mode-bar-txt { font-size: 12px; font-weight: 700; color: var(--green-mid); }
-.sort-mode-done {
-  background: var(--green); color: white;
-  border: none; border-radius: var(--r-pill);
-  padding: 6px 16px; font-size: 12px; font-weight: 700;
-  cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
-  transition: background .15s;
-}
-.sort-mode-done:active { background: var(--green-mid); }
-
-/* sürükleme tutamacı */
-.fl-drag-handle {
-  display: none;
-  position: absolute;
-  right: 14px; top: 50%;
-  transform: translateY(-50%);
-  width: 32px; height: 32px;
-  align-items: center; justify-content: center;
-  color: var(--text3); cursor: grab; z-index: 5;
-  border-radius: 50%;
-  transition: background .15s;
-}
-.fl-drag-handle:active { background: var(--bg2); cursor: grabbing; }
-.sort-mode .fl-drag-handle { display: flex; }
-
-/* sabitleme ikonu — banner üzerine */
-.fl-pin-btn {
-  display: none;
-  position: absolute;
-  left: 12px; top: 12px; z-index: 6;
-  width: 28px; height: 28px; border-radius: 50%;
-  background: rgba(255,255,255,.22);
-  border: 1px solid rgba(255,255,255,.35);
-  align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: background .15s, transform .18s cubic-bezier(.34,1.56,.64,1);
-  color: white;
-}
-.fl-pin-btn:active { transform: scale(.85); }
-.sort-mode .fl-pin-btn { display: flex; }
-.fl-card.pinned .fl-pin-btn {
-  background: rgba(255,255,255,.55);
-  color: var(--green-mid);
-}
-
-/* sabitlenmiş kart — ince yeşil çerçeve */
-.fl-card.pinned {
-  border: 2px solid var(--green);
-  box-shadow: 0 0 0 1px rgba(34,127,131,.15), var(--shadow-md);
-}
-.fl-pin-label {
-  display: none;
-  position: absolute;
-  top: 8px; right: 8px; z-index: 6;
-  background: var(--green);
-  color: white; border-radius: var(--r-pill);
-  padding: 2px 8px; font-size: 9px; font-weight: 700;
-  letter-spacing: .3px;
-}
-.fl-card.pinned .fl-pin-label { display: block; }
 .fl-banner { height:60px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; position:relative; overflow:hidden; }
 .fl-banner::after { content:''; position:absolute; inset:0; background:rgba(0,0,0,.06); pointer-events:none; }
 .fl-banner-left { display:flex; align-items:center; gap:10px; z-index:1; }
@@ -2163,8 +2055,8 @@ body {
           <div class="hfc-body">
             <div class="hfc-name">Kuzey Tarla</div>
             <div class="hfc-meta">Buğday · Tosunbey · 45 dönüm</div>
-            <div class="prog-row"><div class="prog"><div class="pf" id="home-pf-kuzey" style="width:65%;background:#C8951A"></div></div><div class="pct" id="home-pct-kuzey" style="color:#8A6914">%65</div></div>
-            <div class="fc-badge drug" id="home-badge-kuzey" style="margin-top:4px"><div class="pulse amber"></div><div class="fc-badge-txt">Teldor · 14 gün bekleme</div></div>
+            <div class="prog-row"><div class="prog"><div class="pf" style="width:65%;background:#C8951A"></div></div><div class="pct" style="color:#8A6914">%65</div></div>
+            <div class="fc-badge drug" style="margin-top:4px"><div class="pulse amber"></div><div class="fc-badge-txt">Teldor · 14 gün bekleme</div></div>
           </div>
           <div class="hfc-right"><div class="hfc-cost-lbl">Maliyet</div><div class="hfc-cost-val">₺14.200</div></div>
         </div>
@@ -2178,8 +2070,7 @@ body {
           <div class="hfc-body">
             <div class="hfc-name">Doğu Parsel</div>
             <div class="hfc-meta">Çeltik · Osmancık-97 · 30 dönüm</div>
-            <div class="prog-row"><div class="prog"><div class="pf" id="home-pf-dogu" style="width:45%;background:#2B9E9B"></div></div><div class="pct" id="home-pct-dogu" style="color:#2B7A78">%45</div></div>
-            <div id="home-badge-dogu"></div>
+            <div class="prog-row"><div class="prog"><div class="pf" style="width:45%;background:#2B9E9B"></div></div><div class="pct" style="color:#2B7A78">%45</div></div>
           </div>
           <div class="hfc-right"><div class="hfc-cost-lbl">Maliyet</div><div class="hfc-cost-val">₺11.400</div></div>
         </div>
@@ -2193,8 +2084,8 @@ body {
           <div class="hfc-body">
             <div class="hfc-name">Güney Tarla</div>
             <div class="hfc-meta">Ayçiçeği · Tunca · 60 dönüm</div>
-            <div class="prog-row"><div class="prog"><div class="pf" id="home-pf-guney" style="width:35%;background:#B45309"></div></div><div class="pct" id="home-pct-guney" style="color:#8B4513">%35</div></div>
-            <div id="home-badge-guney"></div>
+            <div class="prog-row"><div class="prog"><div class="pf" style="width:92%;background:#B45309"></div></div><div class="pct" style="color:#8B4513">%92</div></div>
+            <div class="fc-badge ready" style="margin-top:4px"><div class="pulse" style="background:#B45309"></div><div class="fc-badge-txt">Hasada hazır!</div></div>
           </div>
           <div class="hfc-right"><div class="hfc-cost-lbl">Maliyet</div><div class="hfc-cost-val">₺21.400</div></div>
         </div>
@@ -2321,123 +2212,88 @@ body {
       <div class="page-title">Tarlalarım</div>
       <button class="hdr-btn" onclick="openSheet()"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="var(--green-mid)" stroke-width="2" stroke-linecap="round"/></svg>Tarla Ekle</button>
     </div>
-    <!-- Sıralama modu banner -->
-    <div class="sort-mode-bar" id="sort-mode-bar">
-      <div class="sort-mode-bar-txt">✦ Tarlayı sürükle, sabitlemeyi 📌 ile yap</div>
-      <button class="sort-mode-done" onclick="exitSortMode()">Bitti</button>
-    </div>
     <div class="scroll">
-      <div class="field-list" id="field-list-el">
+      <div class="field-list">
 
         <!-- Buğday -->
-        <div class="fl-card fu" data-key="kuzey" onclick="flCardClick(event,'kuzey')">
-          <div class="fl-pin-label">📌 Sabitli</div>
-          <div class="fl-pin-btn" onclick="togglePin(event,'kuzey')">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 1l8 8-2.5 1L9 13l-2-2-4 3 2.5-4.5L3.5 8 5 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="fl-drag-handle">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="5" r="1.2" fill="currentColor"/><circle cx="6" cy="9" r="1.2" fill="currentColor"/><circle cx="6" cy="13" r="1.2" fill="currentColor"/><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="9" r="1.2" fill="currentColor"/><circle cx="12" cy="13" r="1.2" fill="currentColor"/></svg>
-          </div>
+        <div class="fl-card fu" onclick="openDetail('kuzey')">
           <div class="fl-banner" style="background:linear-gradient(135deg,#6B4F0A,#C8951A)">
             <div class="fl-banner-left">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 19V8" stroke="white" stroke-width="1.7" stroke-linecap="round"/><path d="M11 13C11 13 7.5 11 6.5 8c2-.3 4.5 1.2 4.5 5C11.5 9 14 7.7 15.5 8c-1 3-4.5 5-4.5 5z" fill="white" fill-opacity=".85"/><path d="M8.5 19h5" stroke="white" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></svg>
               <div class="fl-banner-name">Kuzey Tarla</div>
             </div>
-            <div class="fl-banner-badge" id="fl-badge-kuzey">Büyüme & Bakım</div>
+            <div class="fl-banner-badge">Büyüme & Bakım</div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#8A6914">Buğday · Tosunbey</div><div class="fl-area">45 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val" id="fl-ekim-kuzey">15 Kas '24</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">15 Kas '24</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺14.200</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺315</div></div>
             </div>
-            <div class="fl-prog-row"><div class="prog"><div class="pf" id="fl-pf-kuzey" style="width:65%;background:#C8951A"></div></div><div class="pct" id="fl-pct-kuzey" style="color:#8A6914">%65</div></div>
-            <div class="fl-stage-row" id="fl-stage-kuzey"><div class="fc-badge drug"><div class="pulse amber"></div><div class="fc-badge-txt">Teldor · 14 gün bekleme</div></div></div>
+            <div class="fl-prog-row"><div class="prog"><div class="pf" style="width:65%;background:#C8951A"></div></div><div class="pct" style="color:#8A6914">%65</div></div>
+            <div class="fl-stage-row"><div class="fc-badge drug"><div class="pulse amber"></div><div class="fc-badge-txt">Teldor · 14 gün bekleme</div></div></div>
           </div>
         </div>
 
         <!-- Çeltik -->
-        <div class="fl-card fu" data-key="dogu" onclick="flCardClick(event,'dogu')">
-          <div class="fl-pin-label">📌 Sabitli</div>
-          <div class="fl-pin-btn" onclick="togglePin(event,'dogu')">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 1l8 8-2.5 1L9 13l-2-2-4 3 2.5-4.5L3.5 8 5 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="fl-drag-handle">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="5" r="1.2" fill="currentColor"/><circle cx="6" cy="9" r="1.2" fill="currentColor"/><circle cx="6" cy="13" r="1.2" fill="currentColor"/><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="9" r="1.2" fill="currentColor"/><circle cx="12" cy="13" r="1.2" fill="currentColor"/></svg>
-          </div>
+        <div class="fl-card fu" onclick="openDetail('dogu')">
           <div class="fl-banner" style="background:linear-gradient(135deg,#1A5C5A,#2B9E9B)">
             <div class="fl-banner-left">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 17V7" stroke="white" stroke-width="1.7" stroke-linecap="round"/><path d="M11 11C11 11 8.5 9.5 8 7c1.5-.2 3.5 1 3 4C11.5 8.5 13.5 7 15 7c-.5 2.5-4 4-4 4z" fill="white" fill-opacity=".85"/><path d="M5 19c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity=".7"/></svg>
               <div class="fl-banner-name">Doğu Parsel</div>
             </div>
-            <div class="fl-banner-badge" id="fl-badge-dogu">Kardeşlenme</div>
+            <div class="fl-banner-badge">Kardeşlenme</div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#2B7A78">Çeltik · Osmancık-97</div><div class="fl-area">30 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val" id="fl-ekim-dogu">20 May '25</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">20 May '25</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺11.400</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺380</div></div>
             </div>
-            <div class="fl-prog-row"><div class="prog"><div class="pf" id="fl-pf-dogu" style="width:45%;background:#2B9E9B"></div></div><div class="pct" id="fl-pct-dogu" style="color:#2B7A78">%45</div></div>
-            <div class="fl-stage-row" id="fl-stage-dogu"></div>
+            <div class="fl-prog-row"><div class="prog"><div class="pf" style="width:45%;background:#2B9E9B"></div></div><div class="pct" style="color:#2B7A78">%45</div></div>
           </div>
         </div>
 
         <!-- Kanola -->
-        <div class="fl-card fu" data-key="kanola" onclick="flCardClick(event,'kanola')">
-          <div class="fl-pin-label">📌 Sabitli</div>
-          <div class="fl-pin-btn" onclick="togglePin(event,'kanola')">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 1l8 8-2.5 1L9 13l-2-2-4 3 2.5-4.5L3.5 8 5 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="fl-drag-handle">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="5" r="1.2" fill="currentColor"/><circle cx="6" cy="9" r="1.2" fill="currentColor"/><circle cx="6" cy="13" r="1.2" fill="currentColor"/><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="9" r="1.2" fill="currentColor"/><circle cx="12" cy="13" r="1.2" fill="currentColor"/></svg>
-          </div>
+        <div class="fl-card fu" onclick="openDetail('kanola')">
           <div class="fl-banner" style="background:linear-gradient(135deg,#4A5608,#8A9E0F)">
             <div class="fl-banner-left">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 18V9" stroke="white" stroke-width="1.7" stroke-linecap="round"/><circle cx="11" cy="7" r="2.5" fill="white" opacity=".9"/><circle cx="7" cy="9" r="1.8" fill="white" opacity=".6"/><circle cx="15" cy="9" r="1.8" fill="white" opacity=".6"/><circle cx="8.5" cy="12" r="1.4" fill="white" opacity=".4"/><circle cx="13.5" cy="12" r="1.4" fill="white" opacity=".4"/></svg>
               <div class="fl-banner-name">Batı Tarla</div>
             </div>
-            <div class="fl-banner-badge" id="fl-badge-kanola">Çiçeklenme</div>
+            <div class="fl-banner-badge">Çiçeklenme</div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#6B7A0A">Kanola · ES Imperio</div><div class="fl-area">25 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val" id="fl-ekim-kanola">10 Eki '24</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">10 Eki '24</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺8.600</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺344</div></div>
             </div>
-            <div class="fl-prog-row"><div class="prog"><div class="pf" id="fl-pf-kanola" style="width:75%;background:#8A9E0F"></div></div><div class="pct" id="fl-pct-kanola" style="color:#6B7A0A">%75</div></div>
-            <div class="fl-stage-row" id="fl-stage-kanola"></div>
+            <div class="fl-prog-row"><div class="prog"><div class="pf" style="width:75%;background:#8A9E0F"></div></div><div class="pct" style="color:#6B7A0A">%75</div></div>
           </div>
         </div>
 
         <!-- Ayçiçeği -->
-        <div class="fl-card fu" data-key="guney" onclick="flCardClick(event,'guney')">
-          <div class="fl-pin-label">📌 Sabitli</div>
-          <div class="fl-pin-btn" onclick="togglePin(event,'guney')">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 1l8 8-2.5 1L9 13l-2-2-4 3 2.5-4.5L3.5 8 5 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="fl-drag-handle">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="5" r="1.2" fill="currentColor"/><circle cx="6" cy="9" r="1.2" fill="currentColor"/><circle cx="6" cy="13" r="1.2" fill="currentColor"/><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="9" r="1.2" fill="currentColor"/><circle cx="12" cy="13" r="1.2" fill="currentColor"/></svg>
-          </div>
+        <div class="fl-card fu" onclick="openDetail('guney')">
           <div class="fl-banner" style="background:linear-gradient(135deg,#6B2F0A,#B45309)">
             <div class="fl-banner-left">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3" fill="white" opacity=".9"/><path d="M11 5V2.5M11 13.5v-2.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M4 8H1.5M20.5 8H18" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M6.1 3.9L4.4 2.2M17.6 13.8l-1.7-1.7" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity=".6"/><path d="M6.1 12.1L4.4 13.8M17.6 2.2l-1.7 1.7" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity=".6"/><path d="M11 11V18" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
               <div class="fl-banner-name">Güney Tarla</div>
             </div>
-            <div class="fl-banner-badge" id="fl-badge-guney">Vejetatif Büyüme</div>
+            <div class="fl-banner-badge">Hasada hazır 🌾</div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#8B4513">Ayçiçeği · Tunca</div><div class="fl-area">60 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val" id="fl-ekim-guney">6 Şub '26</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">20 Nis '25</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺21.400</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺356</div></div>
             </div>
-            <div class="fl-prog-row"><div class="prog"><div class="pf" id="fl-pf-guney" style="width:35%;background:#B45309"></div></div><div class="pct" id="fl-pct-guney" style="color:#8B4513">%35</div></div>
-            <div class="fl-stage-row" id="fl-stage-guney"></div>
+            <div class="fl-prog-row"><div class="prog"><div class="pf" style="width:92%;background:#B45309"></div></div><div class="pct" style="color:#8B4513">%92</div></div>
+            <div class="fl-stage-row"><div class="fc-badge ready"><div class="pulse" style="background:#B45309"></div><div class="fc-badge-txt">Hasada hazır — harekete geç!</div></div></div>
           </div>
         </div>
 
@@ -2499,7 +2355,7 @@ body {
 
       <!-- HATIRLATİCİ EKLE -->
       <div id="remind-list" style="margin:0 16px 4px;display:flex;flex-direction:column;gap:6px;"></div>
-      <div class="remind-btn" style="margin-top:6px;" id="remind-btn-detail" onclick="openModal()">
+      <div class="remind-btn" style="margin-top:6px;" onclick="openModal()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="var(--text3)" stroke-width="1.3"/><path d="M2 7h12" stroke="var(--text3)" stroke-width="1.3" stroke-linecap="round"/><path d="M5 1v3M11 1v3" stroke="var(--text3)" stroke-width="1.3" stroke-linecap="round"/><path d="M8 10v2M7 11h2" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/></svg>
         <div class="remind-txt">+ Hatırlatıcı ekle</div>
       </div>
@@ -2560,22 +2416,12 @@ body {
           </div>
         </div>
         <div>
-          <div class="modal-lbl">Tarla (isteğe bağlı)</div>
-          <select id="modal-tarla-sel" style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer;transition:border-color .2s;">
-            <option value="">Tüm tarlalar / Genel</option>
-            <option value="kuzey">Kuzey Tarla</option>
-            <option value="dogu">Doğu Parsel</option>
-            <option value="kanola">Batı Tarla</option>
-            <option value="guney">Güney Tarla</option>
-          </select>
-        </div>
-        <div>
           <div class="modal-lbl">Tarih</div>
-          <input type="date" class="modal-input" id="modal-tarih-inp" value="2026-03-23">
+          <input type="date" class="modal-input" value="2026-03-23">
         </div>
         <div>
           <div class="modal-lbl">Not (isteğe bağlı)</div>
-          <input type="text" class="modal-input" id="modal-not-inp" placeholder="Örn: DAP gübre, 20 kg/dönüm">
+          <input type="text" class="modal-input" placeholder="Örn: DAP gübre, 20 kg/dönüm">
         </div>
         <button class="modal-save" onclick="saveHatirlatici()">Kaydet</button>
       </div>
@@ -3687,7 +3533,7 @@ body {
               <div class="urun-lbl">Çavdar</div>
             </div>
 
-            <div class="urun-btn" onclick="selUrun(this,'sogon','#7A6A8A','linear-gradient(135deg,#5A4A6A,#8A7A9A)')">
+            <div class="urun-btn" onclick="selUrun(this,'sogan','#7A6A8A','linear-gradient(135deg,#5A4A6A,#8A7A9A)')">
               <div class="urun-ic">
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><ellipse cx="11" cy="13" rx="5" ry="4" stroke="#7A6A8A" stroke-width="1.4" fill="#7A6A8A" fill-opacity=".15"/><path d="M11 9V4M9 6l2-2.5 2 2.5" stroke="#7A6A8A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
@@ -4320,101 +4166,35 @@ const urunEslestirme = {
   'zeytin':'zeytin', 'findik':'findik', 'yulaf':'yulaf', 'cavdar':'cavdar',
 };
 
-// Aciliyet skoru — fonksiyon kapsamı dışına alındı (urunTavsiyesiGetir içinde de kullanılıyor)
-function aciliyetSkor(kosulAdi, mesaj) {
-  const lower = mesaj.toLowerCase();
-  const kritikKelimeler = ['kritik','tehlike','acil','zorunlu','hemen','ölüm','fitotoksi','steril','dökülme'];
-  const uyariKelimeler  = ['risk','zarar','artır','yüksel','kontrol et','planla','bekletme','önce','öncelik'];
-  if (kritikKelimeler.some(k => lower.includes(k))) return 3;
-  if (uyariKelimeler.some(k => lower.includes(k)))  return 2;
-  const kritikKosullar = ['firtina','don_riski','cok_sicak'];
-  const uyariKosullar  = ['ruzgar_fazla','yagmurlu','yuksek_nem','dusuk_nem','kuraklık'];
-  if (kritikKosullar.includes(kosulAdi)) return 2;
-  if (uyariKosullar.includes(kosulAdi))  return 1;
-  return 1;
-}
-
 function urunTavsiyesiGetir(kosul) {
+  const aktifUrunler = tarlalar
+    ? Object.values(tarlalar).map(t => t.urun?.toLowerCase().trim()).filter(Boolean)
+    : [];
+
   const guzelAdlar = {
     bugday:'Buğday', arpa:'Arpa', misir:'Mısır', celtik:'Çeltik',
-    aycicegi:'Ayçiçeği', aycicek:'Ayçiçeği', kanola:'Kanola',
-    soya:'Soya', pamuk:'Pamuk', seker_pancari:'Ş. Pancarı',
-    tutun:'Tütün', nohut:'Nohut', mercimek:'Mercimek',
-    fasulye:'Fasulye', domates:'Domates', patates:'Patates',
-    sogan:'Soğan', zeytin:'Zeytin', findik:'Fındık',
+    aycicegi:'Ayçiçeği', kanola:'Kanola', soya:'Soya', pamuk:'Pamuk',
+    seker_pancari:'Ş. Pancarı', tutun:'Tütün', nohut:'Nohut',
+    mercimek:'Mercimek', fasulye:'Fasulye', domates:'Domates',
+    patates:'Patates', sogan:'Soğan', zeytin:'Zeytin', findik:'Fındık',
     yulaf:'Yulaf', cavdar:'Çavdar'
   };
 
   const mesajlar = [];
   const islenenUrunler = new Set();
 
-  Object.values(tarlalar).forEach(t => {
-    const urunKey = (t.urun || '').toLowerCase().trim();
-    const key = urunEslestirme[urunKey] || urunKey;
+  aktifUrunler.forEach(urunAdi => {
+    const key = urunEslestirme[urunAdi];
     if (!key || islenenUrunler.has(key)) return;
     islenenUrunler.add(key);
 
-    // Bitkinin mevcut evresini hesapla
-    const stage = t.ekim ? getStage(key, t.ekim) : null;
-    const evreIdx = stage ? stage.idx : 0;
-    const hasataKalanGun = stage ? stage.hasataKalanGun : 999;
+    const veri = urunOzelTavsiye[key];
+    if (!veri || !veri.uyari) return;
 
-    // ── HASAT YAKLAŞIYORSA MANTIKSAL FİLTRE ──
-    // Hasata <10 gün kalmışsa gübre ve ilaç uyarısı anlamsız
-    if (hasataKalanGun <= 10) {
-      mesajlar.push({
-        urun: guzelAdlar[key] || key,
-        mesaj: `Hasata yaklaşık ${hasataKalanGun} gün kaldı. Gübre ve ilaç uygulaması artık etkisiz — hasat hazırlığına odaklan.`,
-        skor: 3,
-        evreAdi: 'Hasat Yakın',
-        hasataKalan: hasataKalanGun
-      });
-      return;
+    const mesaj = veri.uyari[kosul];
+    if (mesaj) {
+      mesajlar.push({ urun: guzelAdlar[key] || key, mesaj });
     }
-
-    // ── EVRE BAZLI KİŞİSELLEŞTİRİLMİŞ UYARI ──
-    const urunEvreler = evreBazliUyari[key];
-    let mesaj = null;
-
-    if (urunEvreler && urunEvreler[evreIdx]) {
-      mesaj = urunEvreler[evreIdx][kosul];
-      if (!mesaj) mesaj = urunEvreler[evreIdx]['optimal'];
-    }
-
-    // Evre bazlı uyarı yoksa genel uyarı havuzuna bak
-    if (!mesaj) {
-      const genelVeri = urunOzelTavsiye[key];
-      if (genelVeri && genelVeri.uyari) {
-        mesaj = genelVeri.uyari[kosul];
-      }
-    }
-
-    if (!mesaj) return;
-
-    // Evre adını al
-    const tvData = takvim[key];
-    const evreAdi = (tvData && tvData.evreler && tvData.evreler[evreIdx])
-      ? tvData.evreler[evreIdx].ad
-      : isimler[evreIdx] || '';
-
-    // Kişiselleştirilmiş ön ek: evre + kalan gün
-    const kalanBilgi = hasataKalanGun < 30 ? ` · Hasata ~${hasataKalanGun} gün` : '';
-    const tamMesaj = `[${evreAdi}${kalanBilgi}] ${mesaj}`;
-
-    const skor = aciliyetSkor(kosul, mesaj);
-    mesajlar.push({
-      urun: guzelAdlar[key] || key,
-      mesaj: tamMesaj,
-      skor,
-      evreAdi,
-      hasataKalan: hasataKalanGun
-    });
-  });
-
-  // Önce aciliyete, sonra hasata kalan güne göre sırala
-  mesajlar.sort((a, b) => {
-    if (b.skor !== a.skor) return b.skor - a.skor;
-    return a.hasataKalan - b.hasataKalan;
   });
 
   return mesajlar;
@@ -4507,20 +4287,11 @@ function renderHavaTavsiye() {
         <div style="width:6px;height:6px;border-radius:50%;background:#2B9E9B;flex-shrink:0;"></div>
         <div style="font-size:12px;font-weight:700;color:var(--text);">Tarlanıza Özel Uyarılar</div>
       </div>
-      ${urunMesajlar.map((m,i) => {
-        // Aciliyete göre renk: 3=kırmızı, 2=sarı, 1=mavi-yeşil
-        const er = m.skor === 3
-          ? { bg:'var(--red-lt)',  renk:'var(--red)',      accent:'var(--red)' }
-          : m.skor === 2
-          ? { bg:'var(--gold-lt)', renk:'#B45309',         accent:'var(--gold)' }
-          : { bg:'var(--sky-lt)',  renk:'var(--green-mid)', accent:'var(--green)' };
-        return `
-        <div style="position:relative;padding:11px 16px 11px 20px;${i<urunMesajlar.length-1?'border-bottom:1px solid var(--border);':''}display:flex;gap:12px;align-items:baseline;">
-          <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${er.accent};border-radius:0${i===0?'':''};opacity:.7;"></div>
-          <div style="min-width:62px;max-width:62px;background:${er.bg};border-radius:var(--r-pill);padding:3px 0;font-size:10px;font-weight:700;color:${er.renk};text-align:center;flex-shrink:0;letter-spacing:.1px;">${m.urun}</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.65;font-family:'Plus Jakarta Sans',sans-serif;">${m.mesaj}</div>
-        </div>`;
-      }).join('')}
+      ${urunMesajlar.map((m,i) => `
+      <div style="padding:10px 16px;${i<urunMesajlar.length-1?'border-bottom:1px solid var(--border);':''}display:flex;gap:10px;align-items:flex-start;">
+        <div style="background:var(--bg2);border-radius:var(--r-pill);padding:2px 8px;font-size:10px;font-weight:700;color:var(--text2);white-space:nowrap;flex-shrink:0;margin-top:1px;">${m.urun}</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;font-family:'Plus Jakarta Sans',sans-serif;">${m.mesaj}</div>
+      </div>`).join('')}
     </div>` : '';
 
   body.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
@@ -4544,13 +4315,10 @@ function selHavaSenaryo(s) {
 }
 
 function openHavaSheet() {
-  // Başka bir overlay açıksa önce onu kapat
-  closeAllOverlays(() => {
-    seciliHavaGunIdx = 0;
-    renderHavaTahmin(); renderHavaTavsiye();
-    const el = document.getElementById('hava-sheet');
-    el.style.display = 'flex'; el.style.animation = 'overlayIn .22s ease both';
-  });
+  seciliHavaGunIdx = 0;
+  renderHavaTahmin(); renderHavaTavsiye();
+  const el = document.getElementById('hava-sheet');
+  el.style.display = 'flex'; el.style.animation = 'overlayIn .22s ease both';
 }
 function closeHavaSheet(e) {
   const el = document.getElementById('hava-sheet');
@@ -4765,11 +4533,6 @@ function navTo(id) {
 
   // kayitlarim ekranına geçince listeyi render et
   if (id === 'kayitlarim') renderKayitlar('tumu');
-  // tarlalarım ekranına geçince kartları güncelle ve sırala
-  if (id === 'fields') {
-    renderTarlaKartlari();
-    siraKartlari();
-  }
   // kasa ekranına geçince mevcut sezon ile render et
   if (id === 'kasa' && typeof kasaSezonVeri !== 'undefined') {
     const aktifYil = (document.querySelector('.kasa-sezon-sec')?.textContent || '2025').replace(' Sezonu ▾','').trim();
@@ -4781,7 +4544,10 @@ function navTo(id) {
   syncBnav(id);
 }
 
+let currentDetailKey = null;
+
 function openDetail(key) {
+  currentDetailKey = key;
   buildDetail(key);
   fromScreen = currentScreen; // gelinen ekranı kaydet
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-left'));
@@ -4824,7 +4590,7 @@ const tarlalar = {
   kuzey: {
     isim:'Kuzey Tarla', alt:'Buğday · Tosunbey · 45 dönüm',
     gradient:'linear-gradient(160deg,#6B4F0A,#C8951A)',
-    urun:'bugday', ekim:'2025-09-29', // Evre 2: Başaklanma & Çiçeklenme (~170 gün)
+    urun:'bugday', ekim:'2024-11-15',
     maliyet:'₺14.200', donum:'₺315',
     costBand:{ type:'up', title:'Dönüm maliyeti geçen yıla göre %12 arttı', sub:'Geçen yıl: ₺280/dönüm · Bu yıl: ₺315/dönüm · En büyük artış: gübre gideri' },
     yillar:[
@@ -4841,7 +4607,7 @@ const tarlalar = {
   dogu: {
     isim:'Doğu Parsel', alt:'Çeltik · Osmancık-97 · 30 dönüm',
     gradient:'linear-gradient(160deg,#1A5C5A,#2B9E9B)',
-    urun:'celtik', ekim:'2026-01-22', // Evre 1: Kardeşlenme (~55 gün)
+    urun:'celtik', ekim:'2025-05-20',
     maliyet:'₺11.400', donum:'₺380',
     costBand: null,
     yillar:[],
@@ -4854,7 +4620,7 @@ const tarlalar = {
   kanola: {
     isim:'Batı Tarla', alt:'Kanola · ES Imperio · 25 dönüm',
     gradient:'linear-gradient(160deg,#4A5608,#8A9E0F)',
-    urun:'kanola', ekim:'2025-10-04', // Evre 2: Çiçeklenme (~165 gün)
+    urun:'kanola', ekim:'2024-10-10',
     maliyet:'₺8.600', donum:'₺344',
     costBand:{ type:'down', title:'Bu sezon dönüm maliyetin geçen yıla göre %6 düştü', sub:'Geçen yıl: ₺366/dönüm · Bu yıl: ₺344/dönüm · İyi yönetim!' },
     yillar:[
@@ -4870,7 +4636,7 @@ const tarlalar = {
   guney: {
     isim:'Güney Tarla', alt:'Ayçiçeği · Tunca · 60 dönüm',
     gradient:'linear-gradient(160deg,#6B2F0A,#B45309)',
-    urun:'aycicek', ekim:'2026-02-06', // Evre 1: Vejetatif Büyüme (~40 gün)
+    urun:'aycicek', ekim:'2025-04-20',
     maliyet:'₺21.400', donum:'₺356',
     costBand:null,
     yillar:[
@@ -4886,645 +4652,24 @@ const tarlalar = {
 };
 
 // Ürün gelişim takvimleri (gün)
-// ══════════════════════════════════════════════════════════════════════════════
-// FENOLOJİ SİSTEMİ — Ekim tarihinden evre tahmini
-// ══════════════════════════════════════════════════════════════════════════════
-//
-// Referanslar:
-//   • Wageningen Univ. & Research — WOFOST crop model (De Wit et al. 2020)
-//     Buğday, Arpa, Şeker Pancarı fenoloji parametreleri
-//   • IRRI (International Rice Research Institute) — Rice Knowledge Bank
-//     Çeltik vegetatif / üreme / olgunlaşma evre süreleri
-//   • UC Davis Dept. of Plant Sciences — Sunflower growth staging
-//     Schneiter & Miller (1981) Crop Science 21:901-903 esas alınmıştır
-//   • Canola Council of Canada / Bayer Crop Science — BBCH scale for canola
-//     Meier, U. (2018) BBCH Monograph; Lancashire et al. (1991)
-//   • Iowa State University Extension — Corn Growth and Development PMR 1009
-//     Abendroth, Elmore et al. (2011)
-//   • Cornell University — Small Grains Management (barley, oat, rye)
-//   • SDSU Extension — Soybean Growth Stages (Fehr & Caviness 1977 sistemi)
-//   • ScienceDirect / APSIM — Chickpea phenology model (Soltani et al. 2006)
-//     base T: 0°C, opt: 21°C, ceiling: 40°C
-//   • Cambridge Core / Experimental Agriculture — Lentil growth stages
-//     Keatinge et al. (1995) Agric & Forest Meteorology 74:251
-//   • Purdue University — Canola/Rapeseed crop profile
-//     Spring B.napus maturity 74-140 gün, B.campestris 66-111 gün
-//   • Montana State University Extension — GDD-based crop staging
-//     Sunflower, canola, wheat verileri (1993-98 field data)
-//
-// Veri yapısı:
-//   takvim[urun] = [
-//     { ad, gunBaslangic, gunBitis, evreIdx },  // 4 evre
-//     ...
-//   ]
-//   Günler ekimden itibaren; Türkiye koşulları için ortalama değerler
-//
-// EVRELERİ (4 evre standardı):
-//   0: Çimlenme & Fide (Germination & Seedling)
-//   1: Vejetatif Büyüme (Vegetative Growth)
-//   2: Üreme / Çiçeklenme (Reproductive / Flowering)
-//   3: Olgunlaşma & Hasat (Ripening & Harvest)
-// ══════════════════════════════════════════════════════════════════════════════
-
 const takvim = {
-  // ── TAHILLAR ──────────────────────────────────────────────────────────────
-  // Kaynak: Wageningen WOFOST; Cornell Small Grains; Zadoks/BBCH scale
-  bugday: {
-    // Kışlık buğday: Türkiye ortalaması Kasım ekimi → Haziran hasadı (~240 gün)
-    // Vejetatif 0-60, sapa kalkma 60-150, başaklanma/çiçeklenme 150-195, olgunluk 195-240
-    evreler: [
-      { ad:'Çimlenme & Fide',         gunBaslangic:0,   gunBitis:60  },
-      { ad:'Sapa Kalkma & Büyüme',    gunBaslangic:60,  gunBitis:150 },
-      { ad:'Başaklanma & Çiçeklenme', gunBaslangic:150, gunBitis:195 },
-      { ad:'Olgunlaşma & Hasat',      gunBaslangic:195, gunBitis:240 }
-    ],
-    toplamGun: 240
-  },
-
-  arpa: {
-    // Kaynak: Cornell University Small Grains; Zadoks scale
-    // Arpa buğdaydan ~15-20 gün erken olgunlaşır (~210 gün)
-    evreler: [
-      { ad:'Çimlenme & Fide',         gunBaslangic:0,   gunBitis:50  },
-      { ad:'Sapa Kalkma & Büyüme',    gunBaslangic:50,  gunBitis:140 },
-      { ad:'Başaklanma & Çiçeklenme', gunBaslangic:140, gunBitis:180 },
-      { ad:'Olgunlaşma & Hasat',      gunBaslangic:180, gunBitis:210 }
-    ],
-    toplamGun: 210
-  },
-
-  yulaf: {
-    // Kaynak: Montana State Univ. Extension; BBCH cereal scale
-    // Yulaf 200-220 gün; serin sever, geç olgunlaşır
-    evreler: [
-      { ad:'Çimlenme & Fide',         gunBaslangic:0,   gunBitis:45  },
-      { ad:'Kardeşlenme & Büyüme',    gunBaslangic:45,  gunBitis:140 },
-      { ad:'Başaklanma & Çiçeklenme', gunBaslangic:140, gunBitis:185 },
-      { ad:'Olgunlaşma & Hasat',      gunBaslangic:185, gunBitis:215 }
-    ],
-    toplamGun: 215
-  },
-
-  cavdar: {
-    // Kaynak: Cornell Univ. — Rye crop management
-    // Çavdar 200-230 gün; çok dayanıklı, erken olgunlaşır
-    evreler: [
-      { ad:'Çimlenme & Fide',         gunBaslangic:0,   gunBitis:50  },
-      { ad:'Kardeşlenme & Büyüme',    gunBaslangic:50,  gunBitis:145 },
-      { ad:'Başaklanma & Çiçeklenme', gunBaslangic:145, gunBitis:190 },
-      { ad:'Olgunlaşma & Hasat',      gunBaslangic:190, gunBitis:220 }
-    ],
-    toplamGun: 220
-  },
-
-  misir: {
-    // Kaynak: Iowa State Univ. Ext. PMR 1009 (Abendroth et al. 2011)
-    // Mısır 120-140 gün; VE → V6 → VT/R1 → R6 hasat
-    evreler: [
-      { ad:'Çimlenme & Fide (VE-V6)',   gunBaslangic:0,   gunBitis:30  },
-      { ad:'Vejetatif Büyüme (V6-VT)', gunBaslangic:30,  gunBitis:75  },
-      { ad:'Tepe Püskülü & Koçan (R1-R3)', gunBaslangic:75,  gunBitis:105 },
-      { ad:'Tane Dolumu & Hasat (R4-R6)', gunBaslangic:105, gunBitis:135 }
-    ],
-    toplamGun: 135
-  },
-
-  // ── SU BİTKİSİ ────────────────────────────────────────────────────────────
-  celtik: {
-    // Kaynak: IRRI Rice Knowledge Bank; LSU AgCenter (Dunand); Springer Nature (2024)
-    // Çeltik 90-150 gün; kısa çeşit ~90, orta ~120, uzun ~150 gün
-    // Türkiye'de Osmancık-97 vb. ortalama ~130 gün
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:30  },
-      { ad:'Kardeşlenme (Vejetatif)',  gunBaslangic:30,  gunBitis:80  },
-      { ad:'Salkım Oluşumu & Başaklanma', gunBaslangic:80,  gunBitis:110 },
-      { ad:'Tane Dolumu & Olgunlaşma', gunBaslangic:110, gunBitis:140 }
-    ],
-    toplamGun: 140
-  },
-
-  // ── YAĞ BİTKİLERİ ────────────────────────────────────────────────────────
-  kanola: {
-    // Kaynak: Canola Council of Canada BBCH; Purdue Univ. crop profile
-    // Bayer Crop Science BBCH guide; Montana State GDD data (Brandt 1993-97)
-    // Kışlık kanola Türkiye: Ekim ekimi → Haziran hasadı ~225-235 gün
-    // Yaprak rozeti 0-60, sap uzaması 60-150, çiçeklenme 150-190, bakla&hasat 190-230
-    evreler: [
-      { ad:'Çimlenme & Fide (BBCH 0-9)',      gunBaslangic:0,   gunBitis:60  },
-      { ad:'Rozet & Sap Uzaması (BBCH 10-49)', gunBaslangic:60,  gunBitis:150 },
-      { ad:'Tomurcuk & Çiçeklenme (BBCH 50-69)', gunBaslangic:150, gunBitis:190 },
-      { ad:'Bakla Dolumu & Olgunlaşma (BBCH 70-89)', gunBaslangic:190, gunBitis:230 }
-    ],
-    toplamGun: 230
-  },
-
-  aycicek: {
-    // Kaynak: Schneiter & Miller (1981) Crop Sci. 21:901-903 (NDSU/Sunflower NSA)
-    // Montana State Univ. GDD data; Nuseed Europe V/R stage system
-    // Ayçiçeği 95-130 gün; VE→R1 (tomurcuk) ~45-50 gün, R5 çiçek ~70 gün, R9 hasat ~110 gün
-    evreler: [
-      { ad:'Çimlenme & Fide (VE-V4)',      gunBaslangic:0,   gunBitis:25  },
-      { ad:'Vejetatif Büyüme (V4-R1)',     gunBaslangic:25,  gunBitis:60  },
-      { ad:'Tomurcuk & Çiçeklenme (R1-R6)', gunBaslangic:60,  gunBitis:90  },
-      { ad:'Tane Dolumu & Hasat (R7-R9)',  gunBaslangic:90,  gunBitis:115 }
-    ],
-    toplamGun: 115
-  },
-
-  soya: {
-    // Kaynak: SDSU Extension (Fehr & Caviness 1977 sistemi)
-    // Univ. of Arkansas SoyStage tool (Salmeron & Purcell 2016)
-    // Soya 100-130 gün; VE → R1 çiçek ~40-50 gün, R5 tane dolumu ~80 gün, R7 olgunluk ~110 gün
-    evreler: [
-      { ad:'Çimlenme & Fide (VE-V3)',   gunBaslangic:0,   gunBitis:25  },
-      { ad:'Vejetatif Büyüme (V3-R1)', gunBaslangic:25,  gunBitis:65  },
-      { ad:'Çiçeklenme & Bakla (R1-R5)', gunBaslangic:65, gunBitis:95  },
-      { ad:'Tane Dolumu & Hasat (R5-R7)', gunBaslangic:95, gunBitis:120 }
-    ],
-    toplamGun: 120
-  },
-
-  pamuk: {
-    // Kaynak: Texas A&M AgriLife; UC Davis Cotton Production Guide
-    // Pamuk 150-180 gün; çimlenme 0-20, vejetatif 20-60, çiçek-koza 60-120, olgunluk 120-165
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:20  },
-      { ad:'Vejetatif Büyüme',         gunBaslangic:20,  gunBitis:60  },
-      { ad:'Çiçeklenme & Koza Oluşumu', gunBaslangic:60,  gunBitis:120 },
-      { ad:'Koza Açımı & Hasat',       gunBaslangic:120, gunBitis:165 }
-    ],
-    toplamGun: 165
-  },
-
-  tutun: {
-    // Kaynak: NC State Univ. Extension; USDA tobacco production
-    // Tütün 90-120 gün; fideden sonra fidelik 0-45, vejetatif 45-80, tepe kırma/olgunluk 80-110
-    evreler: [
-      { ad:'Fide & Şaşırtma',          gunBaslangic:0,   gunBitis:30  },
-      { ad:'Vejetatif Büyüme',         gunBaslangic:30,  gunBitis:70  },
-      { ad:'Çiçeklenme & Tepe Kırma',  gunBaslangic:70,  gunBitis:95  },
-      { ad:'Yaprak Olgunlaşması & Hasat', gunBaslangic:95, gunBitis:120 }
-    ],
-    toplamGun: 120
-  },
-
-  // ── SEBZE & KÖK BİTKİLERİ ────────────────────────────────────────────────
-  seker_pancari: {
-    // Kaynak: Wageningen Univ. sugar beet phenology (WOFOST parametreleri)
-    // Şeker pancarı 160-180 gün; çimlenme 0-20, yaprak 20-80, kök şişmesi 80-140, olgunluk 140-175
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:20  },
-      { ad:'Yaprak Rozeti & Büyüme',   gunBaslangic:20,  gunBitis:80  },
-      { ad:'Kök Şişmesi & Büyümesi',   gunBaslangic:80,  gunBitis:140 },
-      { ad:'Olgunlaşma & Hasat',       gunBaslangic:140, gunBitis:175 }
-    ],
-    toplamGun: 175
-  },
-
-  patates: {
-    // Kaynak: Cornell Univ. Potato Extension; USDA ARS potato phenology
-    // Patates 90-120 gün; çimlenme 0-20, vejetatif 20-55, yumru büyümesi 55-90, olgunluk 90-110
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:20  },
-      { ad:'Vejetatif Büyüme',         gunBaslangic:20,  gunBitis:55  },
-      { ad:'Yumru Oluşumu & Büyüme',   gunBaslangic:55,  gunBitis:90  },
-      { ad:'Olgunlaşma & Hasat',       gunBaslangic:90,  gunBitis:110 }
-    ],
-    toplamGun: 110
-  },
-
-  domates: {
-    // Kaynak: UC Davis Vegetable Research; Wageningen horticultural phenology
-    // Domates (açık tarla) 90-120 gün; fide 0-30, vejetatif 30-60, çiçek/meyve 60-90, olgunluk 90-110
-    evreler: [
-      { ad:'Fide & Tutma',             gunBaslangic:0,   gunBitis:25  },
-      { ad:'Vejetatif Büyüme',         gunBaslangic:25,  gunBitis:55  },
-      { ad:'Çiçeklenme & Meyve Oluşumu', gunBaslangic:55, gunBitis:85  },
-      { ad:'Meyve Olgunlaşması & Hasat', gunBaslangic:85, gunBitis:110 }
-    ],
-    toplamGun: 110
-  },
-
-  sogan: {
-    // Kaynak: UC Davis Onion Production; Cornell Vegetable Program
-    // Soğan 120-150 gün; fide 0-30, büyüme 30-90, soğan şişmesi 90-125, hasat 125-145
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:30  },
-      { ad:'Yaprak Büyümesi',          gunBaslangic:30,  gunBitis:85  },
-      { ad:'Soğan Şişmesi',            gunBaslangic:85,  gunBitis:120 },
-      { ad:'Olgunlaşma & Hasat',       gunBaslangic:120, gunBitis:145 }
-    ],
-    toplamGun: 145
-  },
-
-  // ── BAKLAGİLLER ──────────────────────────────────────────────────────────
-  nohut: {
-    // Kaynak: APSIM/ScienceDirect Soltani et al. (2006) chickpea phenology
-    // Frontiers in Plant Science (2024) GDD model; base T 0°C, opt 21°C
-    // Nohut 90-120 gün; çimlenme 0-25, vejetatif 25-60, çiçek/bakla 60-90, olgunluk 90-110
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:25  },
-      { ad:'Vejetatif Büyüme',         gunBaslangic:25,  gunBitis:60  },
-      { ad:'Çiçeklenme & Bakla Oluşumu', gunBaslangic:60, gunBitis:90  },
-      { ad:'Tane Dolumu & Hasat',      gunBaslangic:90,  gunBitis:115 }
-    ],
-    toplamGun: 115
-  },
-
-  mercimek: {
-    // Kaynak: Cambridge Core / Experimental Agriculture — Lentil stages
-    // Keatinge et al. (1995); Univ. of Saskatchewan lentil guide
-    // Mercimek 80-100 gün; kırmızı mercimek daha kısa, yeşil daha uzun
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:20  },
-      { ad:'Vejetatif Büyüme',         gunBaslangic:20,  gunBitis:50  },
-      { ad:'Çiçeklenme & Bakla',       gunBaslangic:50,  gunBitis:75  },
-      { ad:'Tane Olgunlaşması & Hasat', gunBaslangic:75, gunBitis:100 }
-    ],
-    toplamGun: 100
-  },
-
-  fasulye: {
-    // Kaynak: Iowa State Univ. — Bean growth stages; Cornell Vegetable Program
-    // Fasulye 70-90 gün (kuruluğa bırakılırsa ~100 gün)
-    evreler: [
-      { ad:'Çimlenme & Fide',          gunBaslangic:0,   gunBitis:15  },
-      { ad:'Vejetatif Büyüme (V1-V4)', gunBaslangic:15,  gunBitis:40  },
-      { ad:'Çiçeklenme & Bakla (R1-R5)', gunBaslangic:40, gunBitis:70  },
-      { ad:'Tane Dolumu & Hasat (R6-R8)', gunBaslangic:70, gunBitis:90  }
-    ],
-    toplamGun: 90
-  },
-
-  // ── ÇOKYILLIK / AĞAÇ BİTKİLERİ ──────────────────────────────────────────
-  zeytin: {
-    // Kaynak: UC Davis Olive Research; Univ. of Córdoba (Spain) olive phenology
-    // Zeytin çok yıllık; yıllık döngü bazlı — sürgün 0-60, çiçek 60-120, meyve 120-240, hasat 240-300
-    evreler: [
-      { ad:'Sürgün & Yaprak Gelişimi',  gunBaslangic:0,   gunBitis:60  },
-      { ad:'Tomurcuk & Çiçeklenme',    gunBaslangic:60,  gunBitis:120 },
-      { ad:'Meyve Tutumu & Büyümesi',  gunBaslangic:120, gunBitis:240 },
-      { ad:'Meyve Olgunlaşması & Hasat', gunBaslangic:240, gunBitis:300 }
-    ],
-    toplamGun: 300
-  },
-
-  findik: {
-    // Kaynak: Ordu Univ. (TR) fındık fenolojisi; Univ. of Corvallis (Oregon State) hazelnut
-    // Fındık çok yıllık; tomurcuk 0-60, çiçek 60-90, meyve büyümesi 90-180, hasat 180-220
-    evreler: [
-      { ad:'Tomurcuk Açılımı & Sürgün', gunBaslangic:0,  gunBitis:60  },
-      { ad:'Çiçeklenme & Meyve Tutumu', gunBaslangic:60, gunBitis:90  },
-      { ad:'Meyve Büyümesi',            gunBaslangic:90, gunBitis:180 },
-      { ad:'Olgunlaşma & Hasat',        gunBaslangic:180,gunBitis:220 }
-    ],
-    toplamGun: 220
-  }
+  bugday: [60,180,220,240], celtik:[30,90,130,150],
+  kanola:[60,180,215,230],  aycicek:[20,60,95,110],
+  misir:[20,80,120,140],    arpa:[50,160,195,210]
 };
 
-// Evre bazlı kişiselleştirilmiş uyarılar
-// ══════════════════════════════════════════════════════════════════════════════
-// Her ürün × her evre × her hava koşulu için spesifik mesaj
-// "İlaçlama yap" yerine "Bu evrede ilaçlama etkisizdir — hasat yakın" gibi
-// ══════════════════════════════════════════════════════════════════════════════
-const evreBazliUyari = {
-
-  bugday: {
-    0: { // Çimlenme & Fide (0-60 gün)
-      yagmurlu:      'Çimlenme döneminde toprak yüzey kabuğu oluşabilir. Yağmur sonrası toprağı çapalayarak havalandır. Kök çürüklüğüne karşı iyi drenaj kritik.',
-      don_riski:     'Fide döneminde don riski var — buğday genç sürgünde -3°C altında zarar görür. Toprak nemini kontrol et: kuru toprak donmaya karşı daha savunmasız.',
-      yuksek_nem:    'Yüksek nem + fide dönemi → toprak kökenli Pythium kök çürüklüğü riski. Tohum ilaçlaması yapılmışsa izle; yapılmamışsa erken fungisit değerlendir.',
-      dusuk_nem:     'Çimlenme için toprak nemi kritik. Toprak nemini kontrol et; gerekirse erken sulama planla. Kuru toprak çimlenmeyi geciktirir ve düzensiz fide çıkışına yol açar.',
-      cok_sicak:     'Toprak yüzey sıcaklığı çimlenmeyi olumsuz etkileyebilir. Sabah erken ekim yapılmışsa toprak nemini koru — yüzey kaybı minimize et.',
-      firtina:       'Fırtına döneminde taze filizler yatabilir. Tarlayı hasardan sonra kontrol et; yatık fideler toparlanabilir ama hasarlı olanlar seyreltme gerektirebilir.'
-    },
-    1: { // Sapa Kalkma & Büyüme (60-150 gün)
-      yagmurlu:      'Sapa kalkma döneminde yağmur pas hastalığı sporlarını yayar. Sarı pas (Puccinia striiformis) serin-yağışlı koşulda hızlı ilerler. Yaprak durumunu takip et.',
-      yagmur_once:   'Yağmur öncesi fungisit uygulaması için iyi pencere. Sapa kalkma sonrası sistemik fungisit 4-6 saat öncesinden uygulanırsa en etkilidir.',
-      don_riski:     'Sapa kalkma döneminde don, sapları dondurabilir ve çiçek taslağını tahrip edebilir. Kışlık buğday kısmen dayanıklıdır ama -8°C altı kritik.',
-      yuksek_nem:    'Sapa kalkma + yüksek nem → septorya yaprak yanıklığı ve külleme riski artar. Bayrak yaprak çıkmadan önce koruyucu fungisit planla.',
-      dusuk_nem:     'Sapa kalkma döneminde su stresi kardeşlenmeyi sınırlar ve tane sayısını düşürür. Sulama imkânın varsa bu dönem öncelikli.',
-      ruzgar_fazla:  'Rüzgarlı havada ilaçlama yapma — spray sürüklenmesi hem komşu parsellere zarar verir hem de etki azalır. Rüzgar 15 km/s altına düşünce uygula.',
-      cok_sicak:     'Sapa kalkma döneminde 30°C üzeri sıcaklık protein kalitesini düşürmeye başlar. Bu dönem sulama öncelikli, gübre değil.'
-    },
-    2: { // Başaklanma & Çiçeklenme (150-195 gün)
-      yagmurlu:      'KRITIK: Başaklanmada yağmur Fusarium başak yanıklığı (FHB) sporlarını yayar — verim ve mikotoksin kaybı ciddi olabilir. Yağmurdan 4-6 saat önce fungisit (tebukonazol/protiokonazol) uygula.',
-      yagmur_once:   'Yağmur öncesi fungisit için son pencere. Başaklanma döneminde koruyucu uygulama, yağmur başladıktan sonra yapılandan çok daha etkilidir.',
-      don_riski:     'ÇOK KRİTİK: Çiçeklenme döneminde don, erkek organları (stamen) öldürür ve tane oluşumu tamamen durur. Tarlayı sabah erken kontrol et; buz kristalleri görünüyorsa hasar kesindir.',
-      ruzgar_fazla:  'Çiçeklenme döneminde rüzgar tozlaşmayı olumsuz etkileyebilir. Ayrıca ilaçlama yapma — çiçekler ilaç hasarına karşı hassas.',
-      yuksek_nem:    'Yüksek nem + çiçeklenme = Fusarium riski dorukta. Sabah çiğ kurumadan önce ilaç uygulamaktan kaçın; yaprak ıslakken etkinlik düşer, hastalık artar.',
-      cok_sicak:     '35°C üzeri sıcaklık buğdayda anters (anter) işlevini bozar ve steril tane oranını artırır. Sulama mümkünse hemen başlat — bu evre verimi doğrudan belirler.',
-      dusuk_nem:     'Çiçeklenme + kuru hava → tane sayısı ve ağırlığı ciddi şekilde düşebilir. Mümkünse sulama yap. Bu, buğdayda verimi en çok etkileyen evrenin başlangıcı.'
-    },
-    3: { // Olgunlaşma & Hasat (195-240 gün)
-      yagmurlu:      'Olgunlaşma döneminde yağmur → tanede çimlenme riski ve Fusarium gelişimi. Hasat olgunluğuna gelmiş parseli bekletme — nem %14\'e düşünce hasat et.',
-      yagmur_once:   'Yağmur öncesi hasat için son fırsat. Tane nemi ölç; %14-16 bandındaysa yağmur gelmeden hasat etmeye çalış.',
-      firtina:       'Fırtına olgunlaşmış buğdayı yatırabilir — yatık parsel hasadı daha zor ve kayıplı olur. Acil hasat planla.',
-      cok_sicak:     'Olgunlaşmış buğdayda aşırı sıcak dane kurumasını hızlandırır — tane çatlaması ve hektolitre ağırlığı düşüşü riski. Erken sabah hasatı tercih et.',
-      ruzgar_fazla:  'Olgun başakta kuvvetli rüzgar tane dökülmesine yol açar. Hasat makinesi hızını ayarla ve yavaş sür.',
-      don_riski:     'Olgunlaşma döneminde don beklenmez ancak geç donan parsellerde tane nem oranı yeniden artabilir — hasat öncesi nem ölçümü yap.',
-      optimal:       'Hasat için ideal koşullar. Tane nemini ölç; %14 altında ise hasata başlayabilirsin.'
-    }
-  },
-
-  celtik: {
-    0: { // Çimlenme & Fide (0-30 gün)
-      don_riski:     'ÇOK KRİTİK: Çeltik fide döneminde 10°C altında büyüme durur, 5°C altında ölüm riski. Su seviyesini 10-15 cm\'e yükselt — derin su donmaya karşı en iyi koruma.',
-      dusuk_nem:     'Tarlada su baskısı fide köklenmeye yardımcı olur — su seviyesini 3-5 cm\'de tut. Kuru tutma fide tutunmasını engeller.',
-      cok_sicak:     '35°C üstü, fide döneminde kök gelişimini baskılar. Su sirkülasyonu sağla; durgun sıcak su fitotoksisite yapabilir.',
-      yuksek_nem:    'Fide döneminde yüksek nem + sıcak su, yaprak yanıklığı (blast) sporlarını aktive edebilir. Tarla giriş suyunu kontrol et.'
-    },
-    1: { // Kardeşlenme (30-80 gün)
-      yagmurlu:      'Kardeşlenme döneminde yağmur su seviyesini yükseltir — savakları aç; aşırı su kardeşlenmeyi baskılar. Gübre atma — yağmurla birlikte gübre kanallara taşınır.',
-      yagmur_once:   'Kardeşlenme gübrelemesi planladıysan yağmurdan en az 2 gün önce yap. Yağmur öncesi atılan gübre yüzey akışıyla kaybolur.',
-      sicak:         'Kardeşlenme döneminde 30°C altı optimum. Sıcakta erken öğleden sonra ilaçlamaktan kaçın; etkinlik azalır.',
-      yuksek_nem:    'Kardeşlenme + yüksek nem → kılıç yanıklığı (sheath blight / Rhizoctonia) riski yükselir. Yaprak tabanlarını gözlemle; kahverengi leke görünce müdahale et.',
-      ruzgar_fazla:  'Kardeşlenme döneminde ilaçlama için rüzgar 15 km/s altı olmalı — aksi halde sulama kanallarına sürüklenme riski.',
-      don_riski:     'Kardeşlenme döneminde kısa don dönemi hasara yol açabilir. Su seviyesini 15-20 cm\'e çıkar — derin su ısıyı korur.'
-    },
-    2: { // Salkım Oluşumu & Başaklanma (80-110 gün)
-      don_riski:     'ÇOKKRITIK: Salkım oluşumu döneminde don, üreme organlarını tahrip eder ve tam spikelet sterilitesine yol açar. Su seviyesini hemen 20 cm\'ye çıkar.',
-      yagmurlu:      'Başaklanma döneminde yağmur kılçık yanıklığı (blast) ve neck blast sporlarını yayar. Triclyclazole veya azoksistrobin ile koruyucu uygulama yap.',
-      yuksek_nem:    'Yüksek nem + salkım dönemi → blast epidemisi riski en yüksek noktada. Fungisit uygulaması için bu evre kritik pencere.',
-      ruzgar_fazla:  'Rüzgarlı havada başaklanma döneminde ilaçlama yapma — ürün sürüklenmesi hem etkisiz hem zararlı.',
-      cok_sicak:     '35°C üstü çiçeklenme döneminde steril spikelet oranı artar. Su sirkülasyonu ile tarlayı serin tut — bu süreçte hasat verimi doğrudan belirlenir.'
-    },
-    3: { // Tane Dolumu & Olgunlaşma (110-140 gün)
-      yagmurlu:      'Olgunlaşma döneminde yağmur → tane çatlaması ve kalitenin düşmesi. Tarlayı kuru tut; hasat öncesi birkaç gün savakları kapat.',
-      cok_sicak:     'Aşırı sıcak tane dolumunu hızlandırır ama içi boş (chalky) tane oluşturur. Sabah erken hasat et; nem %22-25 bandında.',
-      firtina:       'Olgunlaşmış çeltik salkımlarında fırtına tane dökülmesine yol açar. Olgunluğa gelen parsellerini acilen hasat et.',
-      optimal:       'Hasat için iyi koşullar. Tane nemini kontrol et; %20-22 bandında hasat ideal — daha kuru bekleme tane çatlaması riskini artırır.',
-      don_riski:     'Son olgunlaşma döneminde don beklentisi varsa hasatı öne al — donmuş nemli tane kalite kaybına uğrar.'
-    }
-  },
-
-  aycicek: {
-    0: { // Çimlenme & Fide (0-25 gün)
-      don_riski:     'Fide döneminde -2°C\'nin altına düşen kısa don toleransı var; ancak uzun süre 0°C altı ölüm riski yaratır. Soğuk bölgede ekim tarihini ertele.',
-      yagmurlu:      'Çimlenme döneminde yağmur toprak kabuğu oluşturabilir. Filizler yüzeye çıkmadan önce yüzeyi çapalayarak sertleşmeyi önle.',
-      dusuk_nem:     'Çimlenme için toprak nemi kritik — kuru toprakta çimlenme gecikir ve düzensiz fide çıkışı olur. Ekim sonrası hafif sulama yararlı.'
-    },
-    1: { // Vejetatif Büyüme (25-60 gün)
-      dusuk_nem:     'Vejetatif dönem ayçiçeği için görece kuraklığa dayanıklıdır. Ancak hızlı büyüme döneminde ciddi su açığı yaprak sayısını düşürür — genel verimini etkiler.',
-      yagmurlu:      'Yağmurlu havada Phoma (kök boğazı çürüklüğü) ve Sclerotinia gelişebilir. Toprak drenajını kontrol et; suyun kökten uzak durmasını sağla.',
-      cok_sicak:     'Vejetatif dönemde 35°C toleranslıdır. Sabah saatlerinde hücre büyümesi gerçekleştiği için geceleri serin hava yararlı.',
-      yuksek_nem:    'Yüksek nem döneminde yaprak ve gövde hastalıkları (alternaria) dikkat ister. Hastalık belirtisi görünürse erken fungisit değerlendir.'
-    },
-    2: { // Tomurcuk & Çiçeklenme (60-90 gün)
-      ruzgar_fazla:  'KRITIK: Çiçeklenme döneminde ilaçlama yapma — arılar ve polinatörler ayçiçeği verimi için zorunlu. Böcek ilacı polinatörleri öldürür. Sabah erken veya akşam geç saat tercih et.',
-      yagmurlu:      'Çiçeklenme döneminde yağmur Sclerotinia (beyaz çürüklük) sporlarını aktive eder — en kritik pencere. Çiçeklenme başında (%10-30 açık) fungisit uygula.',
-      don_riski:     'Çiçeklenme döneminde don anther ve dişicik başını tahrip eder. Bu evre don riski altında ciddi verim kayıplarına yol açar — erken uyarı al.',
-      yuksek_nem:    'Yüksek nem + çiçeklenme = Botrytis (gri çürüklük) ve Sclerotinia riski. Tabla ve yaprak tabanlarını gözlemle; beyaz ipliksi oluşum görünce hemen müdahale.',
-      cok_sicak:     '35°C üstü tablada tozlaşma düşer. Sulamayı artır; yeterli nem tablo gelişimini ve tane dolumunu destekler.',
-      dusuk_nem:     'Çiçeklenme döneminde su stresi tane sayısını ve tabla çapını ciddi şekilde düşürür. Bu evre sulama açısından en kritik dönem.'
-    },
-    3: { // Tane Dolumu & Hasat (90-115 gün)
-      yagmurlu:      'Tane dolumu sonlarında yağmur → tabla arkasında küf ve çürüklük riski. Tabla arkası sarı-kahverengiye dönünce hasatı erteleme.',
-      cok_sicak:     'Tane dolumunda aşırı sıcak yağ içeriğini düşürür. Sabah erken hasat et; yüksek tane nemi iken kalibrasyonu düzgün yap.',
-      firtina:       'Olgunlaşmış ayçiçeği tane dökülmesine karşı hassas. Fırtına öncesi olgunluk kontrolü yap; hasata hazır parseli bekletme.',
-      don_riski:     'Tane dolumu döneminde erken sonbahar donu ayçiçeği kalitesini düşürür. Tane nemini ölç; %10-12\'de ise hasat et.',
-      optimal:       'İyi koşullar — tabla arkası rengi kontrol et. Sarı-kahverengiye dönmüş tablalar hasada hazır.'
-    }
-  },
-
-  kanola: {
-    0: { // Çimlenme & Fide (0-60 gün)
-      don_riski:     'Fide döneminde kışlık kanola -3°C\'ye kadar dayanır. Ancak toprak yüzeyinde buz oluşumu fide gövdesini keser. Erken çimlenmiş parseli kar örtüsüyle koru.',
-      yagmurlu:      'Çimlenme döneminde toprak kabuğu oluşabilir. Filizler yüzeye çıkmadan önce çapala; fide ölümü bu evrede en yüksek.',
-      dusuk_nem:     'Kanola fidesi, kuru toprakta çimlenememez ve düzensiz çıkış yapar. Ekim derinliği nemli toprak katmanına ulaşmalı (2-3 cm).',
-      yuksek_nem:    'Yüksek nem fide döneminde Phytophthora kök çürüklüğü riskini artırır. Fungisit kaplı tohum kullandıysan 2-3 hafta gözlemle.'
-    },
-    1: { // Rozet & Sap Uzaması (60-150 gün)
-      yagmurlu:      'Sap uzaması döneminde yağmur Sclerotinia sclerotiorum askosporlarını tarla yüzeyine yayar. Bu dönemde ilaç atma — gerçek risk çiçeklenme döneminde.',
-      don_riski:     'Sap uzamasına girmiş kışlık kanola -5°C altında zarar görür. Dolu yaprak koşulunda donma hasarı erken yapraksıymaya yol açabilir.',
-      dusuk_nem:     'Rozet döneminde kuru hava kök büyümesini sınırlar. Azot gübrelemesini kuru havada yapma — toprak azotu alımı sınırlanır.',
-      yuksek_nem:    'Yüksek nem rozet döneminde alternaria yaprak lekelerini başlatabilir. İzle; henüz fungisit gereksinimi yok ama çiçeklenmeden önce uygulama planla.',
-      ruzgar_fazla:  'Rüzgarda ilaçlama yapma. Sap uzaması döneminde herbisit zamanlaması önemliyse rüzgar 10 km/s altına düşünce uygula.'
-    },
-    2: { // Tomurcuk & Çiçeklenme (150-190 gün)
-      yagmurlu:      'KRİTİK PENCERE: Çiçeklenme döneminde Sclerotinia sporları tarlayı enfekte eder. %30-50 çiçeklenme aşamasında fungisit (boscalid veya fluopyram) uygula.',
-      yagmur_once:   'Yağmur öncesi Sclerotinia fungisiti için son fırsat. Çiçeklenme pik noktasını kaçırma — bu dönem tarla kaybı veya verimi doğrudan belirler.',
-      don_riski:     'Çiçeklenme döneminde don çiçekleri öldürür ve bakla tutunmasını engeller. Bir gece donma bile %15-20 verim kaybına yol açabilir.',
-      ruzgar_fazla:  'Çiçeklenme döneminde arılar tozlaşma için aktif — ilaçlama kesinlikle yapma. Arılar olmadan bakla tutunması ciddi şekilde düşer.',
-      yuksek_nem:    'Yüksek nem çiçeklenme döneminde Sclerotinia için mükemmel ortam yaratır. Gübreleme yapmış parsellerde enfeksiyon riski daha yüksek.',
-      cok_sicak:     '30°C üzeri çiçeklenme döneminde polenin canlılığını düşürür; bakla tutunması azalır. Sabah erken saatlerde polinasyon bol olduğu için serin gecelere dikkat et.'
-    },
-    3: { // Bakla Dolumu & Olgunlaşma (190-230 gün)
-      yagmurlu:      'Olgunlaşan baklaların patlama riski var — yağmur sonrası ani kuruma bakla kaybını artırır. Hasat zamanlamasını iyi ayarla: %30-40 tohum renk değişiminde hasat et.',
-      firtina:       'Olgun baklaların rüzgar + fırtınada patlaması ciddi kayıp yaratır. Aralıklı hasat güçleşmeden önce desiccant uygula.',
-      cok_sicak:     'Aşırı sıcakta bakla hızla kurur ve patlar. %30-40 tohum kahverengileşmişse hasatı 3-4 günde bir kontrol et.',
-      ruzgar_fazla:  'Rüzgar olgun baklalarda tane dökülmesine yol açar. Hasat makinesi hızını düşür ve tablayı ayarla.',
-      optimal:       'İyi hasat koşulları — baklaları kontrol et. %30-40 sarı-kahverengi bakla oranında hasat zamanı. Erken hasat tane kayıplarını önler.'
-    }
-  },
-
-  misir: {
-    0: { // Çimlenme & Fide (0-30 gün)
-      don_riski:     'KRİTİK: Mısır 0°C altında zarar görür. Ekim beklenen son don tarihinden 2 hafta sonraya planla. Toprak sıcaklığı 10°C\'nin altındayken ekim yapma.',
-      dusuk_nem:     'Çimlenme için toprak nemi kritik. Kuru tohum yatağı çimlenmeyi geciktirir ve düzensiz fide çıkışına yol açar.',
-      yagmurlu:      'Aşırı yağmur anaerob (havasız) toprak koşulu yaratır — mısır kök çürüklüğüne karşı hassas. Drenajı kontrol et.'
-    },
-    1: { // Vejetatif Büyüme (30-75 gün)
-      dusuk_nem:     'V6-V12 arası kritik büyüme evresi. Bu dönemde su stresi koçan tane sayısını kalıcı olarak düşürür. Iowa State Univ. araştırmaları V6\'dan itibaren sulama yapılmasını öneriyor.',
-      yuksek_nem:    'Yüksek nem kuzey yaprak yanıklığı (NCLB) ve gri yaprak lekesi (GLS) başlatabilir. V6 sonrası yaprakları tara; enfeksiyon belirtisini erken gör.',
-      cok_sicak:     '38°C üstü vejetatif dönemde polenin canlılığını düşürmeye başlar. Iowa State PMR 1009\'a göre bu dönemde sulama ile bitki su stresi azaltılabilir.',
-      ruzgar_fazla:  'V6-V8 dönemindeki genç mısır bitkisi kuvvetli rüzgara karşı savunmasız. İlaçlama yapıyorsan rüzgar 10 km/s altında ol.',
-      don_riski:     'Mısır büyüme noktası V6\'ya kadar toprak altındadır — bu evreden önce hafif don tolere edilebilir. V6 sonrası büyüme noktası yüzeye çıkar ve don kritik olur.'
-    },
-    2: { // Tepe Püskülü & Koçan (75-105 gün)
-      dusuk_nem:     'KRİTİK: VT-R2 dönemi mısır için en kritik su stresi penceresi. Bu dönemde her gün su stresi tane sayısını düşürür. Iowa State araştırmaları bu evreden önce sulama yapılmasını zorunlu kılıyor.',
-      cok_sicak:     'ÇOK KRİTİK: 35°C üstü + VT/R1 dönemi → kıska (silk) kurur ve polinasyon düşer. Tepe püskülü ve kıska çakışmadığında steril koçan riski yükselir.',
-      yagmurlu:      'Tepe püskülü döneminde yağmur tozlaşmayı engelleyebilir — fazla nem poleni ıslatır. Kısa süreli yağmur problem değil; uzun yağmur olabilir.',
-      firtina:       'VT dönemindeki mısır yüksek ve kırılgandır. Fırtına bitkiyi yatırabilir (lodging). Yatık mısır tane dolumu devam eder ama hasat güçleşir.'
-    },
-    3: { // Tane Dolumu & Hasat (105-135 gün)
-      yagmurlu:      'Tane dolumu sonunda yağmur koçan küf (Fusarium ear rot, Gibberella) riskini artırır. Koçan kapçıklarını ara sıra aç ve kontrol et.',
-      cok_sicak:     'Tane dolumu döneminde aşırı sıcak nişasta birikimini hızlandırır ama tane ağırlığını düşürebilir. Fizyolojik olgunluk (kara nokta) görününce hasat planla.',
-      firtina:       'Olgun mısır kırılgandır — fırtına koçan kaybına ve gövde kırılmasına yol açar. Hasat geciktirme.',
-      optimal:       'Hasat için iyi koşullar. Siyah nokta (black layer) oluşmuşsa fizyolojik olgunluğa gelmiştir; tane nemi %25-28\'de hasat edilebilir.'
-    }
-  },
-
-  soya: {
-    0: { // Çimlenme & Fide (0-25 gün)
-      don_riski:     'Soya 0°C altında zarar görür. Ekim son don riskinin geçmesinden en az 1-2 hafta sonraya plan. Toprak sıcaklığı 10°C\'nin altındayken çimlenme çok yavaş.',
-      dusuk_nem:     'Çimlenme için toprak nemi kritik — kuru koşulda fide çıkışı düzensiz olur. Ekim sonrası sulama ile toprak nemi destekle.',
-      yagmurlu:      'Aşırı yağmur + Phytophthora soya fide ölümüne yol açar. Drenajlı parsel seç; ilaçlı tohum kullan.'
-    },
-    1: { // Vejetatif Büyüme (25-65 gün)
-      yuksek_nem:    'V3-R1 döneminde yüksek nem Phytophthora gövde ve kök çürüklüğünü artırır. Beyaz küf (Sclerotinia) için zemin hazırlanıyor — çiçeklenmede fonksisite dikkat.',
-      dusuk_nem:     'Vejetatif dönem görece kurak toleranslı; ancak çiçeklenmeden 2 hafta önce yeterli nem kritik. Bu dönem sulama planını yap.',
-      cok_sicak:     '35°C üstü soya yaprağı dayanıklıdır; ama çiçeklenmeye girdiğinde sıcaklık önemi artar. Şimdi hazırlık döneminde su stresini önle.'
-    },
-    2: { // Çiçeklenme & Bakla (65-95 gün)
-      don_riski:     'Çiçeklenme döneminde don bakla tutunmasını durdurur. Soya bu evrede don için en hassas — erken veya geç frost risk analizini yap.',
-      dusuk_nem:     'KRİTİK: R1-R5 arası su stresi soya verimini en fazla etkileyen pencere. SDSU Extension araştırmaları bu dönemde %50 defoliasyonun verimi %6 düşürdüğünü gösteriyor. Sulama öncelikli.',
-      yuksek_nem:    'Yüksek nem çiçeklenme döneminde beyaz küf (Sclerotinia) için ideal ortam. Thiophanate-methyl veya boscalid uygulaması değerlendir.',
-      cok_sicak:     'Çiçeklenme döneminde 38°C üstü anther işlevini bozar. SDSU araştırmaları bu sıcaklık aralığında tane sayısının belirgin düştüğünü gösteriyor. Sulama kritik.',
-      ruzgar_fazla:  'Çiçeklenme döneminde herbisit veya fungisit uygulaması yapıyorsan rüzgar 10 km/s altında olmalı — hata marjı çok dar.'
-    },
-    3: { // Tane Dolumu & Hasat (95-120 gün)
-      yagmurlu:      'Tane dolumu sonunda yağmur pod shattering (bakla patlaması) ve mantar hastalığı riskini artırır. R7-R8 arasında hasatı erteleme.',
-      cok_sicak:     'Tane dolumunda aşırı sıcak yeşil tane oluşumunu artırır — hasat kalitesini düşürür. Sabah erken hasat et.',
-      firtina:       'Olgunlaşmış soya baklası fırtınada patlayabilir. Hasat geciktirme — her gün bekleme %1-2 kayıp anlamına gelir.',
-      optimal:       'İdeal hasat koşulları. Yapraklar sararmış, baklaların %95\'i kahverengi ise R8 olgunluğuna gelmiştir; hasat başlayabilirsin.'
-    }
-  },
-
-  nohut: {
-    0: { // Çimlenme & Fide (0-25 gün)
-      don_riski:     'Nohut fide döneminde -5°C\'ye kadar kısmen dayanır. Ancak donun büyüme noktasına ulaşması ölümcüldür. Ekim zamanlamasını son don beklentisine göre ayarla.',
-      dusuk_nem:     'Nohut kuru toprak çimlenme sorununa karşı hassas. Derinliğe yerleştirilmiş tohum nemi daha iyi bulur — ekim derinliği 5-8 cm olmalı.',
-      yagmurlu:      'Fazla yağmur nohut fidelerinde Pythium ve Phytophthora kök çürüklüğüne yol açar. Drenajlı tarla seç.'
-    },
-    1: { // Vejetatif Büyüme (25-60 gün)
-      dusuk_nem:     'Nohut bu dönemde görece kurak toleranslı. Soltani et al. (2006) araştırmalarına göre hafif su stresi vejetatif dönemde çiçeklenmeyi öne alabilir — olumsuz değil.',
-      yuksek_nem:    'Vejetatif dönemde yüksek nem Ascochyta blight riskini artırır. Yaprakları kontrol et; kestane rengi lekeler Ascochyta belirtisidir.',
-      don_riski:     'Kışlık nohut vejetatif dönemde dayanıklıdır. Ama ilkbahar donları çiçeklenme öncesinde kritik — fenoloji takibini sürdür.'
-    },
-    2: { // Çiçeklenme & Bakla (60-90 gün)
-      don_riski:     'KRİTİK: Soltani et al. (2006) araştırmaları çiçeklenme döneminde 0°C\'nin altında bakla tutunmasının tamamen durduğunu gösteriyor. Bu evre en hassas pencere.',
-      yuksek_nem:    'Yüksek nem çiçeklenme döneminde Botrytis gri çürüklük riskini artırır. Çiçek ve bakla başlangıcını kontrol et — fungisit zamanlaması kritik.',
-      cok_sicak:     '35°C üstü nohut çiçek döküyor ve bakla tutunması azalıyor. ICRISAT araştırmaları bu sıcaklık aralığının ciddi verim kaybı yarattığını gösteriyor.',
-      dusuk_nem:     'Çiçeklenme döneminde su stresi bakla tutunmasını düşürür. Nohut görece kuraklığa dayanıklı olsa da çiçeklenme döneminde hafif sulama yararlı.'
-    },
-    3: { // Tane Dolumu & Hasat (90-115 gün)
-      yagmurlu:      'Olgunlaşan nohut baklaları yağmur altında çatlar. %90+ olgunluğa gelmiş parseli hasat et — yağmur bekleme.',
-      cok_sicak:     'Nohut bakla olgunlaşması döneminde aşırı sıcakta çatlar. Hasat sabah erken saatlerde yapılırsa kayıp azalır.',
-      firtina:       'Olgun nohut bitkisi lodging riskiyle yıkılabilir. Hasat makinesi yüksekliğini ayarla.',
-      optimal:       'İdeal hasat koşulları. Yapraklar sarımtırak, baklaların %80+ kahverengi ise hasat başlayabilirsin.'
-    }
-  },
-
-  mercimek: {
-    0: { // Çimlenme & Fide (0-20 gün)
-      don_riski:     'Mercimek fide döneminde -3°C\'ye kadar dayanabilir. Keatinge et al. (1995) araştırmaları kışlık mercimeğin gece donlarına adaptasyonunu belgelemiştir. Toprak örtüsü koruyucu.',
-      dusuk_nem:     'Çimlenme için toprak nemi kritik. Sığ ekim (3-4 cm) nem bulmakta zorlanabilir; nemli katmana ulaşacak derinliği tercih et.',
-      yagmurlu:      'Fazla su mercimek fidelerinde kök boğması yaratır. Drenaj kontrolü şart.'
-    },
-    1: { // Vejetatif Büyüme (20-50 gün)
-      yuksek_nem:    'Mercimek vejetatif dönemde Ascochyta mercimeği takip et — kahverengi leke yaprakta belirginleşir. Keatinge araştırmaları bu evrede fungisit uygulamasının etkili olduğunu gösteriyor.',
-      don_riski:     'İlkbahar donları vejetatif mercimeği tehdit eder. Hasarlı yaprakları ertesi gün kontrol et; meristem sağlamsa bitki toparlanır.',
-      dusuk_nem:     'Vejetatif dönemde görece kurak toleranslı — kuru koşullarda derin kök sistemi suya ulaşır.'
-    },
-    2: { // Çiçeklenme & Bakla (50-75 gün)
-      don_riski:     'Çiçeklenme döneminde don bakla tutunmasını durdurur. Mercimek bu evrede aşırı hassas — Cambridge Core araştırmalarına göre kritik dönem.',
-      cok_sicak:     '30°C üstü çiçek dökümü başlar. Mercimek serin mevsim bitkisi olduğundan sıcaklık artışı çiçeklenme penceresini kısaltır.',
-      yuksek_nem:    'Çiçeklenme döneminde yüksek nem Botrytis ve Sclerotinia riskini artırır. Çiçek ve baklaları gözlemle.',
-      dusuk_nem:     'Çiçeklenme döneminde su stresi bakla tutunmasını düşürür. Mümkünse hafif sulama yap.'
-    },
-    3: { // Tane Olgunlaşması & Hasat (75-100 gün)
-      yagmurlu:      'Olgun mercimek yağmurda bakla patlayabilir. Sararmış, kurumuş bitkiyi bekletme — hasat et.',
-      cok_sicak:     'Mercimek hızlı kurur — sabah erken hasat yaparak patlama kayıplarını azalt.',
-      firtina:       'Olgun mercimek bitkisi çok hafif; fırtına tüm tarlayı yere yatırabilir. Acil hasat değerlendir.',
-      optimal:       'İdeal hasat zamanı. Bitkinin %90\'ı sarımtırak-kahverengi ise hasat başlayabilirsin.'
-    }
-  },
-
-  // Kısa uyarı setleri — ek ürünler için temel evreleri kapsıyor
-  arpa: {
-    0: { don_riski:'Fide döneminde arpa -4°C\'ye kadar dayanır; uzun süre 0°C altı kritik.', dusuk_nem:'Çimlenme için toprak nemi koru; kuru toprak düzensiz çıkışa yol açar.', yagmurlu:'Toprak kabuğu oluşabilir — fide çıkışı sonrası çapala.' },
-    1: { yagmurlu:'Sapa kalkma döneminde Rhynchosporium yaprak lekesi hızla yayılır. Nem düşünce fungisit uygula.', sicak:'Arpa sıcağa buğdaydan daha hassas — 28°C üstü protein içeriğini düşürür.', yuksek_nem:'Powdery mildew (külleme) serin-nemli koşulda hızlanır. %85 nem üstünde profilaktik fungisit planla.' },
-    2: { don_riski:'KRİTİK: Çiçeklenme döneminde don stamen öldürür — steril tane riski yüksek.', yagmurlu:'Fusarium başak yanıklığı riski — yağmur öncesi fungisit uygula.', ruzgar_fazla:'Çiçeklenme döneminde ilaçlama yapma.' },
-    3: { yagmurlu:'Olgunlaşmış arpa yağmurda çimlenebilir. Hasat olgunluğunda bekletme.', optimal:'Tane %14 nem altında — hasat zamanı.' }
-  },
-
-  yulaf: {
-    0: { don_riski:'Yulaf fide döneminde -4°C\'ye kadar dayanır.', dusuk_nem:'Çimlenme için yeterli toprak nemi koru.' },
-    1: { yuksek_nem:'Sapa kalkma döneminde külleme ve pas hastalığı izle.', ruzgar_fazla:'İlaçlama için rüzgarın 10-15 km/s altında olmasını bekle.' },
-    2: { don_riski:'Çiçeklenme döneminde don tane oluşumunu durdurabilir.', yagmurlu:'Fusarium riski — fungisit planla.' },
-    3: { yagmurlu:'Olgun yulaf yağmurda çimlenme riskiyle karşılaşabilir. Hasatı geciktirme.', optimal:'Tane rengi altın sarısına dönmüşse hasat zamanı.' }
-  },
-
-  cavdar: {
-    0: { don_riski:'Çavdar tahılların en soğuğa dayanıklısı — -25°C\'ye kadar kök bölgesinde hayatta kalır.', dusuk_nem:'Çimlenme için toprak nemi koru.' },
-    1: { yagmurlu:'Ergot (mahmuzlanma / Claviceps purpurea) yağışlı koşulda hızla yayılır — çiçeklenmeye yakın izle.', yuksek_nem:'Külleme ve yaprak pası izle.' },
-    2: { don_riski:'Çavdar çiçeklenme döneminde bile kısmen dayanıklı; ancak uzun süre 0°C altı zarar verir.', yagmurlu:'Ergot riski zirve — mor renkli fungal yapıları başakta gözlemle.' },
-    3: { yagmurlu:'Olgun çavdar yağmurda çimlenme riski taşır. Hasatı geciktirme.', optimal:'Başak kahverengileşmişse hasat zamanı gelmiştir.' }
-  },
-
-  pamuk: {
-    0: { don_riski:'Pamuk 10°C altında çimlenemez. Toprak sıcaklığını ölç; erken ekim dondan zarar görür.', dusuk_nem:'Çimlenme için yeterli toprak nemi şart.' },
-    1: { dusuk_nem:'Vejetatif dönemde görece kuraklığa dayanıklı — kök sistemi derine iner.', yuksek_nem:'Yüksek nem Verticillium solgunluğu riskini artırabilir.' },
-    2: { ruzgar_fazla:'Çiçeklenme döneminde ilaçlama için rüzgar 10 km/s altında olmalı.', cok_sicak:'40°C üstü pamuk çiçek döküyor — sulama artır.', don_riski:'Çiçeklenme döneminde herhangi bir don felaket anlamına gelir.' },
-    3: { yagmurlu:'Koza açımı döneminde yağmur lif kalitesini düşürür. Açılmış kozaları bekletme.', firtina:'Fırtına koza dökülmesine yol açar — hasat hızlandır.', optimal:'Koza açılımı %50+ ise hasat başlayabilirsin.' }
-  },
-
-  seker_pancari: {
-    0: { don_riski:'Fide döneminde don kritik — toprak örtüsü veya örtü malzeme kullan.', dusuk_nem:'Çimlenme dönemi uzun; toprak nemini düzenli koru.' },
-    1: { yuksek_nem:'Cercospora yaprak lekesi şeker pancarının en önemli hastalığı — nem + sıcak ile hızlanır.', ruzgar_fazla:'İlaçlamayı sakin havada yap; yaprak alanı geniş ve sürüklenme riski yüksek.' },
-    2: { yuksek_nem:'Cercospora için fungisit zamanlamasını kaçırma — yaprak lekesi şeker içeriğini düşürür.', cok_sicak:'Aşırı sıcak şeker birikimini yavaşlatır; sulama ile stresi azalt.', dusuk_nem:'Kök büyümesi döneminde su stresi kök çapını ve şeker içeriğini düşürür.' },
-    3: { yagmurlu:'Hasat döneminde çamurlu arazi hasat makinesini zorlar ve kök hasarına yol açar.', don_riski:'Şeker pancarı olgunluktan sonra hafif dona dayanır; ama kökler donmadan hasat et.', optimal:'Yapraklar sararıp dökülmeye başlamışsa hasat zamanı.' }
-  },
-
-  patates: {
-    0: { don_riski:'Patates yumrusu 0°C altında çimlenemez ve donar. Son don riskinden en az 2 hafta sonra ek.', dusuk_nem:'Çimlenme için toprağı nemli tut; kuru toprak çimlenmeyi geciktirir.' },
-    1: { yuksek_nem:'Yüksek nem Phytophthora (mildiyö) için ideal — Wageningen araştırmaları bu hastalığın gelişimi için nem ve sıcaklık eşiğini belirlemiştir.', don_riski:'Vejetatif dönem don riski var; genç sürgünler -1°C\'de zarar görür.' },
-    2: { yuksek_nem:'KRİTİK: Yumru oluşumu döneminde Phytophthora mildiyö hasadı tamamen bitirebilir. Cornell araştırmaları bu evrede fungisit zamanlamasının erken yapılmasını öneriyor.', dusuk_nem:'Yumru büyümesi döneminde su stresi yumru çatlamasına ve şekil bozukluğuna yol açar. Düzenli sulama şart.', cok_sicak:'35°C üstü yumru büyümesi durur. Toprak sıcaklığını 18-22°C\'de tut.' },
-    3: { yagmurlu:'Hasat döneminde yağmur toprak kaynaklı hastalıkları yumruya bulaştırabilir. Kuru havayı bekle.', don_riski:'Yumrular donmadan hasat et — donmuş yumru satılamaz.', optimal:'Yapraklar tamamen solmuş, deri sertleşmişse — hasat zamanı.' }
-  },
-
-  domates: {
-    0: { don_riski:'Domates fide 0°C altında hemen zarar görür. Şaşırtma sonrası tül veya örtü malzemeyle geceleri koru.', dusuk_nem:'Tutma döneminde düzenli sulama kritik — kuru toprak fide ölümüne yol açar.' },
-    1: { yuksek_nem:'Yüksek nem vejetatif dönemde erken yanıklık ve Botrytis başlatabilir. Alt yapraklarda leke varsa budayarak havalandır.', cok_sicak:'35°C üstü vejetatif büyümeyi yavaşlatır; toprak nemini koru.' },
-    2: { yuksek_nem:'Çiçeklenme döneminde yüksek nem çiçek dökümüne ve Botrytis tutunmaya yol açar. Havalandırmayı artır; ıslak çiçeklere ilaç uygulamaktan kaçın.', ruzgar_fazla:'Çiçeklenme döneminde ilaç uygulaması için sakin hava şart.', don_riski:'Çiçeklenme döneminde don meyve tutunmasını tamamen durdurur. Geceleri koru.', dusuk_nem:'Su stresi çiçek dökmesine yol açar. Düzenli ve yeterli sulama yap.' },
-    3: { yagmurlu:'Meyve olgunlaşmasında yağmur → erken yanıklık ve Alternaria artışı. Ayrıca çatlama riski. Düzenli nem dalgalanmasından kaçın.', cok_sicak:'40°C üstü domates meyve renklenmesi bozulur ve lykopen sentezi azalır. Sabah erken hasat.', optimal:'Meyve rengi istenen olgunluğa ulaşmışsa hasat başlayabilirsin.' }
-  },
-
-  sogan: {
-    0: { don_riski:'Soğan fidesi -3°C\'ye kadar dayanır; ancak şaşırtma sonrası kök tutmadan önce don öldürücü.', dusuk_nem:'Çimlenme için toprak nemini koru; soğan tohumu yavaş çimlenir.' },
-    1: { yuksek_nem:'Yüksek nem mildiyü (Peronospora destructor) ve mor leke (Alternaria) için uygun. Yaprak uçlarını takip et.', ruzgar_fazla:'Soğan uzun yapraklarıyla ilaçlamada sürüklenmeye açık — sakin havada uygula.' },
-    2: { dusuk_nem:'Soğan şişmesi döneminde su stresi soğan çapını ciddi düşürür. Düzenli sulama kritik.', yuksek_nem:'Mildiyü hastalığı bu evrede şiddetlenirse verim ve kalite ciddi düşer. Fungisit uygulaması değerlendir.', cok_sicak:'Aşırı sıcak soğan çapını düşürür; toprak nemini koru.' },
-    3: { yagmurlu:'Hasat olgunluğunda yağmur boyun çürüklüğü riskini artırır. Boyun kurumuş parseli yağmura bırakma.', optimal:'Yaprakların %50-75\'i yatmışsa soğanlar olgunlaşmıştır. Kuru havada hasat et.' }
-  },
-
-  tutun: {
-    0: { don_riski:'Şaşırtma sonrası tütün fidesi dona karşı hassas. Geceleri örtü malzemeyle koru.', dusuk_nem:'Tutma döneminde düzenli sulama kritik.' },
-    1: { yuksek_nem:'Yüksek nem mavi küf (Peronospora tabacina) için uygun — tütünün en yıkıcı hastalığı. Yaprakların alt yüzünü kontrol et.', cok_sicak:'Aşırı sıcak yaprak gelişimini olumsuz etkiler; sabah sulamayı tercih et.' },
-    2: { ruzgar_fazla:'Çiçeklenme döneminde tepe kırma yapılacaksa sakin hava tercih et — rüzgar kesimlerde bakteri girişini kolaylaştırır.', yuksek_nem:'Tepe kırma sonrası mavi küf ve Botrytis riski artar. Fungisit uygulaması değerlendir.', cok_sicak:'Aşırı sıcak yaprak rengi ve aromayı olumsuz etkiler.' },
-    3: { yagmurlu:'Yaprak hasat döneminde yağmur → yaprak küflenmesi ve sarartma güçlüğü. Kuru hava için izle.', optimal:'Alt yapraklar sarımsı yeşile dönmüşse hasat başlayabilirsin.' }
-  },
-
-  zeytin: {
-    0: { don_riski:'Zeytin kış uykusundayken -7°C\'ye kadar dayanabilir; ama aktif büyüme döneminde -2°C kritik. Genç sürgünleri don sonrası kontrol et.', yagmurlu:'Baharda yağmur yeni sürgünlere zeytinyağı lekesi (Spilocea oleagina) iletebilir. Bakır bazlı fungisit uygula.' },
-    1: { yuksek_nem:'Tomurcuk döneminde yüksek nem → Anthracnose ve Colletotrichum zeytinde erken enfeksiyona yol açar. Dikkat.', ruzgar_fazla:'Çiçeklenme döneminde ilaç uygulamasından kaçın — arılar ve tozlaşma için kritik.' },
-    2: { don_riski:'Çiçeklenme döneminde don zeytin meyve tutunmasını sıfırlar. Küçük meyveler bile -1°C\'de dökülür.', yuksek_nem:'Meyve tutumu sonrası yüksek nem Colletotrichum enfeksiyonunu artırır. Bakır fungisiti ile koru.', dusuk_nem:'Meyve büyümesi döneminde su stresi meyve iriliğini düşürür. Düzenli damla sulama kritik.', cok_sicak:'Uzun süreli aşırı sıcak meyve dökümünü artırır.' },
-    3: { yagmurlu:'Hasat döneminde yağmur Anthracnose şiddetlenir — zeytinyağı asitliğini artırır. Erken hasat tercih et.', firtina:'Fırtına olgun zeytini döker. Ağaçların altını kontrol et; dökülen zeytini hemen işle.', optimal:'Zeytinler renk değişim döneminde (yeşilden mora) kalite zirvedeyse hasat et.' }
-  },
-
-  findik: {
-    0: { don_riski:'İlkbaharda erkenci şişme ve sürgünler daha hassas. Son don beklentisi varsa bekle.', yagmurlu:'Baharda yağmur Monilinia ve Botrytis sporlarını aktive edebilir.' },
-    1: { yuksek_nem:'Çiçeklenme döneminde yüksek nem yoğun → külleme ve Botrytis riski. Çiçek tozu yayılımı yavaşlar. Bahçeyi havalandır.', ruzgar_fazla:'Fındık rüzgar tozlaşmalıdır — bu dönemde rüzgar olumlu bile sayılabilir; ilaçlama yapma.' },
-    2: { yuksek_nem:'Meyve büyümesi döneminde yüksek nem Monilinia (iç çürüklüğü) riskini artırır. Fungisit uygulaması değerlendir.', dusuk_nem:'Meyve büyümesi için yeterli toprak nemi koru; kuru koşul küçük ve buruşuk fındık oluşturur.', cok_sicak:'Aşırı sıcak ağust›de meyve bağlanmasını olumsuz etkileyebilir.' },
-    3: { yagmurlu:'Hasat dönemi yağmur fındık kurusunun mantar tutmasına yol açar. Havalandırmalı kurutma şart.', optimal:'Zarflar (içlik) kendiğinden açılmaya başlamışsa hasat zamanı — yere düşen fındıkları hemen topla.' }
-  }
-};
-
-// ══════════════════════════════════════════════════════════════════════════════
-// getStage — Geliştirilmiş evre hesaplama
-// ══════════════════════════════════════════════════════════════════════════════
 function getStage(urun, ekimStr) {
   const gun = Math.floor((Date.now() - new Date(ekimStr)) / 86400000);
   const tv = takvim[urun] || takvim.bugday;
-  const toplamGun = tv.toplamGun || 240;
-  const pct = Math.min(100, Math.max(0, Math.round(gun / toplamGun * 100)));
-
-  // Hangi evrededeyiz?
+  const pct = Math.min(100, Math.round(gun / tv[3] * 100));
   let idx = 0;
-  tv.evreler.forEach((evre, i) => {
-    if (gun >= evre.gunBaslangic) idx = i;
-  });
-  if (gun >= toplamGun) idx = 3; // hasat evresinde veya sonrasında
-
-  // Kalan gün
-  const aktifEvre = tv.evreler[idx];
-  const kalanGun = aktifEvre ? Math.max(0, aktifEvre.gunBitis - gun) : 0;
-  const hasataKalanGun = Math.max(0, toplamGun - gun);
-
-  return { idx, pct, gun, kalanGun, hasataKalanGun, evreler: tv.evreler };
+  if (gun >= tv[2]) idx = 3;
+  else if (gun >= tv[1]) idx = 2;
+  else if (gun >= tv[0]) idx = 1;
+  return { idx, pct };
 }
 
-const isimler = ['Çimlenme & Fide', 'Vejetatif Büyüme', 'Üreme / Çiçeklenme', 'Olgunlaşma & Hasat'];
+const isimler = ['Ekim & Çimlenme','Büyüme & Bakım','Olgunlaşma','Hasat'];
 const ikons = {
   ilac:   { bg:'var(--sky-lt)',   ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 11.5c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 8V5.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M5.5 7L8 4.5l2.5 2.5" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
   gubre:  { bg:'var(--gold-lt)', ic:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5.5 13V6.5l2.5-4 2.5 4V13" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 13h9" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/></svg>' },
@@ -5543,11 +4688,7 @@ function buildDetail(key) {
   document.getElementById('d-name').textContent     = t.isim;
   document.getElementById('d-sub').textContent      = t.alt;
   document.getElementById('d-pct').textContent      = '%' + s.pct;
-  const tvData = takvim[t.urun] || takvim.bugday;
-  const evreAdi = (tvData.evreler && tvData.evreler[s.idx])
-    ? tvData.evreler[s.idx].ad
-    : isimler[s.idx] || '—';
-  document.getElementById('d-stage-txt').textContent = evreAdi;
+  document.getElementById('d-stage-txt').textContent= isimler[s.idx];
   document.getElementById('d-ekim').textContent     = fmtDate(t.ekim);
   document.getElementById('d-maliyet').textContent  = t.maliyet;
   document.getElementById('d-donum').textContent    = t.donum;
@@ -5596,10 +4737,6 @@ function buildDetail(key) {
     </div>`;
   }).join('');
 
-  // Hatırlatıcı butonunu bu tarlaya bağla — modal açılınca otomatik seçili gelecek
-  const remindBtn = document.getElementById('remind-btn-detail');
-  if (remindBtn) remindBtn.setAttribute('onclick', `openModal('${key}')`);
-
   // yıl karşılaştırma
   const yr = document.getElementById('d-year-rows');
   if (!t.yillar.length) {
@@ -5626,335 +4763,6 @@ function buildDetail(key) {
         <div class="yt-c dim">—</div>
       </div>`;
   }
-}
-
-// ── TARLALARIM SIRALAMA SİSTEMİ ─────────────────────────────────────────────
-// Aksiyon skoru: hasat yakın > kritik evre > diğer
-// Sürükle-bırak + sabitleme + localStorage kalıcılığı
-// ─────────────────────────────────────────────────────────────────────────────
-
-let _sortMode      = false;
-let _dragSrc       = null;
-let _longPressTimer = null;
-let _pinnedKeys    = JSON.parse(localStorage.getItem('zr_pinned') || '[]');
-let _customOrder   = JSON.parse(localStorage.getItem('zr_order')  || 'null');
-
-// Aksiyon skoru — sıralamada kullanılır
-function aksiyonSkoru(key) {
-  const t = tarlalar[key];
-  if (!t || !t.ekim) return 0;
-  const s = getStage(t.urun, t.ekim);
-  let skor = 0;
-  // Hasat yakınlığı (0-40 puan)
-  if (s.hasataKalanGun <= 7)       skor += 40;
-  else if (s.hasataKalanGun <= 14) skor += 30;
-  else if (s.hasataKalanGun <= 21) skor += 20;
-  else if (s.hasataKalanGun <= 30) skor += 10;
-  // Kritik evre (üreme/olgunlaşma en önemli) (0-20 puan)
-  if (s.idx === 2) skor += 20;      // çiçeklenme/üreme
-  else if (s.idx === 3) skor += 15; // olgunlaşma
-  else if (s.idx === 1) skor += 5;  // vejetatif
-  // Dönüm büyüklüğü tie-breaker (0-5 puan)
-  const donum = parseFloat(t.alan) || 0;
-  skor += Math.min(5, donum / 20);
-  return skor;
-}
-
-// Kartları aksiyon önceliğine göre sırala (sabitli olanlar hep üstte)
-function siraKartlari() {
-  const list = document.getElementById('field-list-el');
-  if (!list) return;
-  const cards = [...list.querySelectorAll('.fl-card[data-key]')];
-  const keys  = cards.map(c => c.dataset.key);
-
-  let siralı;
-  if (_customOrder && _customOrder.length) {
-    // Kullanıcı özel sırası varsa onu kullan, eksik key'leri sonuna ekle
-    siralı = [..._customOrder.filter(k => keys.includes(k)),
-              ...keys.filter(k => !_customOrder.includes(k))];
-  } else {
-    // Aksiyon skoruna göre otomatik sırala
-    siralı = [...keys].sort((a, b) => aksiyonSkoru(b) - aksiyonSkoru(a));
-  }
-
-  // Sabitli kartlar her zaman en üste
-  const pinned    = siralı.filter(k => _pinnedKeys.includes(k));
-  const unpinned  = siralı.filter(k => !_pinnedKeys.includes(k));
-  const finalSira = [...pinned, ...unpinned];
-
-  // DOM'u yeniden sırala
-  finalSira.forEach(key => {
-    const card = list.querySelector(`.fl-card[data-key="${key}"]`);
-    if (card) list.appendChild(card);
-  });
-
-  // Sabitleme görselini güncelle
-  keys.forEach(key => {
-    const card = list.querySelector(`.fl-card[data-key="${key}"]`);
-    if (!card) return;
-    if (_pinnedKeys.includes(key)) {
-      card.classList.add('pinned');
-    } else {
-      card.classList.remove('pinned');
-    }
-  });
-}
-
-// Kart tıklaması — sort modda değilse detay aç
-function flCardClick(e, key) {
-  if (_sortMode) return; // sıralama modunda tıklama geçersiz
-  // Pin butonuna veya drag handle'a tıklanmışsa detayı açma
-  if (e.target.closest('.fl-pin-btn') || e.target.closest('.fl-drag-handle')) return;
-  openDetail(key);
-}
-
-// Sabitleme toggle
-function togglePin(e, key) {
-  e.stopPropagation();
-  const idx = _pinnedKeys.indexOf(key);
-  if (idx === -1) {
-    _pinnedKeys.push(key);
-  } else {
-    _pinnedKeys.splice(idx, 1);
-  }
-  localStorage.setItem('zr_pinned', JSON.stringify(_pinnedKeys));
-  siraKartlari();
-
-  // Haptic-like animasyon
-  const card = document.querySelector(`.fl-card[data-key="${key}"]`);
-  if (card) {
-    card.style.transform = 'scale(1.025)';
-    setTimeout(() => { card.style.transform = ''; }, 200);
-  }
-}
-
-// Sıralama modunu aç — uzun basınca veya handle'dan
-function enterSortMode() {
-  _sortMode = true;
-  const list = document.getElementById('field-list-el');
-  const bar  = document.getElementById('sort-mode-bar');
-  list?.classList.add('sort-mode');
-  bar?.classList.add('active');
-  initDragDrop();
-}
-
-function exitSortMode() {
-  _sortMode = false;
-  const list = document.getElementById('field-list-el');
-  const bar  = document.getElementById('sort-mode-bar');
-  list?.classList.remove('sort-mode');
-  bar?.classList.remove('active');
-  // Mevcut sırayı kaydet
-  const cards = list ? [...list.querySelectorAll('.fl-card[data-key]')] : [];
-  _customOrder = cards.map(c => c.dataset.key);
-  localStorage.setItem('zr_order', JSON.stringify(_customOrder));
-}
-
-// Uzun basma — sıralama modunu aktif et
-function initLongPress() {
-  const list = document.getElementById('field-list-el');
-  if (!list) return;
-  list.addEventListener('touchstart', e => {
-    const card = e.target.closest('.fl-card[data-key]');
-    if (!card || _sortMode) return;
-    _longPressTimer = setTimeout(() => {
-      // Titreşim geri bildirimi (desteklenen cihazlarda)
-      if (navigator.vibrate) navigator.vibrate(40);
-      enterSortMode();
-    }, 550);
-  }, { passive: true });
-  list.addEventListener('touchend', () => clearTimeout(_longPressTimer));
-  list.addEventListener('touchmove', () => clearTimeout(_longPressTimer), { passive: true });
-}
-
-// HTML5 Drag & Drop — mouse için
-function initDragDrop() {
-  const list = document.getElementById('field-list-el');
-  if (!list) return;
-  const cards = list.querySelectorAll('.fl-card[data-key]');
-
-  cards.forEach(card => {
-    card.setAttribute('draggable', 'true');
-
-    card.addEventListener('dragstart', e => {
-      if (!_sortMode) { e.preventDefault(); return; }
-      _dragSrc = card;
-      card.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-
-    card.addEventListener('dragend', () => {
-      card.classList.remove('dragging');
-      list.querySelectorAll('.fl-card').forEach(c => c.classList.remove('drag-over'));
-      _dragSrc = null;
-    });
-
-    card.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (!_dragSrc || card === _dragSrc) return;
-      // Sabitli kartın üzerine bırakılmasını engelle
-      if (card.classList.contains('pinned') && !_dragSrc.classList.contains('pinned')) return;
-      e.dataTransfer.dropEffect = 'move';
-      list.querySelectorAll('.fl-card').forEach(c => c.classList.remove('drag-over'));
-      card.classList.add('drag-over');
-    });
-
-    card.addEventListener('drop', e => {
-      e.preventDefault();
-      if (!_dragSrc || card === _dragSrc) return;
-      if (card.classList.contains('pinned') && !_dragSrc.classList.contains('pinned')) return;
-      // DOM sırasını güncelle
-      const allCards = [...list.querySelectorAll('.fl-card[data-key]')];
-      const srcIdx   = allCards.indexOf(_dragSrc);
-      const tgtIdx   = allCards.indexOf(card);
-      if (srcIdx < tgtIdx) list.insertBefore(_dragSrc, card.nextSibling);
-      else                  list.insertBefore(_dragSrc, card);
-      card.classList.remove('drag-over');
-    });
-  });
-
-  // Touch sürükleme (mobil için)
-  initTouchDrag(list, cards);
-}
-
-// Touch sürükleme — mobil native hissi
-function initTouchDrag(list, cards) {
-  let touchCard = null, ghost = null, startY = 0, lastY = 0;
-
-  cards.forEach(card => {
-    const handle = card.querySelector('.fl-drag-handle');
-    if (!handle) return;
-
-    handle.addEventListener('touchstart', e => {
-      if (!_sortMode) return;
-      touchCard = card;
-      startY = e.touches[0].clientY;
-      lastY  = startY;
-      card.classList.add('dragging');
-
-      // Ghost — görsel klon
-      ghost = card.cloneNode(true);
-      ghost.style.cssText = `position:fixed;left:16px;right:16px;z-index:999;opacity:.88;pointer-events:none;
-        top:${card.getBoundingClientRect().top}px;border-radius:var(--r-lg);
-        box-shadow:0 12px 40px rgba(0,0,0,.22);transform:scale(1.02);`;
-      document.body.appendChild(ghost);
-      e.preventDefault();
-    }, { passive: false });
-
-    handle.addEventListener('touchmove', e => {
-      if (!touchCard || !ghost) return;
-      const dy = e.touches[0].clientY - lastY;
-      lastY = e.touches[0].clientY;
-      const top = parseFloat(ghost.style.top) + dy;
-      ghost.style.top = top + 'px';
-
-      // Hangi kartın üzerindeyiz?
-      list.querySelectorAll('.fl-card').forEach(c => c.classList.remove('drag-over'));
-      const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-      const over = el?.closest('.fl-card[data-key]');
-      if (over && over !== touchCard) {
-        if (!(over.classList.contains('pinned') && !touchCard.classList.contains('pinned'))) {
-          over.classList.add('drag-over');
-        }
-      }
-      e.preventDefault();
-    }, { passive: false });
-
-    handle.addEventListener('touchend', e => {
-      if (!touchCard) return;
-      ghost?.remove(); ghost = null;
-      touchCard.classList.remove('dragging');
-      list.querySelectorAll('.fl-card').forEach(c => c.classList.remove('drag-over'));
-
-      const el = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-      const target = el?.closest('.fl-card[data-key]');
-      if (target && target !== touchCard) {
-        if (!(target.classList.contains('pinned') && !touchCard.classList.contains('pinned'))) {
-          const allCards = [...list.querySelectorAll('.fl-card[data-key]')];
-          const si = allCards.indexOf(touchCard);
-          const ti = allCards.indexOf(target);
-          if (si < ti) list.insertBefore(touchCard, target.nextSibling);
-          else          list.insertBefore(touchCard, target);
-        }
-      }
-      touchCard = null;
-    });
-  });
-}
-// Her tarla için getStage() çağırır, badge, progress bar ve ekim tarihini günceller
-function renderTarlaKartlari() {
-  const urunRenk = {
-    bugday:'#C8951A', celtik:'#2B9E9B', kanola:'#8A9E0F',
-    aycicek:'#B45309', misir:'#E8A020', arpa:'#A87832',
-    soya:'#5A7A2E', pamuk:'#9C6BAE'
-  };
-
-  Object.entries(tarlalar).forEach(([key, t]) => {
-    if (!t.ekim || !t.urun) return;
-
-    const stage      = getStage(t.urun, t.ekim);
-    const tvData     = takvim[t.urun];
-    const evreAdi    = (tvData && tvData.evreler && tvData.evreler[stage.idx])
-                        ? tvData.evreler[stage.idx].ad
-                        : isimler[stage.idx] || '—';
-    const pct        = stage.pct;
-    const kalanGun   = stage.hasataKalanGun;
-    const renk       = urunRenk[t.urun] || '#4F7942';
-    const ekimStr    = fmtDate(t.ekim);
-
-    // Badge — hasat yakınsa özel metin
-    const badgeEl = document.getElementById('fl-badge-' + key);
-    if (badgeEl) {
-      if (kalanGun <= 7)       badgeEl.textContent = 'Hasada hazır 🌾';
-      else if (kalanGun <= 20) badgeEl.textContent = `Hasata ${kalanGun} gün`;
-      else                     badgeEl.textContent = evreAdi;
-    }
-
-    // Progress bar
-    const pfEl = document.getElementById('fl-pf-' + key);
-    if (pfEl) { pfEl.style.width = pct + '%'; pfEl.style.background = renk; }
-
-    const pctEl = document.getElementById('fl-pct-' + key);
-    if (pctEl) pctEl.textContent = '%' + pct;
-
-    // Ekim tarihi
-    const ekimEl = document.getElementById('fl-ekim-' + key);
-    if (ekimEl) ekimEl.textContent = ekimStr;
-
-    // Stage row (fields ekranı) — hasat yakınsa uyarı badge'i
-    const stageEl = document.getElementById('fl-stage-' + key);
-    if (stageEl) {
-      if (kalanGun <= 7) {
-        stageEl.innerHTML = `<div class="fc-badge ready"><div class="pulse" style="background:${renk}"></div><div class="fc-badge-txt">Hasada hazır — harekete geç!</div></div>`;
-      } else if (kalanGun <= 20) {
-        stageEl.innerHTML = `<div class="fc-badge drug"><div class="pulse" style="background:${renk}"></div><div class="fc-badge-txt">Hasata ~${kalanGun} gün kaldı</div></div>`;
-      } else {
-        stageEl.innerHTML = '';
-      }
-    }
-
-    // Ana sayfa hfc kartları da güncelle
-    const homePf = document.getElementById('home-pf-' + key);
-    if (homePf) { homePf.style.width = pct + '%'; homePf.style.background = renk; }
-
-    const homePct = document.getElementById('home-pct-' + key);
-    if (homePct) homePct.textContent = '%' + pct;
-
-    const homeBadge = document.getElementById('home-badge-' + key);
-    if (homeBadge) {
-      if (kalanGun <= 7) {
-        homeBadge.className = 'fc-badge ready';
-        homeBadge.style.marginTop = '4px';
-        homeBadge.innerHTML = `<div class="pulse" style="background:${renk}"></div><div class="fc-badge-txt">Hasada hazır — harekete geç!</div>`;
-      } else if (kalanGun <= 20) {
-        homeBadge.className = 'fc-badge drug';
-        homeBadge.style.marginTop = '4px';
-        homeBadge.innerHTML = `<div class="pulse" style="background:${renk}"></div><div class="fc-badge-txt">Hasata ~${kalanGun} gün kaldı</div>`;
-      } else {
-        homeBadge.innerHTML = '';
-      }
-    }
-  });
 }
 
 function fmtDate(str) {
@@ -6176,17 +4984,9 @@ function selSezon(el, yil) {
 // ═══════════════════════════════
 // KAYITLARIM VERİLERİ
 // ═══════════════════════════════
-
-// İlk iki kayıt her zaman "Bugün" ve "Dün" görünsün
-function _tarihStr(gunOncesi) {
-  const d = new Date();
-  d.setDate(d.getDate() - gunOncesi);
-  return d.toISOString().split('T')[0];
-}
-
 const kayitlar = [
   {
-    id: 1, tip: 'ilac', tarih: _tarihStr(0), saat: '09:15',
+    id: 1, tip: 'ilac', tarih: '2026-03-16', saat: '09:15',
     tarla: 'Kuzey Tarla', urun: 'Buğday',
     urunler: [
       { ad: 'Teldor 50 WG', doz: '0.8 gr/lt', toplam: '160 gr', donum: '3.6 gr/dönüm', maliyet: 2400 },
@@ -6197,7 +4997,7 @@ const kayitlar = [
     not: 'Hava açık ve rüzgarsızdı. Sabah erken uygulandı.'
   },
   {
-    id: 2, tip: 'gubre', tarih: _tarihStr(1), saat: '14:30',
+    id: 2, tip: 'gubre', tarih: '2026-03-14', saat: '14:30',
     tarla: 'Doğu Parsel', urun: 'Çeltik',
     urunler: [
       { ad: 'Üre 46', miktar: '25 kg/dönüm', toplam: '750 kg', maliyet: 3750 },
@@ -6970,9 +5770,13 @@ renderBarChart();
 
 // ── OTOMATİK HESAP ──
 function getSeciliDonum() {
-  // Seçili tarlanın dönüm sayısı
+  // Seçili tarlanın dönüm sayısı — önce demo map, sonra dinamik tarlalar obj
   const map = { kuzey: 45, dogu: 30, kanola: 25, guney: 60 };
-  return map[kayitTarla] || 0;
+  if (map[kayitTarla]) return map[kayitTarla];
+  if (kayitTarla && tarlalar[kayitTarla]) {
+    return parseInt(tarlalar[kayitTarla].alan) || 0;
+  }
+  return 0;
 }
 
 function updateIlacHesap(itemEl) {
@@ -7372,36 +6176,6 @@ function rowInner(lbl, val, isText) {
 }
 
 
-// ── MERKEZİ OVERLAY YÖNETİCİSİ ──
-// Aynı anda yalnızca bir overlay/sheet açık olabilir.
-// displayFlex kullanılan tüm overlay'ler buradan yönetiliyor.
-const OVERLAY_IDS = [
-  'hava-sheet','home-kayit-sheet','kayit-sheet-overlay',
-  'op-sheet','kasa-sheet-overlay','sezon-sheet',
-  'konum-picker-sheet','profil-edit-sheet','profil-gb-sheet',
-  'kys-sheet','kayit-sheet-overlay'
-];
-
-function closeAllOverlays(callback) {
-  let anyOpen = false;
-  OVERLAY_IDS.forEach(id => {
-    const el = document.getElementById(id);
-    if (el && el.style.display === 'flex') {
-      anyOpen = true;
-      el.style.animation = 'overlayOut .18s ease both';
-      setTimeout(() => { el.style.display = 'none'; }, 180);
-    }
-  });
-  // tarla-sheet (class-based)
-  const tarlaSheet = document.getElementById('tarla-sheet');
-  if (tarlaSheet && tarlaSheet.classList.contains('open')) {
-    anyOpen = true;
-    tarlaSheet.classList.add('closing');
-    setTimeout(() => { tarlaSheet.classList.remove('open','closing'); }, 230);
-  }
-  if (callback) setTimeout(callback, anyOpen ? 200 : 0);
-}
-
 // ── KAYIT DETAY SHEET (ana sayfa + kayıtlarım) ──
 let _activeKayitSheet = null;
 
@@ -7519,54 +6293,26 @@ const urunIkonlar = {
   kanola:  { bg: '#F4F7DC', svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 17V8" stroke="#6B7A0A" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="6.5" r="2.2" fill="#6B7A0A" opacity=".85"/><circle cx="6.2" cy="8.5" r="1.6" fill="#6B7A0A" opacity=".55"/><circle cx="13.8" cy="8.5" r="1.6" fill="#6B7A0A" opacity=".55"/></svg>` },
 };
 
-const kasaYilData = {
-  '2023': {
-    kar: '+₺8.200', gelir: '₺35.400', gider: '₺27.200', durum: 'Tamamlandı',
-    urunler: [
-      { ad: 'Buğday',    gelir: '₺14.200', gider: '₺10.200', kar: '+₺4.000', pos: true,  ikon: 'bugday'  },
-      { ad: 'Ayçiçeği', gelir: '₺14.800', gider: '₺9.600',  kar: '+₺5.200', pos: true,  ikon: 'aycicek' },
-      { ad: 'Kanola',   gelir: '₺6.400',  gider: '₺7.400',  kar: '−₺1.000', pos: false, ikon: 'kanola'  },
-    ],
-    giderler: [
-      { ad: 'Gübre',          tutar: '₺9.800', pct: 36, renk: 'var(--gold)' },
-      { ad: 'Tohum',          tutar: '₺6.200', pct: 23, renk: 'var(--green)' },
-      { ad: 'İlaç',           tutar: '₺7.100', pct: 26, renk: 'var(--sky)' },
-      { ad: 'Yakıt & Makine', tutar: '₺4.100', pct: 15, renk: 'var(--text3)' },
-    ]
-  },
-  '2024': {
-    kar: '+₺10.900', gelir: '₺42.100', gider: '₺31.200', durum: 'Tamamlandı',
-    urunler: [
-      { ad: 'Buğday',    gelir: '₺18.400', gider: '₺11.800', kar: '+₺6.600', pos: true,  ikon: 'bugday'  },
-      { ad: 'Ayçiçeği', gelir: '₺15.300', gider: '₺10.400', kar: '+₺4.900', pos: true,  ikon: 'aycicek' },
-      { ad: 'Kanola',   gelir: '₺8.400',  gider: '₺9.000',  kar: '−₺600',  pos: false, ikon: 'kanola'  },
-    ],
-    giderler: [
-      { ad: 'Gübre',          tutar: '₺10.400', pct: 33, renk: 'var(--gold)' },
-      { ad: 'Tohum',          tutar: '₺7.800',  pct: 25, renk: 'var(--green)' },
-      { ad: 'İlaç',           tutar: '₺8.600',  pct: 28, renk: 'var(--sky)' },
-      { ad: 'Yakıt & Makine', tutar: '₺4.400',  pct: 14, renk: 'var(--text3)' },
-    ]
-  },
-  '2025': {
-    kar: '+₺12.470', gelir: '₺48.200', gider: '₺35.730', durum: 'Devam ediyor',
-    urunler: [
-      { ad: 'Buğday',    gelir: '₺32.400', gider: '₺14.200', kar: '+₺18.200', pos: true, ikon: 'bugday'  },
-      { ad: 'Ayçiçeği', gelir: '₺23.800', gider: '₺21.400', kar: '+₺2.400',  pos: true, ikon: 'aycicek' },
-      { ad: 'Kanola',   gelir: '₺14.400', gider: '₺8.600',  kar: '+₺5.800',  pos: true, ikon: 'kanola'  },
-    ],
-    giderler: [
-      { ad: 'Gübre',          tutar: '₺11.434', pct: 32, renk: 'var(--gold)' },
-      { ad: 'İlaç',           tutar: '₺10.004', pct: 28, renk: 'var(--sky)' },
-      { ad: 'Tohum',          tutar: '₺7.861',  pct: 22, renk: 'var(--green)' },
-      { ad: 'Yakıt & Makine', tutar: '₺6.431',  pct: 18, renk: 'var(--text3)' },
-    ]
-  }
-};
-
 function openKasaYilSheet(yil) {
-  const d = kasaYilData[yil];
-  const devam = d.durum === 'Devam ediyor';
+  // Tek kaynak: kasaSezonVeri — kasaYilData kaldırıldı
+  const sv = kasaSezonVeri[yil];
+  if (!sv) return;
+  const devam = yil === '2025';
+  // kasaYilData uyumlu köprü nesnesi
+  const d = {
+    kar:     '+₺' + sv.net,
+    gelir:   sv.gelir,
+    gider:   sv.gider,
+    durum:   devam ? 'Devam ediyor' : 'Tamamlandı',
+    urunler: sv.gelirler.map(g => {
+      // Tarla verilerinden gider bul
+      const tarlaMatch = sv.tarlalar ? sv.tarlalar.find(t => t.key === g.key || t.alt.toLowerCase().includes(g.ad.toLowerCase())) : null;
+      const karStr = tarlaMatch && tarlaMatch.kar ? tarlaMatch.kar : g.tutar;
+      const karPos = tarlaMatch ? tarlaMatch.karPos : true;
+      return { ad: g.ad, gelir: g.tutar, gider: tarlaMatch ? tarlaMatch.detay.split('·').pop().trim() : '—', kar: karStr, pos: karPos, ikon: g.key };
+    }),
+    giderler: sv.giderler
+  };
 
   document.getElementById('kys-ic').style.background = devam ? 'var(--green-lt)' : 'var(--bg2)';
   document.getElementById('kys-title').textContent = yil + ' Sezonu';
@@ -7744,11 +6490,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const v = kasaSezonVeri['2025'];
   if (v) renderKasaEkrani('2025', v);
   renderBugünNeYapmali();
-  setTimeout(() => {
-    renderTarlaKartlari();
-    siraKartlari();
-    initLongPress();
-  }, 50);
 });
 
 function openKasaSezonSec() {
@@ -8233,16 +6974,18 @@ function autoCalc(inputEl, type) {
   const form = inputEl.closest('.form-fields') || inputEl.closest('.sheet-scroll');
 
   if (type === 'gubre_donum' || type === 'ekim_donum') {
-    // Seçilen tarlanın dönümünü oku — hem sabit tarlalar hem yeni eklenenler için
-    let donum = getSeciliDonum();
-    // Yeni eklenen tarlalarda alan string "45 dönüm" formatında saklanıyor
-    if (!donum && kayitTarla && tarlalar[kayitTarla]) {
-      donum = parseFloat(tarlalar[kayitTarla].alan) || 0;
-    }
+    // kg/dönüm × tarla dönümü = toplam — dinamik: seçili tarladan alınır
+    const donum = getSeciliDonum() || (() => {
+      // Tarla henüz seçilmediyse tarlalar objesinden tahmin et
+      if (kayitTarla && tarlalar[kayitTarla]) {
+        const alan = parseInt(tarlalar[kayitTarla].alan) || 0;
+        return alan;
+      }
+      return 0;
+    })();
     const miktar = parseFloat(inputEl.value) || 0;
     if (!donum) {
-      // Tarla seçilmemişse hesap yapma, ipucu ver
-      showCalcResult(inputEl, 'Önce tarla seçin');
+      showCalcResult(inputEl, 'Önce tarla seçiniz');
       return;
     }
     const toplam = miktar * donum;
@@ -8336,11 +7079,7 @@ function buildCal() {
   const today = new Date();
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
-    // selDay artık {day, month, year} objesi — doğru ay/yıl karşılaştırması
-    const isSel = selDay !== null
-      && selDay.day === d
-      && selDay.month === calMonth
-      && selDay.year === calYear;
+    const isSel = selDay && d === selDay.day && calMonth === selDay.month && calYear === selDay.year;
     const cls = isSel ? 'cal-date sel' : isToday ? 'cal-date today' : 'cal-date';
     html += `<div class="${cls}" onclick="pickDay(this,${d})">${d}</div>`;
   }
@@ -8353,9 +7092,16 @@ function buildCal() {
 }
 
 function pickDay(el, d) {
-  document.querySelectorAll('.cal-date').forEach(c => c.classList.remove('sel','today'));
+  const todayD = new Date();
+  document.querySelectorAll('.cal-date').forEach(c => {
+    c.classList.remove('sel');
+    if (!c.classList.contains('other')) {
+      const cDay = parseInt(c.textContent);
+      const isToday = cDay === todayD.getDate() && calMonth === todayD.getMonth() && calYear === todayD.getFullYear();
+      if (isToday) c.classList.add('today'); else c.classList.remove('today');
+    }
+  });
   el.classList.add('sel');
-  // Seçilen günü ay ve yıl bilgisiyle birlikte sakla
   selDay = { day: d, month: calMonth, year: calYear };
 }
 
@@ -8383,9 +7129,8 @@ function saveTarla() {
   const yeniKey = 'tarla_' + Date.now();
   const alan    = document.getElementById('tarla-alan').value;
   const cesit   = document.getElementById('tarla-cesit').value.trim();
-  // selDay.month JS 0-indexed (0=Ocak), tarih stringinde 1-indexed olmalı
   const ekimTarih = selDay.year + '-' +
-    String(selDay.month + 1).padStart(2,'0') + '-' +
+    String(selDay.month).padStart(2,'0') + '-' +
     String(selDay.day).padStart(2,'0');
 
   // Ürün display adını bul
@@ -8422,7 +7167,6 @@ function saveTarla() {
     // Listeyi güncelle
     appendTarlaKarti(yeniKey, tarlalar[yeniKey]);
     renderBugünNeYapmali();
-    renderTarlaKartlari(); // yeni tarla kartlarını güncelle
   }, 1300);
 }
 
@@ -8459,10 +7203,6 @@ function appendTarlaKarti(key, t) {
   };
   const urunAdi = urunAdlar[t.urun] || t.urun;
 
-  // Ekim tarihinden dinamik ilerleme hesabı
-  const stage = t.ekim ? getStage(t.urun, t.ekim) : { pct: 0 };
-  const pct = Math.max(1, stage.pct); // en az %1 göster
-
   const html = `
     <div class="hfc fu" style="--c:${renk}" onclick="openDetail('${key}')">
       <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${renk};border-radius:3px 0 0 3px;"></div>
@@ -8472,7 +7212,7 @@ function appendTarlaKarti(key, t) {
       <div class="hfc-body">
         <div class="hfc-name">${t.ad}</div>
         <div class="hfc-meta">${urunAdi} · ${t.cesit} · ${t.alan}</div>
-        <div class="prog-row"><div class="prog"><div class="pf" style="width:${pct}%;background:${renk}"></div></div><div class="pct" style="color:${renk}">%${pct}</div></div>
+        <div class="prog-row"><div class="prog"><div class="pf" style="width:5%;background:${renk}"></div></div><div class="pct" style="color:${renk}">%5</div></div>
       </div>
       <div class="hfc-right"><div class="hfc-cost-lbl">Maliyet</div><div class="hfc-cost-val">₺0</div></div>
     </div>`;
@@ -8480,6 +7220,39 @@ function appendTarlaKarti(key, t) {
   // Ana sayfaya ekle
   const homeFields = document.querySelector('.home-fields');
   if (homeFields) homeFields.insertAdjacentHTML('beforeend', html);
+
+  // Tarlalarım ekranına da ekle (fl-card formatında)
+  const fieldList = document.querySelector('.field-list');
+  if (fieldList) {
+    const ekimParts = t.ekim ? t.ekim.split('-') : [];
+    const ekimStr = ekimParts.length === 3 ? ekimParts[2] + '.' + ekimParts[1] : '—';
+    const flHtml = `
+      <div class="fl-card fu" onclick="openDetail('${key}')">
+        <div class="fl-banner" style="background:linear-gradient(135deg,${renk}cc,${renk})">
+          <div class="fl-banner-left">
+            <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style="color:white;opacity:.9">${ikon}</svg>
+            <div class="fl-banner-name">${t.ad}</div>
+          </div>
+          <div class="fl-banner-badge">${urunAdi}</div>
+        </div>
+        <div class="fl-body">
+          <div class="fl-row1">
+            <div class="fl-crop" style="color:${renk}">${urunAdi} · ${t.cesit}</div>
+            <div class="fl-area">${t.alan}</div>
+          </div>
+          <div class="fl-stats">
+            <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">${ekimStr}</div></div>
+            <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺0</div></div>
+            <div class="fl-stat"><div class="fl-stat-lbl">Durum</div><div class="fl-stat-val">${t.durum}</div></div>
+          </div>
+          <div class="fl-prog-row">
+            <div class="prog" style="flex:1"><div class="pf" style="width:5%;background:${renk}"></div></div>
+            <div class="pct" style="color:${renk}">%5</div>
+          </div>
+        </div>
+      </div>`;
+    fieldList.insertAdjacentHTML('beforeend', flHtml);
+  }
 }
 
 // tarih
@@ -8489,13 +7262,17 @@ const now = new Date();
 document.getElementById('g-date').textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months2[now.getMonth()] + ' ' + now.getFullYear();
 
 // MODAL
-function openModal(tarlaKey) {
+function openModal() {
   const el = document.getElementById('modal');
   el.classList.remove('closing');
   el.classList.add('open');
-  // Tarla detayından açıldıysa ilgili tarlayı otomatik seç
-  const tarlaSelect = document.getElementById('modal-tarla-sel');
-  if (tarlaSelect) tarlaSelect.value = tarlaKey || '';
+  // Tarla adını modal başlığına yansıt
+  const titleEl = el.querySelector('.modal-title');
+  if (titleEl && currentDetailKey && tarlalar[currentDetailKey]) {
+    titleEl.textContent = 'Hatırlatıcı — ' + tarlalar[currentDetailKey].ad;
+  } else if (titleEl) {
+    titleEl.textContent = 'Hatırlatıcı Ekle';
+  }
 }
 function closeModal(e) {
   if (!e || e.target === document.getElementById('modal') || e.target.classList.contains('modal-save')) {
@@ -8520,31 +7297,21 @@ function renderRemindList() {
     'Sürüm':     { bg:'#F5F3FF', renk:'#7C3AED' },
     'Diğer':     { bg:'var(--bg2)', renk:'var(--text2)' },
   };
-  const tarlaAdlari = {
-    kuzey:'Kuzey Tarla', dogu:'Doğu Parsel',
-    kanola:'Batı Tarla', guney:'Güney Tarla'
-  };
 
-  // Tarihe göre sırala — en yakın önce
-  const sorted = [...hatirlaticiler].sort((a,b) => new Date(a.tarih) - new Date(b.tarih));
-
-  el.innerHTML = sorted.map((r, i) => {
+  el.innerHTML = hatirlaticiler.map((r, i) => {
     const s = tipRenk[r.tip] || tipRenk['Diğer'];
     const d = new Date(r.tarih);
     const months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
     const tarihStr = d.getDate() + ' ' + months[d.getMonth()];
-    const tarlaAdi = r.tarla ? tarlaAdlari[r.tarla] || r.tarla : '';
-    // Orijinal dizideki index'i bul (sort sonrası sırası değişmiş olabilir)
-    const origIdx = hatirlaticiler.indexOf(r);
     return `
       <div style="display:flex;align-items:center;gap:10px;background:${s.bg};border:1px solid ${s.renk}22;border-radius:var(--r);padding:9px 12px;">
         <div style="width:6px;height:6px;border-radius:50%;background:${s.renk};flex-shrink:0;"></div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:700;color:var(--text);">${r.tip}${tarlaAdi ? ' — ' + tarlaAdi : ''}</div>
-          ${r.not ? `<div style="font-size:11px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.not}</div>` : ''}
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;color:var(--text);">${r.tip}${r.tarla ? ' · ' + r.tarla : ''}</div>
+          ${r.not ? `<div style="font-size:11px;color:var(--text2);margin-top:1px;">${r.not}</div>` : ''}
         </div>
-        <div style="font-size:11px;font-weight:600;color:${s.renk};flex-shrink:0;">${tarihStr}</div>
-        <div onclick="silHatirlatici(${origIdx})" style="font-size:14px;color:var(--text3);cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0;">×</div>
+        <div style="font-size:11px;font-weight:600;color:${s.renk};">${tarihStr}</div>
+        <div onclick="silHatirlatici(${i})" style="font-size:14px;color:var(--text3);cursor:pointer;padding:2px 4px;line-height:1;">×</div>
       </div>`;
   }).join('');
 }
@@ -8556,13 +7323,13 @@ function silHatirlatici(i) {
 
 function saveHatirlatici() {
   const tip     = document.querySelector('.modal .chip.sel')?.textContent || 'Diğer';
-  const tarih   = document.getElementById('modal-tarih-inp')?.value || '';
-  const notText = document.getElementById('modal-not-inp')?.value.trim() || '';
-  const tarla   = document.getElementById('modal-tarla-sel')?.value || '';
+  const tarih   = document.querySelector('.modal input[type=date]')?.value || '';
+  const notText = document.querySelector('.modal input[type=text]')?.value.trim() || '';
 
   if (!tarih) { alert('Tarih seçiniz'); return; }
 
-  hatirlaticiler.push({ tip, tarih, not: notText, tarla });
+  const tarlaAdi = (currentDetailKey && tarlalar[currentDetailKey]) ? tarlalar[currentDetailKey].ad : null;
+  hatirlaticiler.push({ tip, tarih, not: notText, tarla: tarlaAdi });
 
   // Tarihe göre sırala
   hatirlaticiler.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
@@ -8570,24 +7337,14 @@ function saveHatirlatici() {
   renderRemindList();
   closeModal();
 
-  // Formu temizle
-  const notInput = document.getElementById('modal-not-inp');
+  // Not inputunu temizle
+  const notInput = document.querySelector('.modal input[type=text]');
   if (notInput) notInput.value = '';
-  const tarlaSelect = document.getElementById('modal-tarla-sel');
-  if (tarlaSelect) tarlaSelect.value = '';
 }
 
 function selChip(el) {
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
-}
-</script>
-<!-- Service Worker kaydı -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
 }
 </script>
 </body>
