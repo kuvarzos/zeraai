@@ -448,11 +448,16 @@ body {
 .modal { background:var(--card); border-radius:24px 24px 0 0; padding:20px 20px 36px; width:100%; animation:sheetUp .32s cubic-bezier(.22,.68,0,1.1) both; }
 .modal-overlay.closing .modal { animation:sheetDown .22s cubic-bezier(.55,.06,.68,.19) both; }
 .modal-handle {
-  width:40px; height:5px;
+  width:48px; height:5px;
   background:var(--border); border-radius:3px;
   margin:12px auto 8px; flex-shrink:0;
-  cursor:grab; touch-action:none;
+  cursor:grab;
   transition:background .15s;
+  position:relative;
+}
+.modal-handle::before {
+  content:''; position:absolute;
+  left:-40px; right:-40px; top:-18px; bottom:-18px;
 }
 .modal-handle:active { background:var(--text3); cursor:grabbing; }
 .modal-title { font-family:'Fraunces',serif; font-size:18px; font-weight:500; color:var(--text); margin-bottom:16px; }
@@ -504,11 +509,17 @@ body {
 @keyframes sheetDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
 
 .sheet-handle {
-  width:40px; height:5px;
+  width:48px; height:5px;
   background:var(--border); border-radius:3px;
   margin:12px auto 0; flex-shrink:0;
-  cursor:grab; touch-action:none;
-  transition:background .15s, transform .15s;
+  cursor:grab;
+  transition:background .15s;
+  position:relative;
+}
+/* Dokunma alanını genişlet — görünmez ama parmak yakalarlar */
+.sheet-handle::before {
+  content:''; position:absolute;
+  left:-40px; right:-40px; top:-18px; bottom:-18px;
 }
 .sheet-handle:active { background:var(--text3); cursor:grabbing; }
 .sheet-header { padding:14px 20px 12px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; border-bottom:1px solid var(--border); }
@@ -1599,11 +1610,16 @@ body {
 }
 
 .op-sheet-handle {
-  width: 40px; height: 5px;
+  width: 48px; height: 5px;
   background: var(--border); border-radius: 3px;
   margin: 12px auto 0; flex-shrink: 0;
-  cursor: grab; touch-action: none;
-  transition: background .15s, transform .15s;
+  cursor: grab;
+  transition: background .15s;
+  position: relative;
+}
+.op-sheet-handle::before {
+  content: ''; position: absolute;
+  left: -40px; right: -40px; top: -18px; bottom: -18px;
 }
 .op-sheet-handle:active { background: var(--text3); cursor: grabbing; }
 .op-sheet-head {
@@ -7385,141 +7401,193 @@ function selChip(el) {
 
 
 
-// ══════════════════════════════════════════════════
-// DRAG-TO-DISMISS v3  — sürükle-kapat
-// Her handle: parentElement = beyaz panel
-//             panel.parentElement = overlay/backdrop
-// ══════════════════════════════════════════════════
+
+
+
+
+// ══════════════════════════════════════════════════════════════
+// DRAG-TO-DISMISS v5 — iOS Safari garantili
+//
+// Araştırma bulguları (iOS 11.3+, Safari 2026):
+//   • global document touchmove passive:true → preventDefault çalışmaz
+//   • Çözüm: touchmove'u element üzerinde non-passive ekle
+//   • touchstart preventDefault → sonraki touchmove'lar gelir
+//   • Handle küçük → touch area CSS ile genişletildi (pseudo-element)
+//   • Parmak handle'dan kayınca event kesilir → touchmove panele de bağlandı
+//
+// Yapı: handle → panel (.sheet/.op-sheet-inner/.modal) → overlay (backdrop)
+// ══════════════════════════════════════════════════════════════
 (function () {
-  'use strict';
 
-  var DIST = 88;   // px — bu kadar aşağı çekince kapat
-  var VEL  = 0.4;  // px/ms — bu hızda kapat
+  var DIST = 80;   // px — kapatma eşiği
+  var VEL  = 0.35; // px/ms — hız eşiği
 
-  // overlay id → close fonksiyon adı haritası
-  var CLOSE_MAP = {
-    'kayit-sheet':          'closeKayit',
-    'tarla-sheet':          'closeSheet',
-    'modal':                'closeModal',
-    'home-kayit-sheet':     'closeKayitSheetBtn',
-    'kayit-sheet-overlay':  'closeKayitSheetBtn',
-    'kasa-sheet-overlay':   'closeKasaSheet',
-    'kasa-yil-sheet':       'closeKasaYilSheetBtn',
-    'kasa-sezon-sheet':     'closeKasaSezonSheet',
-    'sezon-sheet':          'closeSezonSheet',
-    'profil-edit-sheet':    'closeProfilSheetBtn',
-    'profil-gb-sheet':      'closeGbSheetBtn',
-    'op-sheet':             'closeOpSheet',
+  // overlay.id → global close fn adı
+  var CLOSE = {
+    'kayit-sheet':         'closeKayit',
+    'tarla-sheet':         'closeSheet',
+    'modal':               'closeModal',
+    'home-kayit-sheet':    'closeKayitSheetBtn',
+    'kayit-sheet-overlay': 'closeKayitSheetBtn',
+    'kasa-sheet-overlay':  'closeKasaSheet',
+    'kasa-yil-sheet':      'closeKasaYilSheetBtn',
+    'kasa-sezon-sheet':    'closeKasaSezonSheet',
+    'sezon-sheet':         'closeSezonSheet',
+    'profil-edit-sheet':   'closeProfilSheetBtn',
+    'profil-gb-sheet':     'closeGbSheetBtn',
+    'op-sheet':            'closeOpSheet',
   };
 
-  function callClose(overlay) {
+  function doClose(overlay) {
     if (!overlay) return;
-    var fn = CLOSE_MAP[overlay.id];
+    var fn = CLOSE[overlay.id];
     if (fn && typeof window[fn] === 'function') { window[fn](); return; }
     // fallback
     overlay.style.animation = 'overlayOut .2s ease both';
     setTimeout(function () { overlay.style.display = 'none'; }, 200);
   }
 
-  var drag = null;
-
-  function y(e) {
-    return e.changedTouches ? e.changedTouches[0].clientY
-         : e.touches        ? e.touches[0].clientY
-         : e.clientY;
+  function cy(e) {
+    var t = e.touches || e.changedTouches;
+    return t && t.length ? t[0].clientY : e.clientY;
   }
 
-  function start(e) {
-    var handle  = e.currentTarget;
-    var panel   = handle.parentElement;   // beyaz kutu
-    var overlay = panel  && panel.parentElement; // backdrop
+  // Aktif sürükleme durumu
+  var S = null;
 
-    if (!panel || !overlay) return;
+  function isOpen(overlay) {
+    if (!overlay) return false;
+    var d = overlay.style.display;
+    if (d === 'flex' || d === 'block') return true;
+    if (overlay.classList.contains('open')) return true;
+    if (d === 'none' || d === '') return false;
+    return true;
+  }
 
-    // Sheet kapalıysa başlama
-    var disp = overlay.style.display;
-    var hasOpen = overlay.classList.contains('open');
-    // 'none' veya hiç display ayarlanmamış + open sınıfı da yoksa → kapalı
-    if ((disp === 'none') || (disp === '' && !hasOpen)) return;
+  // ─── START: handle touchstart / mousedown ───────────────────
+  function onStart(e) {
+    // handle veya handle'ın pseudo genişlemesi
+    var handle = e.currentTarget;
+    var panel  = handle.parentElement;
+    var overlay = panel && panel.parentElement;
 
-    drag = {
-      panel:   panel,
-      overlay: overlay,
-      y0:      y(e),
-      yLast:   y(e),
-      tLast:   Date.now(),
-      vel:     0,
-      dy:      0,
-    };
+    if (!panel || !overlay || !isOpen(overlay)) return;
 
-    panel.style.transition = 'none';
+    var y0 = cy(e);
+    S = { panel: panel, overlay: overlay, y0: y0, yp: y0, tp: Date.now(), vel: 0, dy: 0 };
+
+    panel.style.transition  = 'none';
+    panel.style.willChange  = 'transform';
     handle.style.background = 'var(--text3)';
+
+    // preventDefault: iOS Safari'de sonraki touchmove'ların gelmesi için zorunlu
     e.preventDefault();
   }
 
-  function move(e) {
-    if (!drag) return;
-    var cy  = y(e);
-    var raw = cy - drag.y0;
-    drag.dy = raw < 0 ? 0 : raw; // sadece aşağı
+  // ─── MOVE: touchmove / mousemove ────────────────────────────
+  function onMove(e) {
+    if (!S) return;
 
-    // 80px'den sonra direnç
-    var vis = drag.dy > 80 ? 80 + (drag.dy - 80) * 0.45 : drag.dy;
-    drag.panel.style.transform = 'translateY(' + vis + 'px)';
+    var y  = cy(e);
+    var dy = y - S.y0;
+    S.dy = dy < 0 ? 0 : dy; // sadece aşağı
 
-    var now = Date.now(), dt = now - drag.tLast;
-    if (dt > 0) drag.vel = (cy - drag.yLast) / dt;
-    drag.yLast = cy; drag.tLast = now;
-    e.preventDefault();
+    // Direnç etkisi 80px'den sonra
+    var vis = S.dy > 80 ? 80 + (S.dy - 80) * 0.42 : S.dy;
+    S.panel.style.transform = 'translateY(' + vis + 'px)';
+
+    var now = Date.now(), dt = now - S.tp;
+    if (dt > 0) S.vel = (y - S.yp) / dt;
+    S.yp = y; S.tp = now;
+
+    e.preventDefault(); // sayfanın kaymasını engelle
   }
 
-  function end(e) {
-    if (!drag) return;
+  // ─── END: touchend / mouseup ────────────────────────────────
+  function onEnd() {
+    if (!S) return;
 
-    // Handle rengini sıfırla
+    // Handle renklerini sıfırla
     document.querySelectorAll('.sheet-handle,.op-sheet-handle,.modal-handle')
       .forEach(function (h) { h.style.background = ''; });
 
-    var panel   = drag.panel;
-    var overlay = drag.overlay;
-    var dy      = drag.dy;
-    var vel     = drag.vel;
-    drag = null;
+    var panel   = S.panel;
+    var overlay = S.overlay;
+    var dy      = S.dy;
+    var vel     = S.vel;
+    S = null;
+
+    panel.style.willChange = '';
 
     if (dy > DIST || vel > VEL) {
-      // Kapat — önce aşağı fırlat, sonra close fonksiyonunu çağır
-      panel.style.transition = 'transform .22s cubic-bezier(.4,0,1,1)';
-      panel.style.transform  = 'translateY(110%)';
+      // Kapatma animasyonu
+      panel.style.transition = 'transform .2s cubic-bezier(.4,0,1,1)';
+      panel.style.transform  = 'translateY(105%)';
       setTimeout(function () {
         panel.style.transition = '';
         panel.style.transform  = '';
-        callClose(overlay);
-      }, 220);
+        doClose(overlay);
+      }, 210);
     } else {
-      // Yerine geri dön
-      panel.style.transition = 'transform .28s cubic-bezier(.34,1.4,.64,1)';
+      // Geri dön (spring)
+      panel.style.transition = 'transform .3s cubic-bezier(.34,1.5,.64,1)';
       panel.style.transform  = 'translateY(0)';
-      setTimeout(function () { panel.style.transition = ''; }, 280);
+      setTimeout(function () { panel.style.transition = ''; }, 300);
     }
   }
 
-  function bind() {
-    document.querySelectorAll('.sheet-handle,.op-sheet-handle,.modal-handle')
-      .forEach(function (h) {
-        if (h._d3) return;
-        h._d3 = true;
-        h.addEventListener('touchstart', start, { passive: false });
-        h.addEventListener('mousedown',  start, { passive: false });
-      });
+  // ─── Her handle'a ve panel'e listener ekle ──────────────────
+  function bind(h) {
+    if (h._v5) return;
+    h._v5 = true;
+
+    var panel = h.parentElement;
+
+    // touchstart — non-passive (preventDefault zorunlu)
+    h.addEventListener('touchstart', onStart, { passive: false });
+    h.addEventListener('mousedown',  onStart);
+
+    // touchmove — HANDLE üzerinde non-passive
+    h.addEventListener('touchmove', onMove, { passive: false });
+    h.addEventListener('mousemove', onMove, { passive: false });
+
+    // touchmove — PANEL üzerinde de non-passive
+    // (parmak handle'dan kayınca event kesilmemesi için)
+    if (panel && !panel._v5move) {
+      panel._v5move = true;
+      panel.addEventListener('touchmove', onMove, { passive: false });
+      panel.addEventListener('mousemove', onMove, { passive: false });
+    }
   }
 
-  document.addEventListener('touchmove',  move, { passive: false });
-  document.addEventListener('mousemove',  move, { passive: false });
-  document.addEventListener('touchend',   end,  { passive: true  });
-  document.addEventListener('mouseup',    end,  { passive: true  });
+  // touchend global — parmak her yerde kaldırılabilir
+  document.addEventListener('touchend', onEnd, { passive: true });
+  document.addEventListener('mouseup',  onEnd, { passive: true });
 
-  bind();
-  new MutationObserver(bind).observe(document.body, { childList: true, subtree: true });
+  // ─── İlk bind ───────────────────────────────────────────────
+  function bindAll() {
+    document.querySelectorAll('.sheet-handle,.op-sheet-handle,.modal-handle')
+      .forEach(bind);
+  }
+
+  bindAll();
+
+  // Sonradan açılan sheet'leri de yakala (MutationObserver)
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      m.addedNodes.forEach(function (node) {
+        if (node.nodeType !== 1) return;
+        if (node.classList && (
+          node.classList.contains('sheet-handle') ||
+          node.classList.contains('op-sheet-handle') ||
+          node.classList.contains('modal-handle')
+        )) bind(node);
+        if (node.querySelectorAll)
+          node.querySelectorAll('.sheet-handle,.op-sheet-handle,.modal-handle').forEach(bind);
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
+
 }());
 
 </script>
