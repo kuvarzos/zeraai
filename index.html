@@ -7539,18 +7539,35 @@ function selChip(el) {
     var overlay = panel.parentElement;
     if (!overlay || !isOpen(overlay)) return;
 
-    // Scroll içindeyse başlama
     var scroller = getScroller(panel);
-    if (scroller) {
-      var t = e.target;
-      if (t && (t === scroller || scroller.contains(t))) return;
-    }
+    var target   = e.target;
+    var touchY   = getY(e);
 
-    S = {
-      panel: panel, overlay: overlay,
-      y0: getY(e), yp: getY(e),
-      tp: Date.now(), vel: 0, dy: 0, live: false,
-    };
+    if (scroller && (target === scroller || scroller.contains(target))) {
+      // ── Apple davranışı: scroll alanı ────────────────────────
+      // Scroll en üstteyken VE parmak aşağı gidiyorsa → sheet drag
+      // Aksi halde → scroll çalışsın, sheet dokunulmasın
+      // Aşağı mı yoksa yukarı mı gittiğini touchmove'da anlayacağız
+      // Şimdilik "bekle" modunda başlat
+      S = {
+        panel: panel, overlay: overlay,
+        y0: touchY, yp: touchY,
+        tp: Date.now(), vel: 0, dy: 0, live: false,
+        fromScroll: true,                    // scroll alanından geldi
+        scrollTop: scroller.scrollTop,       // başlangıçtaki scroll pozisyonu
+      };
+      // passive:true ile başladık — preventDefault çağıramayız henüz
+      // live=true olunca panel'e ayrı touchmove bağlanır
+    } else {
+      // ── Header / boş alan — her zaman drag ───────────────────
+      S = {
+        panel: panel, overlay: overlay,
+        y0: touchY, yp: touchY,
+        tp: Date.now(), vel: 0, dy: 0, live: false,
+        fromScroll: false,
+        scrollTop: 0,
+      };
+    }
   }
 
   function onMove(e) {
@@ -7558,14 +7575,26 @@ function selChip(el) {
     var cy  = getY(e);
     var raw = cy - S.y0;
 
-    // Yukarı hareket (raw < 0): hafif direnç — tam serbest ama biraz zorlanıyor
-    // iOS'ta da sheet başlangıç pozisyonunun üstüne geçince direnç hissedilir
-    var visual;
-    if (raw < 0) {
-      visual = raw * 0.25; // %25 takip — direnç var ama gidiyor
-    } else {
-      visual = raw; // 1:1 takip
+    // ── Scroll alanından geldiyse: Apple davranışı ─────────────
+    if (S.fromScroll) {
+      // Yukarı gidiyorsa → scroll çalışsın, drag iptal
+      if (raw < 0) { S = null; return; }
+      // Scroll en üstte değilse → scroll çalışsın, drag iptal
+      if (S.scrollTop > 2) { S = null; return; }
+      // Scroll en üstte + aşağı çekiliyorsa → drag devral
+      // 8px eşiği geçince drag modu aktif
+      if (raw < 8) return;
+      // Drag moduna geç
+      S.fromScroll = false;
+      S.live = true;
+      S.panel.style.transition  = 'none';
+      S.panel.style.willChange  = 'transform';
+      S.y0 = cy; // sıfırdan başla — sürpriz atlama yok
+      raw  = 0;
     }
+
+    // Yukarı hareket: %25 direnç, drag devam eder
+    var visual = raw < 0 ? raw * 0.25 : raw;
 
     if (!S.live) {
       if (Math.abs(raw) < 5) return;
@@ -7574,12 +7603,10 @@ function selChip(el) {
       S.panel.style.willChange  = 'transform';
     }
 
-    S.dy = raw; // gerçek mesafe (negatif de olabilir — yukarı fırlatma tespiti için)
-
-    // Parmakla birebir (direnç uygulanmış görsel pozisyon)
+    S.dy = raw;
     S.panel.style.transform = 'translateY(' + visual + 'px)';
 
-    // Backdrop ve scale: sadece aşağı harekette değişir
+    // Backdrop ve scale: aşağı harekette orantılı
     var prog = Math.min(Math.max(raw, 0) / 220, 1);
     S.overlay.style.opacity = String(1 - prog * 0.55);
     presentingProgress(prog);
@@ -7588,7 +7615,8 @@ function selChip(el) {
     if (dt > 0) S.vel = (cy - S.yp) / dt;
     S.yp = cy; S.tp = now;
 
-    e.preventDefault();
+    // Drag aktifse sayfanın kaymasını engelle
+    if (S.live) e.preventDefault();
   }
 
   function onEnd() {
@@ -7674,17 +7702,26 @@ function selChip(el) {
   function bindPanel(panel) {
     if (panel._ios) return;
     panel._ios = true;
-    panel.addEventListener('touchstart',   onStart,   { passive: false });
+    panel.addEventListener('touchstart',   onStart,   { passive: true  });
     panel.addEventListener('touchmove',    onMove,    { passive: false });
     panel.addEventListener('touchend',     onEnd,     { passive: true  });
     panel.addEventListener('touchcancel',  onCancel,  { passive: true  });
     panel.addEventListener('mousedown',    onStart);
   }
 
-  // Desktop mouse
+  // Desktop mouse (iMac test)
   document.addEventListener('mousemove', function (e) {
     if (!S) return;
-    var raw = e.clientY - S.y0;
+    if (S.fromScroll) {
+      var raw0 = e.clientY - S.y0;
+      if (raw0 < 8 || S.scrollTop > 2) { if (raw0 < 0) S = null; return; }
+      S.fromScroll = false;
+      S.live = true;
+      S.panel.style.transition = 'none';
+      S.panel.style.willChange = 'transform';
+      S.y0 = e.clientY; return;
+    }
+    var raw    = e.clientY - S.y0;
     var visual = raw < 0 ? raw * 0.25 : raw;
     if (!S.live) {
       if (Math.abs(raw) < 5) return;
