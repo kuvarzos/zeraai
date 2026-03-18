@@ -1622,7 +1622,7 @@ body {
   max-height: 82%;
   display: flex; flex-direction: column;
   animation: sheetUp .32s cubic-bezier(.22,.68,0,1.05) both;
-  overflow: hidden;
+  overflow: clip;   /* border-radius'ü korur, ::after'a izin verir */
   position: relative;
 }
 /* iOS overscroll fill: köşe dışını ve yukarı çekişi kapatır */
