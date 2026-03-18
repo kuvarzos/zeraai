@@ -139,6 +139,15 @@ body {
   background: var(--bg);
   padding-top: 68px;
   will-change: transform, opacity;
+  transform-origin: top center;
+  transition: transform .32s cubic-bezier(.22,.68,0,1.05),
+              border-radius .32s cubic-bezier(.22,.68,0,1.05);
+}
+/* iOS presenting view — sheet açıkken arka ekran küçülür */
+.screen.sheet-presented {
+  transform: scale(0.92) translateY(10px);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 /* ── iOS premium geçiş animasyonları ─────────────────────────
@@ -448,18 +457,18 @@ body {
 .modal { background:var(--card); border-radius:24px 24px 0 0; padding:20px 20px 36px; width:100%; animation:sheetUp .32s cubic-bezier(.22,.68,0,1.1) both; }
 .modal-overlay.closing .modal { animation:sheetDown .22s cubic-bezier(.55,.06,.68,.19) both; }
 .modal-handle {
-  width:48px; height:5px;
-  background:var(--border); border-radius:3px;
-  margin:12px auto 8px; flex-shrink:0;
+  width:36px; height:5px;
+  background:rgba(60,60,67,0.28); border-radius:2.5px;
+  margin:8px auto 6px; flex-shrink:0;
   cursor:grab;
-  transition:background .15s;
+  transition:background .12s;
   position:relative;
 }
 .modal-handle::before {
   content:''; position:absolute;
-  left:-40px; right:-40px; top:-18px; bottom:-18px;
+  left:-60px; right:-60px; top:-20px; bottom:-14px;
 }
-.modal-handle:active { background:var(--text3); cursor:grabbing; }
+.modal-handle:active { background:rgba(60,60,67,0.45); cursor:grabbing; }
 .modal-title { font-family:'Fraunces',serif; font-size:18px; font-weight:500; color:var(--text); margin-bottom:16px; }
 .modal-form { display:flex; flex-direction:column; gap:12px; }
 .modal-lbl { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
@@ -488,7 +497,7 @@ body {
 ═══════════════════════════════ */
 .sheet-overlay {
   position: absolute; inset: 0;
-  background: rgba(58,50,40,.5);
+  background: rgba(0,0,0,0.36);
   z-index: 200; display: none;
   align-items: flex-end;
   backdrop-filter: blur(4px);
@@ -502,26 +511,25 @@ body {
   width: 100%;
   max-height: 88%;
   display: flex; flex-direction: column;
-  animation: sheetUp .34s cubic-bezier(.22,.68,0,1.1) both;
+  animation: sheetUp .34s cubic-bezier(.22,.68,0,1.05) both;
 }
 .sheet-overlay.closing .sheet { animation: sheetDown .22s cubic-bezier(.55,.06,.68,.19) both; }
 @keyframes sheetUp   { from{transform:translateY(100%)} to{transform:translateY(0)} }
 @keyframes sheetDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
 
 .sheet-handle {
-  width:48px; height:5px;
-  background:var(--border); border-radius:3px;
-  margin:12px auto 0; flex-shrink:0;
+  width:36px; height:5px;
+  background:rgba(60,60,67,0.28); border-radius:2.5px;
+  margin:8px auto 0; flex-shrink:0;
   cursor:grab;
-  transition:background .15s;
+  transition:background .12s;
   position:relative;
 }
-/* Dokunma alanını genişlet — görünmez ama parmak yakalarlar */
 .sheet-handle::before {
   content:''; position:absolute;
-  left:-40px; right:-40px; top:-18px; bottom:-18px;
+  left:-60px; right:-60px; top:-20px; bottom:-14px;
 }
-.sheet-handle:active { background:var(--text3); cursor:grabbing; }
+.sheet-handle:active { background:rgba(60,60,67,0.45); cursor:grabbing; }
 .sheet-header { padding:14px 20px 12px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; border-bottom:1px solid var(--border); }
 .sheet-title  { font-family:'Fraunces',serif; font-size:19px; font-weight:500; color:var(--text); }
 .sheet-close  { width:30px; height:30px; border-radius:50%; background:var(--bg2); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text2); font-size:16px; transition:background .15s; }
@@ -1588,10 +1596,10 @@ body {
 ═══════════════════════════════ */
 #op-sheet {
   position: absolute; inset: 0;
-  background: rgba(40,35,28,.52);
+  background: rgba(0,0,0,0.36);
   z-index: 80;
   display: none; align-items: flex-end;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(2px);
 }
 #op-sheet.open    { display: flex; animation: overlayIn .22s ease both; }
 #op-sheet.closing { display: flex; animation: overlayOut .2s ease both; }
@@ -1602,7 +1610,7 @@ body {
   width: 100%;
   max-height: 82%;
   display: flex; flex-direction: column;
-  animation: sheetUp .32s cubic-bezier(.22,.68,0,1.1) both;
+  animation: sheetUp .32s cubic-bezier(.22,.68,0,1.05) both;
   overflow: hidden;
 }
 #op-sheet.closing .op-sheet-inner {
@@ -1610,18 +1618,18 @@ body {
 }
 
 .op-sheet-handle {
-  width: 48px; height: 5px;
-  background: var(--border); border-radius: 3px;
-  margin: 12px auto 0; flex-shrink: 0;
+  width: 36px; height: 5px;
+  background: rgba(60,60,67,0.28); border-radius: 2.5px;
+  margin: 8px auto 0; flex-shrink: 0;
   cursor: grab;
-  transition: background .15s;
+  transition: background .12s;
   position: relative;
 }
 .op-sheet-handle::before {
   content: ''; position: absolute;
-  left: -40px; right: -40px; top: -18px; bottom: -18px;
+  left: -60px; right: -60px; top: -20px; bottom: -14px;
 }
-.op-sheet-handle:active { background: var(--text3); cursor: grabbing; }
+.op-sheet-handle:active { background: rgba(60,60,67,0.45); cursor: grabbing; }
 .op-sheet-head {
   display: flex; align-items: center; gap: 12px;
   padding: 16px 20px 14px; flex-shrink: 0;
@@ -2198,7 +2206,7 @@ body {
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- KAYIT DETAY SHEET (ana sayfa) -->
-    <div id="home-kayit-sheet" onclick="closeKayitSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="home-kayit-sheet" onclick="closeKayitSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -2215,7 +2223,7 @@ body {
     </div>
 
     <!-- HAVA DETAY SHEET -->
-    <div id="hava-sheet" onclick="closeHavaSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="hava-sheet" onclick="closeHavaSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -2796,7 +2804,7 @@ body {
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- SEZON ÖZET SHEET -->
-    <div id="sezon-sheet" onclick="closeSezonSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="sezon-sheet" onclick="closeSezonSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -2813,7 +2821,7 @@ body {
     </div>
 
     <!-- KONUM PİCKER SHEET -->
-    <div id="konum-picker-sheet" onclick="closeKonumPicker(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="konum-picker-sheet" onclick="closeKonumPicker(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner" style="max-height:72%">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -2841,7 +2849,7 @@ body {
     </div>
 
     <!-- PROFİL DÜZENLE SHEET -->
-    <div id="profil-edit-sheet" onclick="closeProfilSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:90;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="profil-edit-sheet" onclick="closeProfilSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:90;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner" style="max-height:60%">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -2856,7 +2864,7 @@ body {
     </div>
 
     <!-- GERİ BİLDİRİM SHEET -->
-    <div id="profil-gb-sheet" onclick="closeGbSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:90;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="profil-gb-sheet" onclick="closeGbSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:90;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner" style="max-height:65%">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -3131,7 +3139,7 @@ body {
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- SEZON SEÇİCİ SHEET (Kasa) -->
-    <div id="kasa-sezon-sheet" onclick="closeKasaSezonSec(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="kasa-sezon-sheet" onclick="closeKasaSezonSec(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner" style="max-height:55%">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -3158,7 +3166,7 @@ body {
     </div>
 
     <!-- YIL ÖZET SHEET -->
-    <div id="kasa-yil-sheet" onclick="closeKasaYilSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="kasa-yil-sheet" onclick="closeKasaYilSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -3176,7 +3184,7 @@ body {
     </div>
 
     <!-- KASA DETAY SHEET -->
-    <div id="kasa-sheet-overlay" onclick="closeKasaSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="kasa-sheet-overlay" onclick="closeKasaSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -3226,7 +3234,7 @@ body {
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- KAYIT DETAY SHEET -->
-    <div id="kayit-sheet-overlay" onclick="closeKayitSheet(event)" style="position:absolute;inset:0;background:rgba(40,35,28,.52);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div id="kayit-sheet-overlay" onclick="closeKayitSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
       <div class="op-sheet-inner">
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
@@ -7412,68 +7420,106 @@ function selChip(el) {
 
 
 
+
+
 // ══════════════════════════════════════════════════════════════
-// SHEET DRAG — Apple UISheetPresentationController değerleri
+// iOS UISheetPresentationController — tam birebir sistem
 //
-// Kaynak: UIKit spring(response:dampingFraction:) analizi
-//   • 1:1 tracking: RUBBER=1.0, gecikme yok
-//   • Dismiss: velocity-matched, cubic-bezier(.32,0,.67,0) — ease-in
-//   • Spring geri: damping~0.86, response~0.35s
-//     CSS karşılığı: cubic-bezier(.34,1.2,.64,1)
-//   • Backdrop: panel ile eş zamanlı, opacity 1→0
-//
-// Kapsam: .sheet · .op-sheet-inner · .modal — 14 overlay
+// Özellikler:
+//  1. Presenting view scale: sheet açılınca arkadaki ekran
+//     scale(0.92) + border-radius:12px — iOS 13+ ikonik efekt
+//  2. Grabber: 36×5px, rgba(60,60,67,0.28) — sistem değeri
+//  3. Backdrop: rgba(0,0,0,0.36) ile eş zamanlı
+//  4. Açılış: spring(response:0.35, damping:0.86) = 340ms
+//  5. Drag: 1:1 parmak takibi
+//  6. Dismiss: velocity-matched ease-in, hızlı fırlatmada ~80ms
+//  7. Spring geri: interactiveSpring(response:0.15, damping:0.86)
+//  8. Scroll koruması: scroll alanı içinde drag başlamaz
 // ══════════════════════════════════════════════════════════════
 (function () {
 
-  // ── Apple değerleri ──────────────────────────────────────────
-  var DISMISS_DIST = 72;    // px — bu kadar çekilirse kapat (Apple ~1/6 ekran yüksekliği)
-  var DISMISS_VEL  = 0.28;  // px/ms — yavaş fırlat eşiği
-  var RUBBER       = 1.0;   // 1:1 — parmakla birebir
+  // ── iOS değerleri ─────────────────────────────────────────────
+  var DISMISS_DIST = 72;    // ~1/12 ekran yüksekliği
+  var DISMISS_VEL  = 0.26;  // px/ms
+  var SCALE_AMOUNT = 0.92;  // arkadaki ekran ne kadar küçülür
 
-  // ── Overlay temizleme ────────────────────────────────────────
-  // close fn çağırmıyoruz — panel zaten aşağıda, rawClose yeterli
+  // ── Aktif ekranı bul ─────────────────────────────────────────
+  function getActiveScreen() {
+    return document.querySelector('.screen.active') ||
+           document.querySelector('.screen.back');
+  }
+
+  // ── Presenting view scale aç ─────────────────────────────────
+  var _sheetDepth = 0; // kaç sheet açık (iç içe için)
+  function presentingIn() {
+    _sheetDepth++;
+    if (_sheetDepth === 1) {
+      var sc = getActiveScreen();
+      if (sc) sc.classList.add('sheet-presented');
+    }
+  }
+  function presentingOut(instantly) {
+    _sheetDepth = Math.max(0, _sheetDepth - 1);
+    if (_sheetDepth === 0) {
+      var sc = getActiveScreen();
+      if (sc) {
+        if (instantly) {
+          sc.style.transition = 'none';
+          sc.classList.remove('sheet-presented');
+          sc.offsetHeight; // reflow
+          sc.style.transition = '';
+        } else {
+          sc.classList.remove('sheet-presented');
+        }
+      }
+    }
+  }
+  // Drag sırasında scale'i interpolate et
+  function presentingProgress(progress) {
+    // 0=tam açık(0.92), 1=kapanmış(1.0)
+    var sc = getActiveScreen();
+    if (!sc) return;
+    var s = SCALE_AMOUNT + (1 - SCALE_AMOUNT) * progress;
+    var r = 12 * (1 - progress);
+    sc.style.transition = 'none';
+    sc.style.transform  = 'scale(' + s + ') translateY(' + (10 * (1-progress)) + 'px)';
+    sc.style.borderRadius = r + 'px';
+  }
+  function presentingReset() {
+    var sc = getActiveScreen();
+    if (!sc) return;
+    sc.style.transition   = '';
+    sc.style.transform    = '';
+    sc.style.borderRadius = '';
+  }
+
+  // ── Overlay temizleme ─────────────────────────────────────────
   function rawClose(overlay) {
     if (!overlay) return;
-
     var isClass = overlay.classList.contains('sheet-overlay') ||
                   overlay.classList.contains('modal-overlay');
-
     overlay.classList.remove('open', 'closing');
     overlay.style.animation  = '';
     overlay.style.transition = '';
     overlay.style.opacity    = '';
-
-    if (isClass) {
-      // CSS class yönetimli: inline display'i temizle, CSS'e bırak
-      overlay.style.display = '';
-    } else {
-      // Inline-style yönetimli: none yaz
-      overlay.style.display = 'none';
-    }
-
-    // _activeKayitSheet global'ini sıfırla
-    try {
-      if (_activeKayitSheet === overlay.id) _activeKayitSheet = null;
-    } catch(e) {}
-
-    // Panel inline style'larını sıfırla
+    overlay.style.display    = isClass ? '' : 'none';
+    try { if (_activeKayitSheet === overlay.id) _activeKayitSheet = null; } catch(e) {}
     var panel = overlay.querySelector('.sheet, .op-sheet-inner, .modal');
     if (panel) {
       panel.style.transform  = '';
       panel.style.transition = '';
       panel.style.willChange = '';
-      panel.style.opacity    = '';
     }
+    presentingOut(false);
   }
 
   // ── Yardımcılar ──────────────────────────────────────────────
-  function getTouchY(e) {
+  function getY(e) {
     var t = e.touches || e.changedTouches;
     return (t && t.length) ? t[0].clientY : e.clientY;
   }
 
-  function isVisible(overlay) {
+  function isOpen(overlay) {
     if (!overlay) return false;
     var d = overlay.style.display;
     if (d === 'flex' || d === 'block') return true;
@@ -7485,40 +7531,34 @@ function selChip(el) {
     return panel.querySelector('.sheet-scroll, .op-sheet-scroll');
   }
 
-  // ── Aktif sürükleme ──────────────────────────────────────────
+  // ── Sürükleme durumu ─────────────────────────────────────────
   var S = null;
 
   function onStart(e) {
     var panel   = e.currentTarget;
     var overlay = panel.parentElement;
-    if (!overlay || !isVisible(overlay)) return;
+    if (!overlay || !isOpen(overlay)) return;
 
-    // Scroll alanının içindeyse drag başlatma
+    // Scroll içindeyse başlama
     var scroller = getScroller(panel);
     if (scroller) {
-      var t = e.target || e.srcElement;
-      if (t && (scroller === t || scroller.contains(t))) return;
+      var t = e.target;
+      if (t && (t === scroller || scroller.contains(t))) return;
     }
 
     S = {
-      panel:   panel,
-      overlay: overlay,
-      y0:      getTouchY(e),
-      yp:      getTouchY(e),
-      tp:      Date.now(),
-      vel:     0,
-      dy:      0,
-      live:    false,
+      panel: panel, overlay: overlay,
+      y0: getY(e), yp: getY(e),
+      tp: Date.now(), vel: 0, dy: 0, live: false,
     };
   }
 
   function onMove(e) {
     if (!S) return;
-    var cy  = getTouchY(e);
+    var cy  = getY(e);
     var raw = cy - S.y0;
-    if (raw < 0) raw = 0; // sadece aşağı; yukarı harekette dy=0 ama drag devam
+    if (raw < 0) raw = 0;
 
-    // 5px eşiği geçince canlı drag
     if (!S.live) {
       if (raw < 5) return;
       S.live = true;
@@ -7528,18 +7568,19 @@ function selChip(el) {
 
     S.dy = raw;
 
-    // 1:1 takip
+    // 1:1 parmak takibi
     S.panel.style.transform = 'translateY(' + raw + 'px)';
 
-    // Backdrop eş zamanlı: 200px'de %55 solar
-    var progress = Math.min(raw / 200, 1);
-    S.overlay.style.opacity = String(1 - progress * 0.55);
+    // Backdrop: panel ile orantılı
+    var prog = Math.min(raw / 220, 1);
+    S.overlay.style.opacity = String(1 - prog * 0.55);
 
-    // Hız hesapla (px/ms)
+    // Arkadaki ekran: drag ilerledikçe geri geliyor
+    presentingProgress(prog);
+
     var now = Date.now(), dt = now - S.tp;
     if (dt > 0) S.vel = (cy - S.yp) / dt;
-    S.yp = cy;
-    S.tp = now;
+    S.yp = cy; S.tp = now;
 
     e.preventDefault();
   }
@@ -7554,33 +7595,29 @@ function selChip(el) {
     var vel     = S.vel;
     S = null;
 
-    panel.style.willChange  = '';
-    overlay.style.opacity   = '';
+    panel.style.willChange   = '';
+    overlay.style.opacity    = '';
     overlay.style.transition = '';
 
     var dismiss = (dy > DISMISS_DIST) || (vel > DISMISS_VEL);
 
     if (dismiss) {
-      // ── Apple dismiss: velocity-matched süre ─────────────────
-      // Kalan yol: ekran yüksekliği - şu anki konum
-      var screenH  = window.innerHeight || 852;
-      var current  = dy; // panel şu anda burada
-      var remaining = screenH - current;
-
-      // Süre = kalan / hız — min 80ms, max 220ms
-      // Apple ortalaması hızlı fırlatmada ~120ms, yavaşta ~200ms
+      // ── DISMISS: velocity-matched ──────────────────────────
+      var screenH   = window.innerHeight || 852;
+      var remaining = screenH - dy;
       var dur = vel > 0.1
-        ? Math.min(Math.max((remaining / (vel * 1000)), 0.08), 0.22)
+        ? Math.min(Math.max(remaining / (vel * 1000), 0.08), 0.22)
         : 0.18;
       var durMs = Math.round(dur * 1000);
 
-      // ease-in: başlangıç hızına sahip, sona hızlanıyor
-      panel.style.transition   = 'transform ' + dur + 's cubic-bezier(.32,0,.67,0)';
+      // Panel aşağı
+      panel.style.transition   = 'transform ' + dur + 's cubic-bezier(.32,0,.8,.85)';
       panel.style.transform    = 'translateY(110%)';
-
-      // Backdrop: panel ile eş zamanlı solar
-      overlay.style.transition = 'opacity ' + dur + 's cubic-bezier(.32,0,.67,0)';
+      // Backdrop solar
+      overlay.style.transition = 'opacity ' + dur + 's linear';
       overlay.style.opacity    = '0';
+      // Arkadaki ekran geri gelsin
+      presentingReset();
 
       setTimeout(function () {
         panel.style.transition   = '';
@@ -7588,32 +7625,48 @@ function selChip(el) {
         overlay.style.transition = '';
         overlay.style.opacity    = '';
         rawClose(overlay);
-      }, durMs + 16); // +16ms: bir frame buffer
+      }, durMs + 16);
 
     } else {
-      // ── Apple spring geri dönüş ──────────────────────────────
-      // response ~0.35s, dampingFraction ~0.86
-      // CSS: cubic-bezier(.34,1.2,.64,1) → hafif overshoot, hızlı oturma
-      panel.style.transition = 'transform .32s cubic-bezier(.34,1.2,.64,1)';
+      // ── SPRING GERİ: interactiveSpring(response:0.15, damping:0.86) ──
+      // CSS: cubic-bezier(.34,1.2,.64,1) ~220ms
+      panel.style.transition = 'transform .22s cubic-bezier(.34,1.2,.64,1)';
       panel.style.transform  = 'translateY(0)';
-      setTimeout(function () { panel.style.transition = ''; }, 320);
+      // Backdrop ve scale geri
+      overlay.style.transition = 'opacity .22s cubic-bezier(.34,1.2,.64,1)';
+      overlay.style.opacity    = '1';
+      presentingReset();
+      setTimeout(function () {
+        panel.style.transition   = '';
+        overlay.style.transition = '';
+        overlay.style.opacity    = '';
+        // Scale'i class ile tekrar uygula
+        var sc = getActiveScreen();
+        if (sc && _sheetDepth > 0) sc.classList.add('sheet-presented');
+      }, 220);
     }
   }
 
   function onCancel() {
     if (!S) return;
     var panel = S.panel;
+    var overlay = S.overlay;
     S = null;
     panel.style.willChange = '';
-    panel.style.transition = 'transform .32s cubic-bezier(.34,1.2,.64,1)';
+    panel.style.transition = 'transform .22s cubic-bezier(.34,1.2,.64,1)';
     panel.style.transform  = 'translateY(0)';
-    setTimeout(function () { panel.style.transition = ''; }, 320);
+    presentingReset();
+    setTimeout(function () {
+      panel.style.transition = '';
+      var sc = getActiveScreen();
+      if (sc && _sheetDepth > 0) sc.classList.add('sheet-presented');
+    }, 220);
   }
 
-  // ── Binding ──────────────────────────────────────────────────
+  // ── Panel binding ─────────────────────────────────────────────
   function bindPanel(panel) {
-    if (panel._appleSheet) return;
-    panel._appleSheet = true;
+    if (panel._ios) return;
+    panel._ios = true;
     panel.addEventListener('touchstart',   onStart,   { passive: false });
     panel.addEventListener('touchmove',    onMove,    { passive: false });
     panel.addEventListener('touchend',     onEnd,     { passive: true  });
@@ -7621,7 +7674,7 @@ function selChip(el) {
     panel.addEventListener('mousedown',    onStart);
   }
 
-  // Desktop mouse (iMac test)
+  // Desktop mouse
   document.addEventListener('mousemove', function (e) {
     if (!S) return;
     var raw = e.clientY - S.y0;
@@ -7634,31 +7687,64 @@ function selChip(el) {
     }
     S.dy = raw;
     S.panel.style.transform = 'translateY(' + raw + 'px)';
-    var progress = Math.min(raw / 200, 1);
-    S.overlay.style.opacity = String(1 - progress * 0.55);
+    var prog = Math.min(raw / 220, 1);
+    S.overlay.style.opacity = String(1 - prog * 0.55);
+    presentingProgress(prog);
     var now = Date.now(), dt = now - S.tp;
     if (dt > 0) S.vel = (e.clientY - S.yp) / dt;
     S.yp = e.clientY; S.tp = now;
   });
   document.addEventListener('mouseup', onEnd);
 
-  // ── İlk bind + MutationObserver ──────────────────────────────
+  // ── Open/Close hook'ları — presenting view scale tetikle ──────
+  // Mevcut open/close fn'leri wrap ediyoruz
+  function wrapOpen(fnName) {
+    var orig = window[fnName];
+    if (typeof orig !== 'function') return;
+    window[fnName] = function () {
+      presentingIn();
+      return orig.apply(this, arguments);
+    };
+  }
+  function wrapClose(fnName) {
+    var orig = window[fnName];
+    if (typeof orig !== 'function') return;
+    window[fnName] = function () {
+      presentingOut(false);
+      return orig.apply(this, arguments);
+    };
+  }
+
+  // Sheet açma fonksiyonları
+  var openFns  = ['openKayit','openSheet','openHavaSheet','openOpSheet',
+                  'openKasaYilSheet','openKasaSezonSec','openSezonSheet',
+                  'openKonumPicker','openProfilEdit','openGeriBildirim','openModal'];
+  // Sheet kapama fonksiyonları
+  var closeFns = ['closeKayit','closeSheet','closeHavaSheetBtn',
+                  'closeKasaYilSheetBtn','closeKasaSezonSheet','closeSezonSheetBtn',
+                  'closeKonumPickerBtn','closeProfilSheetBtn','closeGbSheetBtn',
+                  'closeModal','closeKayitSheetBtn','closeKasaSheet','closeOpSheet'];
+
+  // DOM hazır olunca wrap et
+  setTimeout(function () {
+    openFns.forEach(wrapOpen);
+    closeFns.forEach(wrapClose);
+  }, 0);
+
+  // ── Bind all ─────────────────────────────────────────────────
   function bindAll() {
     document.querySelectorAll('.sheet, .op-sheet-inner, .modal').forEach(bindPanel);
   }
-
   bindAll();
-
   new MutationObserver(function (muts) {
     muts.forEach(function (m) {
       m.addedNodes.forEach(function (node) {
         if (node.nodeType !== 1) return;
-        var cls = node.classList;
-        if (cls && (cls.contains('sheet') ||
-                    cls.contains('op-sheet-inner') ||
-                    cls.contains('modal'))) bindPanel(node);
+        var c = node.classList;
+        if (c && (c.contains('sheet') || c.contains('op-sheet-inner') || c.contains('modal')))
+          bindPanel(node);
         if (node.querySelectorAll)
-          node.querySelectorAll('.sheet, .op-sheet-inner, .modal').forEach(bindPanel);
+          node.querySelectorAll('.sheet,.op-sheet-inner,.modal').forEach(bindPanel);
       });
     });
   }).observe(document.body, { childList: true, subtree: true });
