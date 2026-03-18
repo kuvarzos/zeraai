@@ -454,7 +454,7 @@ body {
 .modal-overlay.closing { animation:overlayOut .22s ease both; }
 @keyframes overlayIn  { from{opacity:0} to{opacity:1} }
 @keyframes overlayOut { from{opacity:1} to{opacity:0} }
-.modal { background:var(--card); border-radius:24px 24px 0 0; padding:20px 20px 36px; width:100%; animation:sheetUp .32s cubic-bezier(.22,.68,0,1.1) both; }
+.modal { background:var(--card); border-radius:24px 24px 0 0; padding:20px 20px 36px; width:100%; animation:sheetUp .32s cubic-bezier(.22,.68,0,1.1) both;  box-shadow: 0 -200px 0 0 var(--card); }
 .modal-overlay.closing .modal { animation:sheetDown .22s cubic-bezier(.55,.06,.68,.19) both; }
 .modal-handle {
   width:36px; height:5px;
@@ -512,6 +512,10 @@ body {
   max-height: 88%;
   display: flex; flex-direction: column;
   animation: sheetUp .34s cubic-bezier(.22,.68,0,1.05) both;
+  /* iOS: köşe altındaki backdrop boşluğunu kapat */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Yukarı overscroll: panel rengi üste devam eder */
+  box-shadow: 0 -200px 0 0 var(--card);
 }
 .sheet-overlay.closing .sheet { animation: sheetDown .22s cubic-bezier(.55,.06,.68,.19) both; }
 @keyframes sheetUp   { from{transform:translateY(100%)} to{transform:translateY(0)} }
@@ -1612,6 +1616,8 @@ body {
   display: flex; flex-direction: column;
   animation: sheetUp .32s cubic-bezier(.22,.68,0,1.05) both;
   overflow: hidden;
+  /* iOS: overscroll fill + köşe fix */
+  box-shadow: 0 -200px 0 0 var(--card);
 }
 #op-sheet.closing .op-sheet-inner {
   animation: sheetDown .2s cubic-bezier(.55,.06,.68,.19) both;
@@ -7641,8 +7647,8 @@ function selChip(el) {
       var screenH   = window.innerHeight || 852;
       var remaining = screenH - dy;
       var dur = vel > 0.1
-        ? Math.min(Math.max(remaining / (vel * 1000), 0.08), 0.22)
-        : 0.18;
+        ? Math.min(Math.max(remaining / (vel * 1000), 0.06), 0.18)
+        : 0.15;
       var durMs = Math.round(dur * 1000);
 
       // Panel aşağı
@@ -7665,10 +7671,10 @@ function selChip(el) {
     } else {
       // ── SPRING GERİ: interactiveSpring(response:0.15, damping:0.86) ──
       // CSS: cubic-bezier(.34,1.2,.64,1) ~220ms
-      panel.style.transition = 'transform .22s cubic-bezier(.34,1.2,.64,1)';
+      panel.style.transition = 'transform .18s cubic-bezier(.34,1.2,.64,1)';
       panel.style.transform  = 'translateY(0)';
       // Backdrop ve scale geri
-      overlay.style.transition = 'opacity .22s cubic-bezier(.34,1.2,.64,1)';
+      overlay.style.transition = 'opacity .18s cubic-bezier(.34,1.2,.64,1)';
       overlay.style.opacity    = '1';
       presentingReset();
       setTimeout(function () {
@@ -7678,7 +7684,7 @@ function selChip(el) {
         // Scale'i class ile tekrar uygula
         var sc = getActiveScreen();
         if (sc && _sheetDepth > 0) sc.classList.add('sheet-presented');
-      }, 220);
+      }, 180);
     }
   }
 
