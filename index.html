@@ -454,7 +454,8 @@ body {
 .modal-overlay.closing { animation:overlayOut .22s ease both; }
 @keyframes overlayIn  { from{opacity:0} to{opacity:1} }
 @keyframes overlayOut { from{opacity:1} to{opacity:0} }
-.modal { background:var(--card); border-radius:24px 24px 0 0; padding:20px 20px 36px; width:100%; animation:sheetUp .32s cubic-bezier(.22,.68,0,1.1) both;  box-shadow: 0 -200px 0 0 var(--card); }
+.modal { background:var(--card); border-radius:24px 24px 0 0; padding:20px 20px 36px; width:100%; animation:sheetUp .32s cubic-bezier(.22,.68,0,1.1) both; position:relative;  }
+.modal::after { content:''; position:absolute; left:0; right:0; bottom:-300px; height:300px; background:var(--card); pointer-events:none; }
 .modal-overlay.closing .modal { animation:sheetDown .22s cubic-bezier(.55,.06,.68,.19) both; }
 .modal-handle {
   width:36px; height:5px;
@@ -512,10 +513,16 @@ body {
   max-height: 88%;
   display: flex; flex-direction: column;
   animation: sheetUp .34s cubic-bezier(.22,.68,0,1.05) both;
-  /* iOS: köşe altındaki backdrop boşluğunu kapat */
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  /* Yukarı overscroll: panel rengi üste devam eder */
-  box-shadow: 0 -200px 0 0 var(--card);
+  position: relative;
+}
+.sheet::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -300px;
+  height: 300px;
+  background: var(--card);
+  pointer-events: none;
 }
 .sheet-overlay.closing .sheet { animation: sheetDown .22s cubic-bezier(.55,.06,.68,.19) both; }
 @keyframes sheetUp   { from{transform:translateY(100%)} to{transform:translateY(0)} }
@@ -1616,9 +1623,18 @@ body {
   display: flex; flex-direction: column;
   animation: sheetUp .32s cubic-bezier(.22,.68,0,1.05) both;
   overflow: hidden;
-  /* iOS: overscroll fill + köşe fix */
-  box-shadow: 0 -200px 0 0 var(--card);
+  position: relative;
 }
+/* iOS overscroll fill: köşe dışını ve yukarı çekişi kapatır */
+.op-sheet-inner::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -300px;
+  height: 300px;
+  background: var(--card);
+  pointer-events: none;
+}
+
 #op-sheet.closing .op-sheet-inner {
   animation: sheetDown .2s cubic-bezier(.55,.06,.68,.19) both;
 }
@@ -1633,12 +1649,12 @@ body {
 }
 .op-sheet-handle::before {
   content: ''; position: absolute;
-  left: -60px; right: -60px; top: -20px; bottom: -14px;
+  left: -80px; right: -80px; top: -8px; bottom: -8px;
 }
 .op-sheet-handle:active { background: rgba(60,60,67,0.45); cursor: grabbing; }
 .op-sheet-head {
   display: flex; align-items: center; gap: 12px;
-  padding: 16px 20px 14px; flex-shrink: 0;
+  padding: 10px 20px 12px; flex-shrink: 0;
   border-bottom: 1px solid var(--border);
 }
 .op-sheet-ic {
