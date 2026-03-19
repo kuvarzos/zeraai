@@ -58,17 +58,22 @@
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: var(--bg);
+  background: #0e0c08; /* splash rengi — fotoğraf gelene kadar koyu */
   display: flex; justify-content: center; align-items: center;
   min-height: 100vh; padding: 20px;
+  transition: background 0.4s ease;
 }
+body.app-ready { background: var(--bg); }
 
 .phone {
   width: 393px; height: 852px;
-  background: var(--bg); border-radius: 50px; overflow: hidden;
+  background: #1a1208; /* splash bg — beyaz flash önler */
+  border-radius: 50px; overflow: hidden;
   box-shadow: 0 0 0 1px rgba(120,100,80,0.12), 0 28px 70px rgba(80,60,40,0.22), inset 0 1px 0 rgba(255,255,255,0.8);
   display: flex; flex-direction: column; position: relative;
+  transition: background 0.4s ease;
 }
+.phone.app-ready { background: var(--bg); }
 
 .sb {
   padding: 0 18px;
@@ -576,7 +581,8 @@ body {
 .fu:nth-child(5){animation-delay:.25s}.fu:nth-child(6){animation-delay:.30s}
 
 @media (max-width:430px) {
-  body { padding:0; background:var(--bg); }
+  body { padding:0; background:#0e0c08; } /* splash rengi başlangıç */
+  body.app-ready { background:var(--bg); }
   .phone { width:100%; height:100dvh; border-radius:0; box-shadow:none; }
 }
 
@@ -3853,7 +3859,7 @@ body {
               <div class="urun-lbl">Pamuk</div>
             </div>
 
-            <div class="urun-btn" onclick="selUrun(this,'seker','#B42030','linear-gradient(135deg,#6B0A18,#B42030)')">
+            <div class="urun-btn" onclick="selUrun(this,'seker_pancari','#B42030','linear-gradient(135deg,#6B0A18,#B42030)')">
               <div class="urun-ic">
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><ellipse cx="11" cy="9" rx="5" ry="6" stroke="#B42030" stroke-width="1.4" fill="#B42030" fill-opacity=".15"/><path d="M11 15v4" stroke="#B42030" stroke-width="1.4" stroke-linecap="round"/><path d="M8.5 18h5" stroke="#B42030" stroke-width="1.4" stroke-linecap="round" opacity=".4"/></svg>
               </div>
@@ -4951,6 +4957,10 @@ function navTo(id) {
     splashEl.classList.remove('active');
     splashEl.classList.add('splash-exit');
 
+    // Adım 1b: Body + phone'u açık renge geçir (beyaz flash önleme)
+    document.body.classList.add('app-ready');
+    document.querySelector('.phone')?.classList.add('app-ready');
+
     // Adım 2: Onboarding'i aktif et + giriş animasyonunu tetikle
     // earthRise from:{opacity:0, translateY:28px} → fill-mode:both → başta görünmez ✓
     obEl.classList.add('active', 'ob-entering');
@@ -5427,12 +5437,20 @@ function obNext(adim) {
     // Ana sayfa selamlama güncelle
     const gEl = document.getElementById('g-isim');
     if (gEl) gEl.textContent = isim.split(' ')[0];
+    // localStorage'a kaydet
+    const mevcutKonum = document.getElementById('p-konum')?.textContent || '';
+    lsProfilKaydet(isim, mevcutKonum);
   }
   if (adim === 2) {
-    const il = document.getElementById('ob-il').value;
+    const il    = document.getElementById('ob-il').value;
+    const ilce  = document.getElementById('ob-ilce').value;
     if (il) {
-      document.getElementById('p-konum').textContent = il;
-      document.getElementById('p-konum-satir').textContent = il;
+      const konumStr = ilce ? il + ' / ' + ilce : il;
+      document.getElementById('p-konum').textContent       = il;
+      document.getElementById('p-konum-satir').textContent = konumStr;
+      // localStorage'a kaydet
+      const mevcutIsim = document.getElementById('p-isim')?.textContent || '';
+      lsProfilKaydet(mevcutIsim, konumStr);
     }
   }
 
@@ -5448,6 +5466,11 @@ function obNext(adim) {
 }
 
 function obBitir() {
+  // Son adım: tarla sayısı onboarding'de seçilmişse not olarak ekle (opsiyonel)
+  // Profil verilerinin kesinlikle LS'de olduğunu garantile
+  const finalIsim  = document.getElementById('p-isim')?.textContent || '';
+  const finalKonum = document.getElementById('p-konum-satir')?.textContent || '';
+  if (finalIsim) lsProfilKaydet(finalIsim, finalKonum);
   updateGreeting();
   navTo('home');
 }
@@ -5843,6 +5866,8 @@ function selSatin(el) {
 
 function buildKayitForm(tip) {
   const wrap = document.getElementById('kayit-form-fields');
+  // Önceki formdan kalan auto-calc sonuçlarını temizle
+  wrap.querySelectorAll('.auto-calc').forEach(el => el.remove());
 
   const forms = {
     ekim: `
@@ -6156,34 +6181,103 @@ function saveKayit() {
   // Tipe göre toplam maliyet hesapla
   let maliyetVal = 0;
 
+  // ── Tip'e özgü form alanlarını topla ───────────────────────────
+  let detayAlanlar = {}; // kayıt objesine eklenecek ek alanlar
+
   if (kayitIslem === 'satis') {
-    // Satış: miktar(ton) × birim_fiyat(₺/ton)
     const inputs = document.querySelectorAll('#kayit-form-fields input[type=number]');
     const miktar = parseFloat(inputs[0]?.value) || 0;
     const fiyat  = parseFloat(inputs[1]?.value) || 0;
     maliyetVal = miktar > 0 && fiyat > 0 ? miktar * fiyat : fiyat;
     if (maliyetVal === 0) { alert('Miktar ve birim fiyatı giriniz'); return; }
+    detayAlanlar.satisMiktar   = miktar || null;
+    detayAlanlar.satisFiyat    = fiyat  || null;
+    detayAlanlar.satisAlici    = document.querySelector('#kayit-form-fields .yontem-chip.sel')?.textContent?.trim() || null;
+    // Ödeme şekli: alıcı satırından sonraki sel chip
+    const tumSelChipler = document.querySelectorAll('#kayit-form-fields .yontem-chip.sel');
+    if (tumSelChipler.length >= 2) detayAlanlar.satisOdeme = tumSelChipler[1]?.textContent?.trim() || null;
 
   } else if (kayitIslem === 'ilac') {
-    // İlaç: tüm ilaçların maliyet toplamı (calcIlacToplam'ın hesapladığı)
     const inputs = document.querySelectorAll('#ilac-list .maliyet-input');
     inputs.forEach(inp => maliyetVal += parseFloat(inp.value) || 0);
     if (maliyetVal === 0) { alert('En az bir ilaç maliyeti giriniz'); return; }
+    // İlaç listesini topla
+    detayAlanlar.ilaclar = [];
+    document.querySelectorAll('#ilac-list .karisim-item').forEach(item => {
+      const ad    = item.querySelector('input[placeholder*="İlaç adı"], input[placeholder*="adı"]')?.value?.trim() || '';
+      const doz   = item.querySelector('input[type=number]')?.value || '';
+      const birim = item.querySelector('.birim-sel')?.textContent?.trim() || '';
+      const mal   = parseFloat(item.querySelector('.maliyet-input')?.value) || 0;
+      if (ad || doz || mal) detayAlanlar.ilaclar.push({ ad, doz, birim, maliyet: mal });
+    });
+    detayAlanlar.uygulama = document.querySelector('#kayit-form-fields .yontem-chip.sel')?.textContent?.trim() || null;
 
   } else if (kayitIslem === 'gubre') {
-    // Gübre: tüm gübre maliyet toplamı
     const inputs = document.querySelectorAll('#gubre-list .maliyet-input');
     inputs.forEach(inp => maliyetVal += parseFloat(inp.value) || 0);
     if (maliyetVal === 0) { alert('En az bir gübre maliyeti giriniz'); return; }
+    // Gübre listesini topla
+    detayAlanlar.gubreler = [];
+    document.querySelectorAll('#gubre-list .karisim-item').forEach(item => {
+      const ad     = item.querySelector('input[placeholder*="Gübre adı"], input[placeholder*="adı"]')?.value?.trim() || '';
+      const inputs2 = item.querySelectorAll('input[type=number]');
+      const miktar  = inputs2[0]?.value || '';
+      const mal     = parseFloat(item.querySelector('.maliyet-input')?.value) || 0;
+      if (ad || miktar || mal) detayAlanlar.gubreler.push({ ad, miktar, maliyet: mal });
+    });
+    detayAlanlar.uygulama = document.querySelector('#kayit-form-fields .yontem-chip.sel')?.textContent?.trim() || null;
 
-  } else {
-    // Diğer tipler: tek maliyet input
+  } else if (kayitIslem === 'ekim') {
     const maliyetInput = document.querySelector('#kayit-form-fields .maliyet-input');
     if (maliyetInput && !maliyetInput.value) { alert('Maliyet giriniz'); return; }
-    maliyetVal = maliyetInput ? parseFloat(maliyetInput.value) || 0 : 0;
+    maliyetVal = parseFloat(maliyetInput?.value) || 0;
+    const textInputs = document.querySelectorAll('#kayit-form-fields input:not([type=number])');
+    detayAlanlar.ekimCesit  = textInputs[0]?.value?.trim() || null;
+    const numInputs = document.querySelectorAll('#kayit-form-fields input[type=number]');
+    detayAlanlar.ekimMiktar = numInputs[0]?.value || null;
+    detayAlanlar.ekimToplam = numInputs[1]?.value || null;
+
+  } else if (kayitIslem === 'hasat') {
+    const maliyetInput = document.querySelector('#kayit-form-fields .maliyet-input');
+    if (maliyetInput && !maliyetInput.value) { alert('Maliyet giriniz'); return; }
+    maliyetVal = parseFloat(maliyetInput?.value) || 0;
+    const numInputs = document.querySelectorAll('#kayit-form-fields input[type=number]');
+    detayAlanlar.hasatMiktar = numInputs[0]?.value || null;
+    detayAlanlar.hasatNem    = numInputs[1]?.value || null;
+    const textInp = document.querySelector('#kayit-form-fields input:not([type=number])');
+    detayAlanlar.hasatDepo   = textInp?.value?.trim() || null;
+
+  } else if (kayitIslem === 'sulama') {
+    const maliyetInput = document.querySelector('#kayit-form-fields .maliyet-input');
+    if (maliyetInput && !maliyetInput.value) { alert('Maliyet giriniz'); return; }
+    maliyetVal = parseFloat(maliyetInput?.value) || 0;
+    detayAlanlar.sulamaYontem = document.querySelector('#kayit-form-fields .yontem-chip.sel')?.textContent?.trim() || null;
+    const numInp = document.querySelector('#kayit-form-fields input[type=number]:not(.maliyet-input)');
+    detayAlanlar.sulamaSure  = numInp?.value || null;
+
+  } else if (kayitIslem === 'surum') {
+    const maliyetInput = document.querySelector('#kayit-form-fields .maliyet-input');
+    if (maliyetInput && !maliyetInput.value) { alert('Maliyet giriniz'); return; }
+    maliyetVal = parseFloat(maliyetInput?.value) || 0;
+    detayAlanlar.surumTip = document.querySelector('#kayit-form-fields .yontem-chip.sel')?.textContent?.trim() || null;
+
+  } else if (kayitIslem === 'satin') {
+    const maliyetInput = document.querySelector('#kayit-form-fields .maliyet-input');
+    if (maliyetInput && !maliyetInput.value) { alert('Maliyet giriniz'); return; }
+    maliyetVal = parseFloat(maliyetInput?.value) || 0;
+    detayAlanlar.satinKategori = document.querySelector('#kayit-form-fields .satin-btn.sel .satin-lbl')?.textContent?.trim() || null;
+    const urunInp = document.querySelector('#kayit-form-fields input[placeholder*="Teldor"], input[placeholder*="Üre"]');
+    detayAlanlar.satinUrun = urunInp?.value?.trim() || null;
+    const numInputs = document.querySelectorAll('#kayit-form-fields input[type=number]');
+    detayAlanlar.satinMiktar = numInputs[0]?.value || null;
+    detayAlanlar.satinBirim  = document.querySelector('#kayit-form-fields select')?.value || null;
+
+  } else {
+    // not
+    maliyetVal = 0;
   }
 
-  // Miktar, not
+  // Miktar (genel), not
   const miktar   = document.querySelector('#kayit-form-fields .miktar-input')?.value || '';
   const notInput = document.querySelector('#kayit-form-fields textarea')?.value || '';
   const now      = new Date();
@@ -6203,6 +6297,7 @@ function saveKayit() {
     miktar: miktar,
     not:    notInput,
     toplam: toplam,
+    ...detayAlanlar,   // tip'e özgü alanlar (alıcı, yöntem, ürün adı vb.)
   };
 
   kayitlar.unshift(yeniKayit);
@@ -6231,14 +6326,15 @@ function saveKayit() {
 // kayitlar[] dizisindeki runtime eklemelerden kasaSezonVeri'yi günceller.
 // Sadece mevcut yıl (2025) için çalışır — geçmiş yıllar statik kalır.
 function syncKasaFromKayitlar() {
-  const yil = '2025';
+  // Aktif yılı UI'dan al (sezon seçiciden), yoksa cari yıl
+  const yil = (_aktifBarYil && kasaSezonVeri[_aktifBarYil])
+    ? _aktifBarYil
+    : new Date().getFullYear().toString();
+
   const sv = kasaSezonVeri[yil];
   if (!sv) return;
 
-  const gelirTipleri = ['satis', 'hasat'];
-  const giderTipleri = ['ilac', 'gubre', 'ekim', 'sulama', 'surum', 'satin', 'not'];
-
-  // kayitlar'daki tüm 2025 kayıtlarının toplamını hesapla
+  // kayitlar'daki tüm ilgili yıl kayıtlarının toplamını hesapla
   let toplamGelir = 0;
   let toplamGider = 0;
 
@@ -6268,23 +6364,25 @@ function syncKasaFromKayitlar() {
 
   // Bar chart'ı da güncelle — ilgili ayı bul
   const buAy = new Date().getMonth();
-  const buGunKayitlar = kayitlar.filter(k => {
-    if (!k.tarih || k.tarih.substring(0,4) !== yil) return false;
-    return parseInt(k.tarih.substring(5,7)) - 1 === buAy;
-  });
-  if (buGunKayitlar.length && sv.aylik && sv.aylik[buAy]) {
-    let ayGelir = 0, ayGider = 0;
-    buGunKayitlar.forEach(k => {
-      if (k.toplam > 0) ayGelir += k.toplam;
-      else ayGider += Math.abs(k.toplam);
+  const buAyYil = new Date().getFullYear().toString();
+  // Sadece cari yılın mevcut ayını güncelle (geçmiş yıllar dokunulmaz)
+  if (yil === buAyYil) {
+    const buGunKayitlar = kayitlar.filter(k => {
+      if (!k.tarih || k.tarih.substring(0,4) !== yil) return false;
+      return parseInt(k.tarih.substring(5,7)) - 1 === buAy;
     });
-    // kasaSezonVeri tek kaynak
-    sv.aylik[buAy].gelir = ayGelir;
-    sv.aylik[buAy].gider = ayGider;
-    // aylikVeri aynı yılı gösteriyorsa senkronize et
-    if (_aktifBarYil === yil && aylikVeri[buAy]) {
-      aylikVeri[buAy].gelir = ayGelir;
-      aylikVeri[buAy].gider = ayGider;
+    if (buGunKayitlar.length && sv.aylik && sv.aylik[buAy]) {
+      let ayGelir = 0, ayGider = 0;
+      buGunKayitlar.forEach(k => {
+        if (k.toplam > 0) ayGelir += k.toplam;
+        else ayGider += Math.abs(k.toplam);
+      });
+      sv.aylik[buAy].gelir = ayGelir;
+      sv.aylik[buAy].gider = ayGider;
+      if (_aktifBarYil === yil && aylikVeri[buAy]) {
+        aylikVeri[buAy].gelir = ayGelir;
+        aylikVeri[buAy].gider = ayGider;
+      }
     }
   }
 
@@ -6299,7 +6397,7 @@ function syncKasaFromKayitlar() {
 // selKasaSezon() ile aktif yıl değişince güncellenir
 let aylikVeri = [];
 
-let _aktifBarYil = '2025';
+let _aktifBarYil = new Date().getFullYear().toString();
 
 let barExpanded = false;
 let secilenAy = null;
@@ -7029,6 +7127,36 @@ function closeKasaYilSheetBtn() {
 
 // ── KASA SEZON SEÇİCİ ──
 const kasaSezonVeri = {
+  '2026': {
+    net:'0',gelir:'₺0',gider:'₺0',
+    gelirTrend:{dir:'up',  txt:'Sezon devam ediyor'},
+    giderTrend:{dir:'gider-up',txt:'Sezon devam ediyor'},
+    aylik:[
+      {ay:'Oca',gelir:0,gider:0},{ay:'Şub',gelir:0,gider:0},{ay:'Mar',gelir:0,gider:0},
+      {ay:'Nis',gelir:0,gider:0},{ay:'May',gelir:0,gider:0},{ay:'Haz',gelir:0,gider:0},
+      {ay:'Tem',gelir:0,gider:0},{ay:'Ağu',gelir:0,gider:0},{ay:'Eyl',gelir:0,gider:0},
+      {ay:'Eki',gelir:0,gider:0},{ay:'Kas',gelir:0,gider:0},{ay:'Ara',gelir:0,gider:0},
+    ],
+    giderler:[
+      {key:'ilac', ad:'İlaç',          tutar:'₺0',pct:0,bar:'0%',renk:'var(--sky)'  },
+      {key:'gubre',ad:'Gübre',          tutar:'₺0',pct:0,bar:'0%',renk:'var(--gold)' },
+      {key:'tohum',ad:'Tohum',          tutar:'₺0',pct:0,bar:'0%',renk:'var(--green)'},
+      {key:'yakit',ad:'Yakıt & Makine',tutar:'₺0',pct:0,bar:'0%',renk:'var(--text2)'},
+    ],
+    tarlalar:[
+      {key:'kuzey', ad:'Kuzey Tarla',alt:'Buğday · 45 dönüm · devam ediyor',   renk:'#C8951A',kar:null,karPos:false,detay:'Sezon başladı'},
+      {key:'dogu',  ad:'Doğu Parsel',alt:'Çeltik · 30 dönüm · devam ediyor',   renk:'#2B9E9B',kar:null,karPos:false,detay:'Sezon başladı'},
+      {key:'kanola',ad:'Batı Tarla', alt:'Kanola · 25 dönüm · devam ediyor',   renk:'#8A9E0F',kar:null,karPos:false,detay:'Sezon başladı'},
+      {key:'guney', ad:'Güney Tarla',alt:'Ayçiçeği · 60 dönüm · devam ediyor',renk:'#B45309',kar:null,karPos:false,detay:'Sezon başladı'},
+    ],
+    gelirler:[],
+    yillar:[
+      {yil:'2024',val:'₺10.900',trend:'',     trendCls:'',       bar:'87%', barRenk:''},
+      {yil:'2025',val:'₺12.470',trend:'↑%14', trendCls:'arr-up', bar:'100%',barRenk:''},
+      {yil:'2026',val:'₺0',     trend:'',     trendCls:'',       bar:'0%',  barRenk:'var(--green-mid)',aktif:true},
+    ],
+  },
+
   '2025': {
     net:'12.470',gelir:'₺48.200',gider:'₺35.730',
     gelirTrend:{dir:'up',  txt:'↑ %14 geçen yıl'},
@@ -7460,12 +7588,13 @@ function renderTarlaSirasi() {
 // ══════════════════════════════════════════════════════════════
 const LS = {
   KEYS: {
-    kayitlar : 'zr_kayitlar',
-    tarlalar : 'zr_tarlalar',
-    sirasi   : 'zr_sirasi',
-    profil   : 'zr_profil',
-    avatar   : 'zr_avatar',
-    sezon    : 'zr_sezon',
+    kayitlar     : 'zr_kayitlar',
+    tarlalar     : 'zr_tarlalar',
+    sirasi       : 'zr_sirasi',
+    profil       : 'zr_profil',
+    avatar       : 'zr_avatar',
+    sezon        : 'zr_sezon',
+    hatirlatici  : 'zr_hatirlatici',
   },
 
   kaydet(key, val) {
@@ -7495,6 +7624,20 @@ function lsKayitKaydet() {
 // Tarla sırası değişince kaydet
 function lsSirasiKaydet() {
   LS.kaydet(LS.KEYS.sirasi, tarlaSirasi);
+}
+
+// Hatırlatıcıları kaydet
+function lsHatirlaticiKaydet() {
+  LS.kaydet(LS.KEYS.hatirlatici, hatirlaticiler);
+}
+
+// Hatırlatıcıları yükle
+function lsHatirlaticiYukle() {
+  const stored = LS.oku(LS.KEYS.hatirlatici);
+  if (stored && Array.isArray(stored) && stored.length > 0) {
+    hatirlaticiler.length = 0;
+    stored.forEach(h => hatirlaticiler.push(h));
+  }
 }
 
 // Profil bilgisi kaydet
@@ -7607,11 +7750,12 @@ function avatarSec() {
 // ══════════════════════════════════════════════════════════════
 function veriDısaAktar() {
   const yedek = {
-    versiyon : '1.0',
-    tarih    : new Date().toISOString(),
+    versiyon      : '1.1',
+    tarih         : new Date().toISOString(),
     kayitlar,
-    profil   : LS.oku(LS.KEYS.profil),
-    sirasi   : tarlaSirasi,
+    hatirlaticiler,
+    profil        : LS.oku(LS.KEYS.profil),
+    sirasi        : tarlaSirasi,
   };
   const blob = new Blob([JSON.stringify(yedek, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
@@ -7639,6 +7783,12 @@ function veriIceAktar() {
         kayitlar.length = 0;
         data.kayitlar.forEach(k => kayitlar.push(k));
         LS.kaydet(LS.KEYS.kayitlar, kayitlar);
+        if (data.hatirlaticiler && Array.isArray(data.hatirlaticiler)) {
+          hatirlaticiler.length = 0;
+          data.hatirlaticiler.forEach(h => hatirlaticiler.push(h));
+          LS.kaydet(LS.KEYS.hatirlatici, hatirlaticiler);
+          renderRemindList();
+        }
         if (data.sirasi) { tarlaSirasi = data.sirasi; LS.kaydet(LS.KEYS.sirasi, tarlaSirasi); }
         if (data.profil) {
           LS.kaydet(LS.KEYS.profil, data.profil);
@@ -7663,12 +7813,19 @@ document.addEventListener('DOMContentLoaded', function() {
   lsSirasiYukle();
   lsProfilYukle();
   lsAvatarYukle();
+  lsHatirlaticiYukle();
 
-  // 2. Kasa render
-  const v = kasaSezonVeri['2025'];
+  // 2. Kasa render — aktif yıl cari yıl (2026)
+  const _defaultYil = new Date().getFullYear().toString();
+  const v = kasaSezonVeri[_defaultYil] || kasaSezonVeri['2025'];
+  const _defaultYilKey = kasaSezonVeri[_defaultYil] ? _defaultYil : '2025';
+  _aktifBarYil = _defaultYilKey;
   if (v) {
     aylikVeri.splice(0, aylikVeri.length, ...v.aylik);
-    renderKasaEkrani('2025', v);
+    renderKasaEkrani(_defaultYilKey, v);
+    // Sezon seçici butonunu güncelle
+    const secBtn = document.querySelector('.kasa-sezon-sec');
+    if (secBtn) secBtn.textContent = _defaultYilKey + ' Sezonu ▾';
   }
   renderBarChart();
   renderBugünNeYapmali();
@@ -7773,6 +7930,7 @@ function renderKasaEkrani(yil, v) {
     {yil:'2023', val:'₺8.200',  trend:'',     trendCls:'',       bar:'66%' },
     {yil:'2024', val:'₺10.900', trend:'↑%33', trendCls:'arr-up', bar:'87%' },
     {yil:'2025', val:'₺12.470', trend:'↑%14', trendCls:'arr-up', bar:'100%'},
+    {yil:'2026', val:'₺0',      trend:'',     trendCls:'',       bar:'0%'  },
   ];
   document.getElementById('kasa-yil-kart').innerHTML = tumYillar.map(y => {
     const isSecili   = y.yil === yil;
@@ -8460,7 +8618,7 @@ function appendTarlaKarti(key, t) {
   const urunAdi = urunAdlar[t.urun] || t.urun;
 
   const html = `
-    <div class="hfc fu" style="--c:${renk}" onclick="openDetail('${key}')">
+    <div class="hfc fu" data-key="${key}" style="--c:${renk}" onclick="openDetail('${key}')">
       <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${renk};border-radius:3px 0 0 3px;"></div>
       <div class="hfc-thumb" style="background:${bg}">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="color:${renk}">${ikon}</svg>
@@ -8483,7 +8641,7 @@ function appendTarlaKarti(key, t) {
     const ekimParts = t.ekim ? t.ekim.split('-') : [];
     const ekimStr = ekimParts.length === 3 ? ekimParts[2] + '.' + ekimParts[1] : '—';
     const flHtml = `
-      <div class="fl-card fu" onclick="openDetail('${key}')">
+      <div class="fl-card fu" data-key="${key}" onclick="openDetail('${key}')">
         <div class="fl-banner" style="background:linear-gradient(135deg,${renk}cc,${renk})">
           <div class="fl-banner-left">
             <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style="color:white;opacity:.9">${ikon}</svg>
@@ -8589,6 +8747,7 @@ function renderRemindList() {
 
 function silHatirlatici(i) {
   hatirlaticiler.splice(i, 1);
+  lsHatirlaticiKaydet();
   renderRemindList();
 }
 
@@ -8618,6 +8777,7 @@ function saveHatirlatici() {
   });
 
   renderRemindList();
+  lsHatirlaticiKaydet();
   closeModal();
 
   // Not inputunu temizle
