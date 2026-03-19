@@ -58,7 +58,7 @@
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: #C8C2B6;
+  background: var(--bg);
   display: flex; justify-content: center; align-items: center;
   min-height: 100vh; padding: 20px;
 }
@@ -135,23 +135,18 @@ body {
   background: var(--bg);
   padding-top: 68px;
   will-change: transform, opacity;
-  transform-origin: top center;
+  transform-origin: 50% 34px;
   transition: transform .32s cubic-bezier(.22,.68,0,1.05),
               border-radius .32s cubic-bezier(.22,.68,0,1.05);
 }
-/* iOS presenting view — sheet açıkken arka ekran küçülür */
+/* iOS presenting view — sheet açıkken içerik küçülür, header sabit */
 .screen.sheet-presented {
   transform: scale(0.92) translateY(10px);
   border-radius: 12px;
   overflow: hidden;
 }
 /* Header da ekranla birlikte küçülür — gap kapanır */
-.sb.sheet-presented {
-  transform: scale(0.92) translateY(10px);
-  transform-origin: top center;
-  border-radius: 0;
-  transition: transform .32s cubic-bezier(.22,.68,0,1.05);
-}
+/* sb-bar sabit kalır — iOS davranışı (header scale edilmez) */
 
 /* ── iOS premium geçiş animasyonları ─────────────────────────
    Tab geçişi (home/fields/kayitlarim/kasa): Instagram/X tarzı
@@ -2115,7 +2110,7 @@ body {
 <div class="phone">
 
   <!-- STATUS BAR - always on top -->
-  <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;border-radius:50px 50px 0 0;">
+  <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;border-radius:50px 50px 0 0;background:var(--bg)">
     <!-- Sol: bağlama göre geri butonu veya boş -->
     <div class="sb-left" id="sb-left"></div>
     <!-- Orta: Logo (mutlak merkez) -->
@@ -2381,7 +2376,7 @@ body {
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#8A6914">Buğday · Tosunbey</div><div class="fl-area">45 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">15 Kas '24</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">21 Ağu '25</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺14.200</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺315</div></div>
             </div>
@@ -2402,7 +2397,7 @@ body {
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#2B7A78">Çeltik · Osmancık-97</div><div class="fl-area">30 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">20 May '25</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">13 Oca '26</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺11.400</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺380</div></div>
             </div>
@@ -2422,7 +2417,7 @@ body {
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#6B7A0A">Kanola · ES Imperio</div><div class="fl-area">25 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">10 Eki '24</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">9 Ağu '25</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺8.600</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺344</div></div>
             </div>
@@ -2442,7 +2437,7 @@ body {
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#8B4513">Ayçiçeği · Tunca</div><div class="fl-area">60 dönüm</div></div>
             <div class="fl-stats">
-              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">20 Nis '25</div></div>
+              <div class="fl-stat"><div class="fl-stat-lbl">Ekim</div><div class="fl-stat-val">12 Şub '26</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">Maliyet</div><div class="fl-stat-val">₺21.400</div></div>
               <div class="fl-stat"><div class="fl-stat-lbl">₺/Dönüm</div><div class="fl-stat-val">₺356</div></div>
             </div>
@@ -2749,7 +2744,11 @@ body {
   <!-- ═══════ PROFİL ═══════ -->
   <div class="screen" id="profil">
     <div class="profil-hero">
-      <div class="profil-avatar-big" id="p-avatar">A</div>
+      <div class="profil-avatar-big" id="p-avatar" onclick="avatarSec()" style="cursor:pointer;position:relative;" title="Fotoğraf değiştir">A
+        <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--green);border:2px solid white;display:flex;align-items:center;justify-content:center;">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+      </div>
       <div class="profil-hero-info">
         <div class="profil-isim" id="p-isim">Ahmet Bey</div>
         <div class="profil-konum">
@@ -2863,6 +2862,26 @@ body {
           <div class="profil-row-body">
             <div class="profil-row-lbl">Geri Bildirim Gönder</div>
             <div class="profil-row-val">Görüşlerini ilet</div>
+          </div>
+          <div class="profil-row-arr">›</div>
+        </div>
+        <div class="profil-row" onclick="veriDısaAktar()" style="cursor:pointer">
+          <div class="profil-row-ic" style="background:var(--green-lt)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3" stroke="var(--green-mid)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v1.5A1.5 1.5 0 003.5 14h9a1.5 1.5 0 001.5-1.5V11" stroke="var(--green-mid)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div class="profil-row-body">
+            <div class="profil-row-lbl">Veriyi Dışa Aktar</div>
+            <div class="profil-row-val">JSON dosyası olarak yedekle</div>
+          </div>
+          <div class="profil-row-arr">›</div>
+        </div>
+        <div class="profil-row" onclick="veriIceAktar()" style="cursor:pointer">
+          <div class="profil-row-ic" style="background:var(--sky-lt)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 10V2M5 5l3-3 3 3" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v1.5A1.5 1.5 0 003.5 14h9a1.5 1.5 0 001.5-1.5V11" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div class="profil-row-body">
+            <div class="profil-row-lbl">Veriyi İçe Aktar</div>
+            <div class="profil-row-val">Yedek dosyasından geri yükle</div>
           </div>
           <div class="profil-row-arr">›</div>
         </div>
@@ -4823,7 +4842,7 @@ const tarlalar = {
   kuzey: {
     isim:'Kuzey Tarla', ad:'Kuzey Tarla', alt:'Buğday · Tosunbey · 45 dönüm',
     gradient:'linear-gradient(160deg,#6B4F0A,#C8951A)',
-    urun:'bugday', ekim:'2024-11-15',
+    urun:'bugday', ekim:'2025-08-21',
     maliyet:'₺14.200', donum:'₺315',
     costBand:{ type:'up', title:'Dönüm maliyeti geçen yıla göre %12 arttı', sub:'Geçen yıl: ₺280/dönüm · Bu yıl: ₺315/dönüm · En büyük artış: gübre gideri' },
     yillar:[
@@ -4840,7 +4859,7 @@ const tarlalar = {
   dogu: {
     isim:'Doğu Parsel', ad:'Doğu Parsel', alt:'Çeltik · Osmancık-97 · 30 dönüm',
     gradient:'linear-gradient(160deg,#1A5C5A,#2B9E9B)',
-    urun:'celtik', ekim:'2025-05-20',
+    urun:'celtik', ekim:'2026-01-13',
     maliyet:'₺11.400', donum:'₺380',
     costBand: null,
     yillar:[],
@@ -4853,7 +4872,7 @@ const tarlalar = {
   kanola: {
     isim:'Batı Tarla', ad:'Batı Tarla', alt:'Kanola · ES Imperio · 25 dönüm',
     gradient:'linear-gradient(160deg,#4A5608,#8A9E0F)',
-    urun:'kanola', ekim:'2024-10-10',
+    urun:'kanola', ekim:'2025-08-09',
     maliyet:'₺8.600', donum:'₺344',
     costBand:{ type:'down', title:'Bu sezon dönüm maliyetin geçen yıla göre %6 düştü', sub:'Geçen yıl: ₺366/dönüm · Bu yıl: ₺344/dönüm · İyi yönetim!' },
     yillar:[
@@ -4869,7 +4888,7 @@ const tarlalar = {
   guney: {
     isim:'Güney Tarla', ad:'Güney Tarla', alt:'Ayçiçeği · Tunca · 60 dönüm',
     gradient:'linear-gradient(160deg,#6B2F0A,#B45309)',
-    urun:'aycicek', ekim:'2025-04-20',
+    urun:'aycicek', ekim:'2026-02-12',
     maliyet:'₺21.400', donum:'₺356',
     costBand:null,
     yillar:[
@@ -4884,11 +4903,36 @@ const tarlalar = {
   }
 };
 
-// Ürün gelişim takvimleri (gün)
+// Ürün gelişim takvimleri (gün) — [çimlenme_biter, büyüme_biter, olgunlaşma_biter, hasat_toplam]
+// Kaynak: T.C. Tarım ve Orman Bakanlığı yayınları, TAGEM bültenleri,
+//         agrowy.com (Bakanlık iştiraki), FAO crop calendars, Türkiye koşulları
 const takvim = {
-  bugday: [60,180,220,240], celtik:[30,90,130,150],
-  kanola:[60,180,215,230],  aycicek:[20,60,95,110],
-  misir:[20,80,120,140],    arpa:[50,160,195,210]
+  // TAHILLAR
+  bugday:        [60, 180, 220, 240], // Kışlık buğday — TAGEM Hububat Bülteni
+  arpa:          [50, 155, 190, 210], // Arpa buğdaydan ~30g erken — TAGEM
+  celtik:        [30,  90, 130, 150], // Çeltik fide+tarla — Edirne TAGEM
+  misir:         [15,  75, 110, 135], // Dane mısır — TAGEM Mısır Bülteni
+  yulaf:         [55, 165, 205, 225], // Yulaf kışlık — Tarım Bakanlığı Hububat
+  cavdar:        [60, 175, 220, 240], // Çavdar kışlık uzun — Tarım Bakanlığı
+  // YAĞ BİTKİLERİ
+  aycicek:       [15,  55,  90, 115], // Vejetasyon 80-130g — Trakya TAEM, agrowy
+  kanola:        [55, 175, 210, 230], // Kışlık kolza — Tarım Bakanlığı Yağlı Tohumlar
+  soya:          [15,  55,  85, 105], // İkinci ürün kısa dönem — Adana TAGEM
+  // ENDÜSTRİ BİTKİLERİ
+  pamuk:         [15,  75, 135, 185], // Uzun vejetasyon — Şanlıurfa TAGEM
+  seker_pancari: [15,  80, 135, 170], // Türkiye Şeker Fabrikaları A.Ş. bülteni
+  tutun:         [60,  90, 115, 140], // Tütün Eksperleri Derneği, Tarım Bakanlığı
+  // BAKLAGİLLER
+  nohut:         [15,  70, 110, 130], // ICARDA + Tarım Bakanlığı Baklagiller
+  mercimek:      [15,  60,  95, 115], // En kısa baklagil — Güneydoğu TAGEM
+  fasulye:       [10,  50,  90, 110], // Kuru fasulye — Tarım Bakanlığı Sebzecilik
+  // SEBZELER
+  domates:       [20,  55,  85, 120], // Fide+tarla — Antalya TAGEM
+  patates:       [20,  55,  85, 110], // Niğde patates bülteni — Tarım Bakanlığı
+  sogan:         [20,  80, 130, 165], // Kışlık soğan — Tarım Bakanlığı
+  // MEYVE / AĞAÇ (sezon: çiçek→hasat)
+  zeytin:        [30,  90, 160, 210], // Nisan çiçek → Kasım hasat — İzmir TAGEM
+  findik:        [30, 100, 170, 210], // Ocak çiçek → Ağustos hasat — Ordu TAGEM
 };
 
 function getStage(urun, ekimStr) {
@@ -5222,7 +5266,7 @@ function selSezon(el, yil) {
 // ═══════════════════════════════
 // KAYITLARIM VERİLERİ
 // ═══════════════════════════════
-const kayitlar = [
+let kayitlar = [
   {
     id: 1, tip: 'ilac', tarih: '2026-03-16', saat: '09:15',
     tarla: 'Kuzey Tarla', urun: 'Buğday',
@@ -5271,7 +5315,7 @@ const kayitlar = [
   {
     id: 6, tip: 'satin', tarih: '2026-03-05', saat: '16:00',
     tarla: null, kategori: 'İlaç',
-    urunAdi: 'Teldor 50 WG', miktar: '5 kg', 
+    urunAdi: 'Teldor 50 WG', miktar: '5 kg',
     toplam: -4800,
     not: 'Kooperatiften alındı.'
   },
@@ -5292,6 +5336,100 @@ const kayitlar = [
     nem: '%14', depo: 'Kendi depom',
     toplam: -8500,
     not: 'Hasat gayet verimli geçti.'
+  },
+  // ── EK DEMO VERİLER — tüm tipler dolu ──
+  {
+    id: 9, tip: 'surum', tarih: '2026-02-15', saat: '09:30',
+    tarla: 'Kuzey Tarla', urun: 'Buğday',
+    yontem: 'Derin Sürüm', sure: '6 saat',
+    toplam: -1800,
+    not: 'Sonbahar sürümü. Toprak iyi kabardı.'
+  },
+  {
+    id: 10, tip: 'gubre', tarih: '2026-02-10', saat: '14:00',
+    tarla: 'Batı Tarla', urun: 'Kanola',
+    urunler: [
+      { ad: 'DAP Gübre', miktar: '15 kg/dönüm', toplam: '375 kg', maliyet: 2625 },
+      { ad: 'Kükürt', miktar: '5 kg/dönüm', toplam: '125 kg', maliyet: 525 }
+    ],
+    yontem: 'Serpme',
+    toplam: -3150,
+    not: 'Çiçeklenme öncesi takviye.'
+  },
+  {
+    id: 11, tip: 'satin', tarih: '2026-02-05', saat: '11:00',
+    tarla: null, kategori: 'Gübre',
+    urunAdi: 'Üre 46 — 50 kg çuval', miktar: '30 çuval',
+    toplam: -9000,
+    not: 'Bayiden toplu alım, %5 indirim.'
+  },
+  {
+    id: 12, tip: 'sulama', tarih: '2026-01-28', saat: '07:00',
+    tarla: 'Batı Tarla', urun: 'Kanola',
+    yontem: 'Damla', sure: '8 saat',
+    toplam: -520,
+    not: ''
+  },
+  {
+    id: 13, tip: 'satis', tarih: '2026-01-20', saat: '10:30',
+    tarla: 'Kuzey Tarla', urun: 'Buğday',
+    miktar: '9 ton', birimFiyat: '₺1.555/ton',
+    alici: 'TMO', odeme: 'Havale',
+    toplam: 13995,
+    not: ''
+  },
+  {
+    id: 14, tip: 'ilac', tarih: '2026-01-15', saat: '09:00',
+    tarla: 'Doğu Parsel', urun: 'Çeltik',
+    urunler: [
+      { ad: 'Basagran', doz: '1.5 lt/da', toplam: '45 lt', donum: '1.5 lt/dönüm', maliyet: 3600 }
+    ],
+    yontem: 'Traktör Pompası', su: '300 lt',
+    toplam: -3600,
+    not: 'Yabancı ot için geniş spektrum.'
+  },
+  {
+    id: 15, tip: 'ekim', tarih: '2025-08-21', saat: '07:00',
+    tarla: 'Kuzey Tarla', urun: 'Buğday',
+    cesit: 'Tosunbey', miktar: '18 kg/dönüm',
+    toplamKg: '810 kg',
+    toplam: -4860,
+    not: 'Toprak sıcaklığı 8°C, ideal koşul.'
+  },
+  {
+    id: 16, tip: 'surum', tarih: '2025-08-05', saat: '08:00',
+    tarla: 'Batı Tarla', urun: 'Kanola',
+    yontem: 'Diskaro', sure: '4 saat',
+    toplam: -1200,
+    not: ''
+  },
+  {
+    id: 17, tip: 'satin', tarih: '2025-08-01', saat: '15:00',
+    tarla: null, kategori: 'Tohum',
+    urunAdi: 'ES Imperio Kanola Tohumu', miktar: '25 kg',
+    toplam: -3750,
+    not: 'Sertifikalı tohum, bayiden.'
+  },
+  {
+    id: 18, tip: 'not', tarih: '2025-09-05', saat: '17:30',
+    tarla: 'Güney Tarla',
+    toplam: 0,
+    not: 'Güney tarlada toprak analizi yaptırdım. pH: 6.8, organik madde düşük. İlkbaharda organik gübre takviyesi lazım.'
+  },
+  {
+    id: 19, tip: 'satin', tarih: '2025-08-20', saat: '10:00',
+    tarla: null, kategori: 'Makine',
+    urunAdi: 'Pülverizatör bakım — filtre seti', miktar: '1 set',
+    toplam: -850,
+    not: 'Sezon başı bakım.'
+  },
+  {
+    id: 20, tip: 'hasat', tarih: '2025-07-15', saat: '06:30',
+    tarla: 'Kuzey Tarla', urun: 'Buğday',
+    verim: '380 kg/dönüm', toplamKg: '17.100 kg',
+    nem: '%13.5', depo: 'Kendi depom',
+    toplam: -7200,
+    not: 'İyi bir sezondu, verim beklentinin üzerinde.'
   }
 ];
 
@@ -5384,7 +5522,10 @@ function formatGun(tarihStr) {
 function kayitSil(id) {
   if (confirm('Bu kayıt silinsin mi?')) {
     const idx = kayitlar.findIndex(k => k.id === id);
-    if (idx !== -1) kayitlar.splice(idx, 1);
+    if (idx !== -1) {
+      kayitlar.splice(idx, 1);
+      lsKayitKaydet(); // localStorage güncelle
+    }
     closeKayitSheetBtn();
     renderKayitlar(aktifFiltre);
     syncKasaFromKayitlar();
@@ -5837,6 +5978,7 @@ function saveKayit() {
   };
 
   kayitlar.unshift(yeniKayit);
+  lsKayitKaydet(); // localStorage'a kaydet
 
   const btn = document.getElementById('kayit-save-btn');
   btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><path d="M3 9l4.5 4.5L15 5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kaydedildi!`;
@@ -7027,6 +7169,7 @@ function renderTarlaSirasi() {
 
       setTimeout(function() { el.classList.remove('drag-settle'); }, SETTLE_MS);
       tarlaSirasi = getCards().map(function(c) { return c.dataset.key; });
+      lsSirasiKaydet(); // sırayı localStorage'a kaydet
     }, 220);
   }
 
@@ -7084,7 +7227,216 @@ function renderTarlaSirasi() {
 
 })();
 
+// ══════════════════════════════════════════════════════════════
+// LOCALSTORAGE — VERİ KALICILIĞI
+// ══════════════════════════════════════════════════════════════
+const LS = {
+  KEYS: {
+    kayitlar : 'zr_kayitlar',
+    tarlalar : 'zr_tarlalar',
+    sirasi   : 'zr_sirasi',
+    profil   : 'zr_profil',
+    avatar   : 'zr_avatar',
+    sezon    : 'zr_sezon',
+  },
+
+  kaydet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+    catch(e) { console.warn('LS kaydet hata:', e); return false; }
+  },
+
+  oku(key) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    catch(e) { return null; }
+  },
+
+  sil(key) {
+    try { localStorage.removeItem(key); } catch(e) {}
+  },
+
+  tumunuSil() {
+    Object.values(LS.KEYS).forEach(k => LS.sil(k));
+  }
+};
+
+// Kayıt ekle/sil → localStorage'a yaz
+function lsKayitKaydet() {
+  LS.kaydet(LS.KEYS.kayitlar, kayitlar);
+}
+
+// Tarla sırası değişince kaydet
+function lsSirasiKaydet() {
+  LS.kaydet(LS.KEYS.sirasi, tarlaSirasi);
+}
+
+// Profil bilgisi kaydet
+function lsProfilKaydet(isim, konum) {
+  LS.kaydet(LS.KEYS.profil, { isim, konum });
+}
+
+// ── Profil yükle
+function lsProfilYukle() {
+  const p = LS.oku(LS.KEYS.profil);
+  if (!p) return;
+  if (p.isim) {
+    const els = ['p-ad-satir','p-isim'].map(id => document.getElementById(id));
+    els.forEach(el => el && (el.textContent = p.isim));
+    ['sb-avatar','p-avatar'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.querySelector('img')) el.textContent = p.isim.charAt(0).toUpperCase();
+    });
+    const gEl = document.getElementById('g-isim');
+    if (gEl) gEl.textContent = p.isim.split(' ')[0];
+  }
+  if (p.konum) {
+    ['p-konum-satir','p-konum'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = p.konum;
+    });
+  }
+}
+
+// ── Avatar yükle
+function lsAvatarYukle() {
+  const src = LS.oku(LS.KEYS.avatar);
+  if (!src) return;
+  setAvatarImage(src);
+}
+
+// Avatar göster — hem header hem profil
+function setAvatarImage(src) {
+  const sbAv = document.getElementById('sb-avatar');
+  const pAv  = document.getElementById('p-avatar');
+  if (sbAv) {
+    sbAv.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="avatar">`;
+  }
+  if (pAv) {
+    pAv.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:20px;" alt="avatar">`;
+  }
+}
+
+// ── Kayıtları yükle
+function lsKayitlarYukle() {
+  const stored = LS.oku(LS.KEYS.kayitlar);
+  if (stored && Array.isArray(stored) && stored.length > 0) {
+    // localStorage'dakini demo verinin üzerine yaz
+    kayitlar.length = 0;
+    stored.forEach(k => kayitlar.push(k));
+  }
+  // Yoksa demo veriler kalır
+}
+
+// ── Tarla sırası yükle
+function lsSirasiYukle() {
+  const s = LS.oku(LS.KEYS.sirasi);
+  if (s && Array.isArray(s) && s.length > 0) {
+    tarlaSirasi = s;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// AVATAR FOTOĞRAF SEÇİCİ
+// ══════════════════════════════════════════════════════════════
+function avatarSec() {
+  const inp = document.createElement('input');
+  inp.type   = 'file';
+  inp.accept = 'image/*';
+  inp.style.display = 'none';
+  document.body.appendChild(inp);
+
+  inp.onchange = function() {
+    const file = inp.files[0];
+    if (!file) return;
+    document.body.removeChild(inp);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      // Canvas ile sıkıştır — max 200x200px
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX = 200;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+        else       { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.8);
+        // Kaydet ve göster
+        LS.kaydet(LS.KEYS.avatar, compressed);
+        setAvatarImage(compressed);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  inp.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+// JSON YEDEK — DIŞA / İÇE AKTAR
+// ══════════════════════════════════════════════════════════════
+function veriDısaAktar() {
+  const yedek = {
+    versiyon : '1.0',
+    tarih    : new Date().toISOString(),
+    kayitlar,
+    profil   : LS.oku(LS.KEYS.profil),
+    sirasi   : tarlaSirasi,
+  };
+  const blob = new Blob([JSON.stringify(yedek, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'zeraai-yedek-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function veriIceAktar() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = function() {
+    const file = inp.files[0];
+    if (!file) return;
+    document.body.removeChild(inp);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.kayitlar) { alert('Geçersiz yedek dosyası.'); return; }
+        kayitlar.length = 0;
+        data.kayitlar.forEach(k => kayitlar.push(k));
+        LS.kaydet(LS.KEYS.kayitlar, kayitlar);
+        if (data.sirasi) { tarlaSirasi = data.sirasi; LS.kaydet(LS.KEYS.sirasi, tarlaSirasi); }
+        if (data.profil) {
+          LS.kaydet(LS.KEYS.profil, data.profil);
+          lsProfilYukle();
+        }
+        renderKayitlar(aktifFiltre);
+        renderTarlaSirasi();
+        syncKasaFromKayitlar();
+        alert('Veriler başarıyla yüklendi!');
+      } catch(err) {
+        alert('Dosya okunamadı: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  // 1. localStorage'dan verileri yükle
+  lsKayitlarYukle();
+  lsSirasiYukle();
+  lsProfilYukle();
+  lsAvatarYukle();
+
+  // 2. Kasa render
   const v = kasaSezonVeri['2025'];
   if (v) {
     aylikVeri.splice(0, aylikVeri.length, ...v.aylik);
@@ -7522,14 +7874,20 @@ function saveProfilField() {
   if (_profilEditField === 'isim') {
     document.getElementById('p-ad-satir').textContent  = val;
     document.getElementById('p-isim').textContent      = val;
-    document.getElementById('sb-avatar').textContent   = val.charAt(0).toUpperCase();
-    document.getElementById('p-avatar').textContent    = val.charAt(0).toUpperCase();
+    const sbAv = document.getElementById('sb-avatar');
+    if (sbAv && !sbAv.querySelector('img')) sbAv.textContent = val.charAt(0).toUpperCase();
+    const pAv = document.getElementById('p-avatar');
+    if (pAv && !pAv.querySelector('img')) pAv.textContent = val.charAt(0).toUpperCase();
     const gEl = document.getElementById('g-isim');
     if (gEl) gEl.textContent = val.split(' ')[0];
   } else {
     document.getElementById('p-konum-satir').textContent = val;
     document.getElementById('p-konum').textContent       = val;
   }
+  // Profili localStorage'a kaydet
+  const isim  = document.getElementById('p-isim')?.textContent || '';
+  const konum = document.getElementById('p-konum')?.textContent || '';
+  lsProfilKaydet(isim, konum);
   closeProfilSheetBtn();
 }
 
@@ -7567,19 +7925,27 @@ function closeGbSheetBtn() {
 // ── TÜM VERİLERİ SİL ──
 function confirmVeriSil() {
   if (confirm('Tüm veriler silinsin mi? Bu işlem geri alınamaz.')) {
+    // localStorage'ı temizle
+    LS.tumunuSil();
     // Runtime kayıtları sıfırla
     kayitlar.splice(0, kayitlar.length);
     hatirlaticiler.splice(0, hatirlaticiler.length);
+    tarlaSirasi = [];
     // Dinamik eklenen tarlaları kaldır (demo 4 tarla kalır)
     const demoKeys = ['kuzey','dogu','kanola','guney'];
     Object.keys(tarlalar).forEach(k => {
       if (!demoKeys.includes(k)) delete tarlalar[k];
     });
-    // Kasa verisini 2025 başlangıç değerlerine geri al
+    // Avatar sıfırla
+    ['sb-avatar','p-avatar'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = 'A';
+    });
+    // Kasa verisini sıfırla
     syncKasaFromKayitlar();
-    // UI güncelle
     renderRemindList();
     renderFieldsProgress();
+    renderTarlaSirasi();
     navTo('home');
   }
 }
@@ -8088,16 +8454,13 @@ function selChip(el) {
     if (_sheetDepth === 1) {
       var sc = getActiveScreen();
       if (sc) sc.classList.add('sheet-presented');
-      // Header da birlikte küçülür — gap kapanır
-      var sb = document.getElementById('sb-bar');
-      if (sb) sb.classList.add('sheet-presented');
+      // sb-bar sabit kalır — sadece içerik scale edilir (iOS davranışı)
     }
   }
   function presentingOut(instantly) {
     _sheetDepth = Math.max(0, _sheetDepth - 1);
     if (_sheetDepth === 0) {
       var sc = getActiveScreen();
-      var sb = document.getElementById('sb-bar');
       if (sc) {
         if (instantly) {
           sc.style.transition = 'none';
@@ -8108,21 +8471,11 @@ function selChip(el) {
           sc.classList.remove('sheet-presented');
         }
       }
-      if (sb) {
-        if (instantly) {
-          sb.style.transition = 'none';
-          sb.classList.remove('sheet-presented');
-          sb.offsetHeight;
-          sb.style.transition = '';
-        } else {
-          sb.classList.remove('sheet-presented');
-        }
-      }
     }
   }
   // Drag sırasında scale'i interpolate et
   function presentingProgress(progress) {
-    // 0=tam açık(0.92), 1=kapanmış(1.0)
+    // 0=tam açık(0.92), 1=kapanmış(1.0) — sadece içerik scale edilir
     var sc = getActiveScreen();
     if (!sc) return;
     var s = SCALE_AMOUNT + (1 - SCALE_AMOUNT) * progress;
@@ -8409,12 +8762,13 @@ function selChip(el) {
   var openFns  = ['openKayit','openSheet','openHavaSheet','openOpSheet',
                   'openKasaYilSheet','openKasaSezonSec','openSezonSheet',
                   'openKonumPicker','openProfilDuzenle','openGeriBildirim','openModal',
-                  'openYilSheet'];
+                  'openYilSheet','openKasaSheet'];
   // Sheet kapama fonksiyonları
   var closeFns = ['closeKayit','closeSheet','closeHavaSheetBtn',
                   'closeKasaYilSheetBtn','closeKasaSezonSecBtn','closeSezonSheetBtn',
                   'closeKonumPickerBtn','closeProfilSheetBtn','closeGbSheetBtn',
-                  'closeModal','closeKayitSheetBtn','closeKayitSheet','closeKasaSheet','closeOpSheet'];
+                  'closeModal','closeKayitSheetBtn','closeKayitSheet','closeKasaSheet',
+                  'closeOpSheet','closeKasaSheetBtn','closeSezonSheet'];
 
   // DOM ve tüm script'ler hazır olunca wrap et
   // DOMContentLoaded garantisi: tüm global fonksiyonlar bu noktada tanımlı
