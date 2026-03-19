@@ -4,7 +4,7 @@
 ║  Bu bloğu yeni konuşma başında dosyayla birlikte upload et.     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  UYGULAMA ADI   : Zeraai (Hasat)                                ║
-║  VERSİYON       : v39                                           ║
+║  VERSİYON       : v41                                           ║
 ║  PLATFORM       : iOS-benzeri mobil prototype (393×852px)       ║
 ║  YAPI           : Tek HTML dosyası — CSS + JS içinde            ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -52,17 +52,20 @@
 ║  • Navigasyon: navTo(), showScreen() fonksiyonları             ║
 ║  • Tüm veri: localStorage'da (FIELDS, KAYITLAR, USER_PREFS)    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  SON DURUM (v39 itibarıyla tamamlanan)                          ║
-║  ✅ v38'deki her şey korundu                                    ║
-║  ✅ Onboarding header yenilendi:                                ║
-║     • Avatar kaldırıldı (kayıtsız kullanıcıya profil saçma)    ║
-║     • Logo-mark ortada kalıyor, wordmark gizleniyor             ║
-║     • Sağa "Atla" butonu eklendi (--c-dismiss rengi)           ║
-║     • Header altına teal progress bar eklendi (33/66/100%)     ║
-║     • obBitir() ve "Atla" tıklandığında ob-mode kapanıyor      ║
+║  SON DURUM (v41 itibarıyla tamamlanan)                          ║
+║  ✅ v40'daki her şey korundu                                    ║
+║  ✅ GPS + hava bandı konum sistemi eklendi:                     ║
+║     • Konum yok → hava bandına tıklayınca ön-izin ekranı çıkar ║
+║     • "Konumuma izin ver" → GPS alır → Nominatim'den şehir     ║
+║     • "İl/ilçe seç" → mevcut konum picker açılır               ║
+║     • GPS reddedilirse otomatik il/ilçe'ye yönlendirir          ║
+║     • Konum alındıktan sonra hava bandı güncellenir             ║
+║     • Konum picker'dan kayıt sonrası da hava bandı güncellenir  ║
+║  NOT: Hava verisi şu an mockup — gerçek API ayrı entegrasyon   ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  SIRADAKI / AÇIK KONULAR                                        ║
-║  → Onboarding gövde içeriği (ikon, başlık, form) düzenlenecek  ║
+║  → Onboarding gövde içeriği (ikon, başlık, punto, spacing)     ║
+║  → Gerçek hava API entegrasyonu (OpenWeatherMap veya MGM)      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  BİLİNEN SORUNLAR / NOTLAR                                      ║
 ║  → sheet-close ve op-sheet-close zaten nötr renk kullanıyor,   ║
@@ -232,7 +235,50 @@ body.app-ready { background: var(--bg); }
 }
 .app-avatar:active { transform: scale(.88); }
 
-/* ── Onboarding header modu ───────────────────────────────────
+/* ── Progressive onboarding banneri ──────────────────────────
+   Kayıt formunun üstünde — ad girilmemişse görünür,
+   kaydedince kalıcı olarak kaybolur
+──────────────────────────────────────────────────────────── */
+.prog-ob-banner {
+  margin: 0 0 14px;
+  background: var(--green-lt);
+  border: 1px solid rgba(34,127,131,.18);
+  border-radius: var(--r);
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: obFadeUp .3s cubic-bezier(.22,.68,0,1.05) both;
+}
+.prog-ob-ic {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--green); display: flex;
+  align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.prog-ob-body { flex: 1; min-width: 0; }
+.prog-ob-title { font-size: 12px; font-weight: 600; color: var(--green-mid); margin-bottom: 2px; }
+.prog-ob-desc  { font-size: 11px; color: var(--text2); }
+.prog-ob-form  { display: flex; gap: 7px; margin-top: 8px; align-items: center; }
+.prog-ob-input {
+  flex: 1; height: 34px; border-radius: var(--r-pill);
+  border: 1.5px solid var(--border);
+  padding: 0 12px; font-family: 'Inter', sans-serif;
+  font-size: 13px; color: var(--text);
+  background: var(--card); outline: none;
+  transition: border-color .15s;
+}
+.prog-ob-input:focus { border-color: var(--green); }
+.prog-ob-btn {
+  height: 34px; padding: 0 14px;
+  background: var(--green); color: white;
+  border: none; border-radius: var(--r-pill);
+  font-family: 'Inter', sans-serif; font-size: 12px;
+  font-weight: 600; cursor: pointer;
+  transition: background .15s, transform .15s;
+  white-space: nowrap;
+}
+.prog-ob-btn:active { background: var(--green-mid); transform: scale(.97); }
    Onboarding'de: wordmark gizlenir, avatar → Atla butonu,
    header altına ince teal progress bar eklenir
 ──────────────────────────────────────────────────────────── */
@@ -2481,11 +2527,11 @@ body.app-ready { background: var(--bg); }
       </div>
 
       <!-- HAVA BANDI -->
-      <div class="wb fu" onclick="toggleFc()">
+      <div class="wb fu" onclick="wbTikla()">
         <div class="wb-main">
           <div class="wb-left">
             <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="5.5" fill="#FCD34D"/><g stroke="#FDE68A" stroke-width="1.6" stroke-linecap="round" opacity=".65"><line x1="13" y1="2.5" x2="13" y2="5"/><line x1="13" y1="21" x2="13" y2="23.5"/><line x1="2.5" y1="13" x2="5" y2="13"/><line x1="21" y1="13" x2="23.5" y2="13"/><line x1="5.8" y1="5.8" x2="7.7" y2="7.7"/><line x1="18.3" y1="18.3" x2="20.2" y2="20.2"/><line x1="20.2" y1="5.8" x2="18.3" y2="7.7"/><line x1="7.7" y1="18.3" x2="5.8" y2="20.2"/></g></svg>
-            <div><div class="wb-temp">23°</div><div class="wb-desc">Az Bulutlu · Manisa</div></div>
+            <div><div class="wb-temp" id="wb-temp-val">23°</div><div class="wb-desc" id="wb-desc-val">Az Bulutlu · Manisa</div></div>
           </div>
           <div class="wb-stats">
             <div class="wb-stat"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M5 1C5 1 1.5 5.5 1.5 8a3.5 3.5 0 007 0C8.5 5.5 5 1 5 1z" stroke="var(--sky)" stroke-width="1.3" stroke-linejoin="round"/></svg>%58</div>
@@ -4886,6 +4932,150 @@ function selHavaSenaryo(s) {
   });
 }
 
+// ══════════════════════════════════════════════════════════════
+// KONUM & HAVA BANDI SİSTEMİ
+// Akış: wbTikla() → konum var mı? → GPS sor / il-ilçe sheet
+// ══════════════════════════════════════════════════════════════
+
+// Konum durumu: 'none' | 'gps' | 'manual'
+var konumDurumu = 'none';
+
+// Sayfa açılışında mevcut konum var mı kontrol et
+(function konumBaslat() {
+  const konum = (document.getElementById('p-konum')?.textContent || '').trim();
+  const defaultKonumlar = ['Manisa', ''];
+  if (konum && !defaultKonumlar.includes(konum)) {
+    konumDurumu = 'manual';
+    wbGuncelle(konum);
+  }
+})();
+
+// Hava bandına tıklama
+function wbTikla() {
+  if (konumDurumu !== 'none') {
+    // Konum var — normal genişle/daralt
+    toggleFc();
+    return;
+  }
+  // Konum yok — bağlamsal GPS izni sor
+  gpsIzniSor();
+}
+
+// GPS izni: önce kendi ön-ekranımızı göster, sonra sistem dialogunu aç
+function gpsIzniSor() {
+  // Eğer tarayıcı geolocation desteklemiyorsa direkt il/ilçe'ye geç
+  if (!navigator.geolocation) {
+    konumIlIlceAc();
+    return;
+  }
+  // Bağlamsal izin ekranı — modal göster
+  const modal = document.getElementById('modal');
+  if (!modal) { gpsAl(); return; }
+  modal.classList.add('open');
+  modal.innerHTML = `
+    <div class="modal-box" style="padding:24px 20px 20px;">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--green-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <circle cx="11" cy="11" r="3.5" stroke="var(--green)" stroke-width="1.6"/>
+          <path d="M11 2v2.5M11 17.5V20M2 11h2.5M17.5 11H20" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M5.6 5.6l1.7 1.7M14.7 14.7l1.7 1.7M16.4 5.6l-1.7 1.7M7.3 14.7l-1.7 1.7" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+        </svg>
+      </div>
+      <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--text);text-align:center;margin-bottom:8px;">Tarlana özel hava durumu</div>
+      <div style="font-size:13px;color:var(--text2);text-align:center;line-height:1.55;margin-bottom:20px;">Konumunu kullanarak tam tarlana özel hava tahmini gösterelim. İlçe merkezi değil, tam tarlan için.</div>
+      <button onclick="gpsAl()" style="width:100%;height:44px;background:var(--green);color:white;border:none;border-radius:var(--r-pill);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">Konumuma izin ver</button>
+      <button onclick="konumIlIlceAc()" style="width:100%;height:44px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:var(--r-pill);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">İl / ilçe seç</button>
+    </div>`;
+}
+
+// GPS'ten konum al
+function gpsAl() {
+  closeModal();
+  // Hava bandında "alınıyor..." göster
+  var descEl = document.getElementById('wb-desc-val');
+  if (descEl) descEl.textContent = 'Konum alınıyor…';
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      // Başarılı: koordinattan şehir adı bul
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      koordinattenSehir(lat, lon);
+    },
+    function(hata) {
+      // Reddedildi veya hata: il/ilçe'ye geç
+      var descEl = document.getElementById('wb-desc-val');
+      if (descEl) descEl.textContent = 'Konum alınamadı';
+      konumIlIlceAc();
+    },
+    { timeout: 8000, maximumAge: 300000 }
+  );
+}
+
+// Koordinattan şehir adı — Nominatim (OpenStreetMap, ücretsiz)
+function koordinattenSehir(lat, lon) {
+  fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&accept-language=tr')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var addr = data.address || {};
+      // Önce ilçe, sonra il, sonra state
+      var yer = addr.town || addr.city_district || addr.district || addr.county || addr.city || addr.state || 'Bilinmeyen';
+      konumDurumu = 'gps';
+      konumKaydetVeGuncelle(yer, yer);
+    })
+    .catch(function() {
+      // API başarısız — il/ilçe'ye geç
+      konumIlIlceAc();
+    });
+}
+
+// Il/ilçe picker'ı aç (mevcut konum sheet)
+function konumIlIlceAc() {
+  closeModal();
+  openKonumPicker();
+}
+
+// Konum kaydet ve hava bandını güncelle
+function konumKaydetVeGuncelle(gorsel, kayit) {
+  // Profil güncelle
+  var isim = document.getElementById('p-isim')?.textContent || '';
+  lsProfilKaydet(isim, kayit);
+  document.getElementById('p-konum').textContent = gorsel.split(' / ')[0];
+  document.getElementById('p-konum-satir').textContent = gorsel;
+  // Hava bandı güncelle
+  wbGuncelle(gorsel.split(' / ')[0] || gorsel);
+}
+
+// Hava bandını konuma göre güncelle (mockup veri)
+function wbGuncelle(sehir) {
+  var descEl = document.getElementById('wb-desc-val');
+  if (descEl) {
+    var veri = gunlukVeri()[0];
+    var kosulAdi = {
+      normal: 'Az Bulutlu', don_riski: 'Soğuk', cok_sicak: 'Çok Sıcak',
+      yagmurlu: 'Yağmurlu', firtina: 'Fırtınalı', kuvvetli_ruzgar: 'Rüzgarlı',
+      yuksek_nem: 'Nemli', ideal: 'Güneşli', kuraklık: 'Kurak'
+    }[aktifSenaryo] || 'Parçalı Bulutlu';
+    descEl.textContent = kosulAdi + ' · ' + sehir;
+  }
+  // Konum alınınca hava bandı genişlesin
+  if (!fcOpen) toggleFc();
+}
+
+// Konum picker'dan kaydet çağrısı — mevcut saveKonum ile entegre
+// saveKonum fonksiyonu zaten var, onu wrap ediyoruz
+var _origSaveKonum = window.saveKonum;
+window.saveKonum = function() {
+  if (_origSaveKonum) _origSaveKonum();
+  // Konum kaydedildikten sonra durumu güncelle
+  setTimeout(function() {
+    var konum = document.getElementById('p-konum')?.textContent || '';
+    if (konum) {
+      konumDurumu = 'manual';
+      wbGuncelle(konum);
+    }
+  }, 100);
+};
+
 function openHavaSheet() {
   seciliHavaGunIdx = 0;
   renderHavaTahmin(); renderHavaTavsiye();
@@ -5649,6 +5839,66 @@ function obNext(adim) {
   obProgressGuncelle(adim);
 }
 
+// ── Progressive onboarding banner ─────────────────────────────
+function progObBannerGuncelle() {
+  const scroll = document.getElementById('kayit-scroll');
+  if (!scroll) return;
+  const mevcutBanner = document.getElementById('prog-ob-banner');
+  if (mevcutBanner) mevcutBanner.remove();
+  const isim = (document.getElementById('p-isim')?.textContent || '').trim();
+  const defaultIsimler = ['Ahmet Bey', 'A', ''];
+  if (isim && !defaultIsimler.includes(isim)) return;
+  const banner = document.createElement('div');
+  banner.id = 'prog-ob-banner';
+  banner.className = 'prog-ob-banner';
+  banner.innerHTML = `
+    <div class="prog-ob-ic">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 14C3 11.5 5 10 8 10C11 10 13 11.5 13 14" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="8" cy="6" r="3" stroke="white" stroke-width="1.4"/>
+      </svg>
+    </div>
+    <div class="prog-ob-body">
+      <div class="prog-ob-title">Bu kayıt kimin adına?</div>
+      <div class="prog-ob-desc">Adını ekle, kayıtların sana ait olsun.</div>
+      <div class="prog-ob-form">
+        <input class="prog-ob-input" id="prog-ob-isim" placeholder="Adın ve soyadın…" maxlength="30" autocomplete="name">
+        <button class="prog-ob-btn" onclick="progObKaydet()">Ekle</button>
+      </div>
+    </div>`;
+  scroll.insertBefore(banner, scroll.firstChild);
+  banner.querySelector('#prog-ob-isim').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') progObKaydet();
+  });
+}
+
+function progObKaydet() {
+  const input = document.getElementById('prog-ob-isim');
+  if (!input) return;
+  const isim = input.value.trim();
+  if (!isim) { input.style.borderColor = 'var(--red)'; input.focus(); return; }
+  const harf = isim.charAt(0).toUpperCase();
+  document.getElementById('p-isim').textContent = isim;
+  const pAdSatir = document.getElementById('p-ad-satir');
+  if (pAdSatir) pAdSatir.textContent = isim;
+  const gEl = document.getElementById('g-isim');
+  if (gEl) gEl.textContent = isim.split(' ')[0];
+  ['sb-avatar','p-avatar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.querySelector('img')) el.textContent = harf;
+  });
+  const mevcutKonum = document.getElementById('p-konum')?.textContent || '';
+  lsProfilKaydet(isim, mevcutKonum);
+  const banner = document.getElementById('prog-ob-banner');
+  if (banner) {
+    banner.style.transition = 'opacity .25s, transform .25s';
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-8px)';
+    setTimeout(() => banner.remove(), 260);
+  }
+}
+// ─────────────────────────────────────────────────────────────
+
 function obBitir() {
   // Son adım: tarla sayısı onboarding'de seçilmişse not olarak ekle (opsiyonel)
   // Profil verilerinin kesinlikle LS'de olduğunu garantile
@@ -5993,6 +6243,8 @@ function openKayit() {
   document.getElementById('kayit-not').value = '';
   const t = new Date();
   document.getElementById('tarih-custom').value = t.toISOString().split('T')[0];
+  // Progressive onboarding: ad girilmemişse banner göster
+  progObBannerGuncelle();
 }
 
 function closeKayit() {
