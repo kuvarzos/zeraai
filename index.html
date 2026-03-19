@@ -1863,8 +1863,8 @@ body {
 .splash-logo-wrap {
   position: relative; z-index: 2;
   display: flex; flex-direction: column;
-  align-items: center; gap: 10px;
-  padding-bottom: 64px;
+  align-items: center; gap: 14px;
+  padding-bottom: 72px;
   /* wrapper animasyonu yok — çocuklar kendi CSS'i ile */
 }
 
@@ -1882,7 +1882,7 @@ body {
               inset 0 1px 0 rgba(255,255,255,.3);
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   animation: splashContent 1.4s 1.2s ease-out both;
 }
 
@@ -1895,20 +1895,25 @@ body {
 }
 
 .splash-tagline {
-  font-size: 12px; color: rgba(255,255,255,.65);
-  font-weight: 600; letter-spacing: 2.5px;
-  text-transform: uppercase; margin-top: -2px;
+  font-size: 12px;
+  /* Warm tint — fotoğrafın amber/altın tonlarıyla uyum */
+  color: rgba(255, 240, 200, 0.78);
+  font-weight: 500;
+  letter-spacing: 1.8px;
+  /* uppercase kaldırıldı: title case daha otantik, artisanal */
+  text-transform: none;
+  margin-top: -2px;
   animation: splashContent 1.4s 1.2s ease-out both;
 }
 
 .splash-btn {
-  margin-top: 44px;
+  margin-top: 32px;
   background: white; color: #1a3a1a;
   border: none; border-radius: var(--r-pill);
-  padding: 16px 64px;
+  padding: 16px 56px;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 16px; font-weight: 700;
-  cursor: pointer; letter-spacing: .3px;
+  font-size: 17px; font-weight: 700;
+  cursor: pointer; letter-spacing: .2px;
   box-shadow: 0 8px 28px rgba(0,0,0,.35);
   transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
   /* Buton biraz daha sonra — son "mühür" gibi */
