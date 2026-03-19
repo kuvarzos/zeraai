@@ -1,3 +1,74 @@
+<!--
+╔══════════════════════════════════════════════════════════════════╗
+║  HASAT / ZERAİ — PROJE NOTU (Claude ile çalışırken kullan)      ║
+║  Bu bloğu yeni konuşma başında dosyayla birlikte upload et.     ║
+╠══════════════════════════════════════════════════════════════════╣
+║  UYGULAMA ADI   : Zeraai (Hasat)                                ║
+║  VERSİYON       : v37                                           ║
+║  PLATFORM       : iOS-benzeri mobil prototype (393×852px)       ║
+║  YAPI           : Tek HTML dosyası — CSS + JS içinde            ║
+╠══════════════════════════════════════════════════════════════════╣
+║  EKRANLAR (id)                                                  ║
+║  ├─ #splash        → Açılış ekranı (fotoğraflı)                 ║
+║  ├─ #onboarding    → 3 adım: isim/işletme, konum, tarla ekle   ║
+║  ├─ #home          → Ana sayfa: hava, uyarılar, tarlalar, son  ║
+║  ├─ #fields        → Tarlalarım listesi (sürükle-bırak sıralama)║
+║  ├─ #detail        → Tarla detay: aşama bar, operasyonlar, tbl ║
+║  ├─ #kayitlarim    → Tüm kayıtlar / işlem geçmişi              ║
+║  ├─ #kasa          → Gelir/Gider/Net kasa, bar chart, sezonlar ║
+║  └─ #profil        → Kullanıcı profili, sezon yönetimi         ║
+║                                                                 ║
+║  SHEET'LER (overlay paneller)                                   ║
+║  ├─ #kayit-sheet         → Yeni operasyon kayıt formu (FAB)    ║
+║  ├─ #op-sheet            → Operasyon detay (tarla detayda)     ║
+║  ├─ #home-kayit-sheet    → Ana sayfadan hızlı kayıt detayı     ║
+║  ├─ #hava-sheet          → 7 günlük hava tahmini               ║
+║  ├─ #sezon-sheet         → Sezon detay (profil)                ║
+║  ├─ #kasa-sezon-sheet    → Kasa sezon seçici                   ║
+║  ├─ #kasa-yil-sheet      → Kasa yıl detay                      ║
+║  ├─ #kasa-sheet-overlay  → Kasa kayıt detay                    ║
+║  ├─ #konum-picker-sheet  → İl/ilçe seçici                      ║
+║  ├─ #profil-edit-sheet   → Profil düzenle                      ║
+║  └─ #profil-gb-sheet     → Geri bildirim                       ║
+╠══════════════════════════════════════════════════════════════════╣
+║  SEMANTİK TOKEN SİSTEMİ (:root içinde tanımlı, v36+)           ║
+║  --c-primary / -lt / -mid  → CTA, onay, devam, aktif seçim     ║
+║  --c-dismiss / -lt / -mid  → Kapat (X), iptal, geri, pasif btn ║
+║  --c-warning / -lt         → Hasat uyarısı, ilaç bildirimi     ║
+║  --c-danger  / -lt         → Hata, kritik uyarı, eksik alan    ║
+║                                                                 ║
+║  RENK KURALI:                                                   ║
+║    Teal (#227F83) sadece → CTA, onay, ilerleme, aktif           ║
+║    Nötr (#7A7570) sadece → Kapat, iptal, geri, pasif            ║
+╠══════════════════════════════════════════════════════════════════╣
+║  RENK PALETİ (CSS değişkenleri, :root içinde)                   ║
+║  --green: #227F83  --text: #333  --bg: #F9F6EE                  ║
+║  --gold:  #D4A017  --red:  #C0574A  --sky: #4F7942             ║
+╠══════════════════════════════════════════════════════════════════╣
+║  TEKNİK NOTLAR                                                  ║
+║  • Animasyonlar: iOS-benzeri sheet drag-to-dismiss (altta JS)  ║
+║  • Fontlar: Fraunces (başlık), Plus Jakarta Sans (gövde),       ║
+║             Outfit (sayılar — .num class)                       ║
+║  • Navigasyon: navTo(), showScreen() fonksiyonları             ║
+║  • Tüm veri: localStorage'da (FIELDS, KAYITLAR, USER_PREFS)    ║
+╠══════════════════════════════════════════════════════════════════╣
+║  SON DURUM (v37 itibarıyla tamamlanan)                          ║
+║  ✅ v36'daki her şey korundu                                    ║
+║  ✅ Buğday Tarlası yüzey sistemi uygulandı:                     ║
+║     --bg:#EDE8DD / --bg-header:#E2DCD0 / --bg2:#F0EBE1          ║
+║  ✅ Header (.sb) ve bottom nav (.bnav) --bg-header'a bağlandı   ║
+║  ✅ --text sıcak siyaha (#2C2A25), --border uyarlandı           ║
+║  ✅ --green-lt #EBF5F5 olarak yeni gövdeyle uyumlu hale getirildi║
+╠══════════════════════════════════════════════════════════════════╣
+║  SIRADAKI / AÇIK KONULAR                                        ║
+║  → Tüm uygulamayı tarayıp hardcode renk kalmış mı kontrol et   ║
+║  → Sheet ve modal arka planlarını gözden geçir                  ║
+╠══════════════════════════════════════════════════════════════════╣
+║  BİLİNEN SORUNLAR / NOTLAR                                      ║
+║  → sheet-close ve op-sheet-close zaten nötr renk kullanıyor,   ║
+║    token'a bağlanmaları yeterli (renk değişmeyecek)            ║
+╚══════════════════════════════════════════════════════════════════╝
+-->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -7,28 +78,57 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:        #F9F6EE;
-  --bg2:       #F0ECE2;
-  --card:      #FFFFFF;
-  --border:    #E4DDD2;
+  /* ── Buğday Tarlası yüzey sistemi (v37) ─────────────────────
+     header(#E2DCD0) → gövde(#EDE8DD) → pasif kart(#F0EBE1) → aktif kart(#FFF)
+     Her katman ~5% daha açık → net derinlik, premium his
+  ──────────────────────────────────────────────────────────── */
+  --bg:        #EDE8DD;   /* Gövde / ekran zemini */
+  --bg2:       #F0EBE1;   /* Pasif kart, seçilmemiş alan */
+  --bg-header: #E2DCD0;   /* Header / nav bar */
+  --card:      #FFFFFF;   /* Aktif kart, modal, seçili */
+  --border:    #D8D1C8;   /* Kenarlık — gövdeyle uyumlu */
   --green:     #227F83;
-  --green-lt:  #E6F4F4;
+  --green-lt:  #EBF5F5;   /* Teal açık — yeni gövdeyle uyumlu */
   --green-mid: #1A6366;
-  --text:      #333333;
-  --text2:     #6B6460;
-  --text3:     #A09890;
+  --text:      #2C2A25;   /* Sıcak siyah */
+  --text2:     #6B6560;
+  --text3:     #9A9088;
   --red:       #C0574A;
   --red-lt:    #FCECEA;
   --gold:      #D4A017;
   --gold-lt:   #FDF6E3;
-  --sky:       #4F7942;  /* orman yeşili — ilaç/sulama ikonları için */
+  --sky:       #4F7942;
   --sky-lt:    #EDF4EB;
-  --shadow:    0 2px 10px rgba(50,50,50,0.06);
-  --shadow-md: 0 4px 18px rgba(50,50,50,0.09);
+  --shadow:    0 2px 10px rgba(40,36,28,0.07);
+  --shadow-md: 0 4px 18px rgba(40,36,28,0.10);
   --r:         14px;
   --r-lg:      20px;
   --r-pill:    100px;
   --num:       'Outfit', sans-serif;
+
+  /* ── Semantik renk tokenları ────────────────────────────────
+     Rengi değiştirmek için sadece bu tokenları güncelle.
+     Uygulama genelinde tutarlı hiyerarşi sağlar.
+
+     KULLANIM KURALI:
+       --c-primary   → CTA, onay, devam, ilerleme, aktif seçim
+       --c-dismiss   → kapat (X), iptal, geri, pasif buton
+       --c-warning   → hasat uyarısı, ilaç bildirimi, dikkat
+       --c-danger    → hata, kritik uyarı, eksik alan
+  ──────────────────────────────────────────────────────────── */
+  --c-primary:     #227F83;
+  --c-primary-lt:  #E6F4F4;
+  --c-primary-mid: #1A6366;
+
+  --c-dismiss:     #7A7570;
+  --c-dismiss-lt:  #EEECE6;
+  --c-dismiss-mid: #5C5855;
+
+  --c-warning:     #D4A017;
+  --c-warning-lt:  #FDF6E3;
+
+  --c-danger:      #C0574A;
+  --c-danger-lt:   #FCECEA;
 }
 
 /* Rakam fontu — sadece sayısal değer gösteren sınıflar */
@@ -79,7 +179,7 @@ body.app-ready { background: var(--bg); }
   padding: 0 18px;
   display: flex; justify-content: space-between; align-items: center;
   flex-shrink: 0; height: 68px;
-  background: var(--bg);
+  background: var(--bg-header);
   border-bottom: 1px solid var(--border);
   position: relative; z-index: 30;
   transition: background .3s, border-color .3s;
@@ -111,13 +211,13 @@ body.app-ready { background: var(--bg); }
 }
 .sb-back-btn {
   width: 36px; height: 36px; border-radius: 50%;
-  background: var(--green-lt); border: 1px solid rgba(34,127,131,.18); cursor: pointer;
+  background: var(--c-dismiss-lt); border: 1px solid rgba(122,117,112,.18); cursor: pointer;
   display:flex; align-items:center; justify-content:center;
-  color: var(--green-mid);
+  color: var(--c-dismiss-mid);
   transition: background .15s, transform .18s cubic-bezier(.34,1.56,.64,1);
 }
-.sb-back-btn:active { background: rgba(34,127,131,.2); transform: scale(.88); }
-.sb-back-tab { background: var(--green-lt); color: var(--green-mid); border: 1px solid rgba(34,127,131,.18); }
+.sb-back-btn:active { background: rgba(122,117,112,.18); transform: scale(.88); }
+.sb-back-tab { background: var(--c-dismiss-lt); color: var(--c-dismiss-mid); border: 1px solid rgba(122,117,112,.18); }
 
 /* profil avatar sağ */
 .app-avatar {
@@ -245,7 +345,7 @@ body.app-ready { background: var(--bg); }
 /* BOTTOM NAV */
 .bnav {
   position:absolute; bottom:0; left:0; right:0;
-  background:var(--bg); border-top:1px solid var(--border);
+  background:var(--bg-header); border-top:1px solid var(--border);
   padding:0 0 28px;
   display:flex; align-items:flex-end;
   z-index:10;
