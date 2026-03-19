@@ -77,7 +77,6 @@ body {
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   position: relative; z-index: 30;
-  backdrop-filter: blur(12px);
   transition: background .3s, border-color .3s;
 }
 
@@ -2110,7 +2109,7 @@ body {
 <div class="phone">
 
   <!-- STATUS BAR - always on top -->
-  <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;border-radius:50px 50px 0 0;background:var(--bg)">
+  <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;background:var(--bg)">
     <!-- Sol: bağlama göre geri butonu veya boş -->
     <div class="sb-left" id="sb-left"></div>
     <!-- Orta: Logo (mutlak merkez) -->
