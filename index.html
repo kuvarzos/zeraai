@@ -381,10 +381,10 @@ body {
 .stage-wrap { display:flex; align-items:center; flex:1; }
 .stage-wrap:last-child { flex:none; }
 .stage-step { display:flex; flex-direction:column; align-items:center; gap:4px; }
-.stage-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; border:2px solid var(--border); background:var(--bg); transition:all .3s; flex-shrink:0; }
-.stage-dot.done    { border-color:var(--green); background:var(--green-lt); }
-.stage-dot.current { border-color:var(--green); background:var(--green); box-shadow:0 0 0 3px rgba(34,127,131,.2); }
-.stage-dot.future  { border-color:var(--border); background:var(--bg); opacity:.45; }
+.stage-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--border); background:var(--bg); transition:all .3s; flex-shrink:0; color:var(--text3); }
+.stage-dot.done    { border-color:var(--green); background:var(--green-lt); color:var(--green-mid); }
+.stage-dot.current { border-color:var(--green); background:var(--green); color:white; box-shadow:0 0 0 3px rgba(34,127,131,.2); }
+.stage-dot.future  { border-color:var(--border); background:var(--bg); opacity:.45; color:var(--text3); }
 .stage-line { flex:1; height:2px; background:var(--border); border-radius:2px; margin:0 4px; margin-bottom:20px; }
 .stage-line.done { background:var(--green); }
 .stage-lbl { font-size:8px; font-weight:700; color:var(--text3); text-align:center; line-height:1.3; white-space:nowrap; }
@@ -2377,7 +2377,7 @@ body {
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3" fill="white" opacity=".9"/><path d="M11 5V2.5M11 13.5v-2.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M4 8H1.5M20.5 8H18" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M6.1 3.9L4.4 2.2M17.6 13.8l-1.7-1.7" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity=".6"/><path d="M6.1 12.1L4.4 13.8M17.6 2.2l-1.7 1.7" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity=".6"/><path d="M11 11V18" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
               <div class="fl-banner-name">Güney Tarla</div>
             </div>
-            <div class="fl-banner-badge">Hasada hazır 🌾</div>
+            <div class="fl-banner-badge">Hasada hazır</div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#8B4513">Ayçiçeği · Tunca</div><div class="fl-area">60 dönüm</div></div>
@@ -2415,19 +2415,19 @@ body {
     <!-- 4 AŞAMA BAR -->
     <div class="stage-bar">
       <div class="stage-wrap">
-        <div class="stage-step"><div class="stage-dot" id="s0">🌱</div><div class="stage-lbl" id="sl0">Ekim &<br>Çimlenme</div></div>
+        <div class="stage-step"><div class="stage-dot" id="s0"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 10V6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 6.5C6.5 6.5 4.8 5.5 4.5 4c1.1-.15 2.5.5 2 2.5z" fill="currentColor" fill-opacity=".6"/><path d="M6.5 6.5C6.5 6.5 8.2 5.5 8.5 4c-1.1-.15-2.5.5-2 2.5z" fill="currentColor" fill-opacity=".38"/><path d="M3 11.5h7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg></div><div class="stage-lbl" id="sl0">Ekim &<br>Çimlenme</div></div>
         <div class="stage-line" id="ln0"></div>
       </div>
       <div class="stage-wrap">
-        <div class="stage-step"><div class="stage-dot" id="s1">🌿</div><div class="stage-lbl" id="sl1">Büyüme<br>& Bakım</div></div>
+        <div class="stage-step"><div class="stage-dot" id="s1"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 11V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 8.5C5 8 3.5 6.5 4 4.5c1.5 0 3 1.2 2.5 4z" fill="currentColor" fill-opacity=".55"/><path d="M6.5 7C8 6 9.5 4.5 9 2.5c-1.5.3-3 1.5-2.5 4.5z" fill="currentColor" fill-opacity=".38"/></svg></div><div class="stage-lbl" id="sl1">Büyüme<br>& Bakım</div></div>
         <div class="stage-line" id="ln1"></div>
       </div>
       <div class="stage-wrap">
-        <div class="stage-step"><div class="stage-dot" id="s2">🌾</div><div class="stage-lbl" id="sl2">Olgunlaşma</div></div>
+        <div class="stage-step"><div class="stage-dot" id="s2"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 11V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 7.5C6.5 7.5 4.8 6.8 4.5 5.2c1.1-.15 2.5.6 2 2.3z" fill="currentColor" fill-opacity=".6"/><path d="M6.5 7.5C6.5 7.5 8.2 6.8 8.5 5.2c-1.1-.15-2.5.6-2 2.3z" fill="currentColor" fill-opacity=".4"/><path d="M3.5 9C4.2 7.5 5.6 6.5 6.5 6.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".4"/></svg></div><div class="stage-lbl" id="sl2">Olgunlaşma</div></div>
         <div class="stage-line" id="ln2"></div>
       </div>
       <div class="stage-wrap">
-        <div class="stage-step"><div class="stage-dot" id="s3">✂️</div><div class="stage-lbl" id="sl3">Hasat</div></div>
+        <div class="stage-step"><div class="stage-dot" id="s3"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 10h9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 10V6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M6.5 7.5C6.5 7.5 5 6.8 4.8 5.2c1-.15 2.2.5 1.7 2.3z" fill="currentColor" fill-opacity=".55"/><path d="M3 8C3.8 6.5 5.2 5.5 6.5 5.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".4"/></svg></div><div class="stage-lbl" id="sl3">Hasat</div></div>
       </div>
     </div>
 
@@ -4407,28 +4407,58 @@ function renderHavaTavsiye() {
   const body = document.getElementById('hava-tavsiye-body');
   if (!body||!kural) return;
 
-  // Ürün bazlı ek tavsiyeler
+  // Ürün bazlı ek tavsiyeler — renk: uyarı seviyesine göre
   const urunMesajlar = urunTavsiyesiGetir(kosul, g);
-  const urunBlok = urunMesajlar.length > 0 ? `
-    <div style="margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
-      <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;">
-        <div style="width:6px;height:6px;border-radius:50%;background:#2B9E9B;flex-shrink:0;"></div>
-        <div style="font-size:12px;font-weight:700;color:var(--text);">Tarlanıza Özel Uyarılar</div>
+
+  // Uyarı seviyesi renk sistemi
+  const uyariSeviye = {
+    firtina:     { renk:'var(--red)',      bg:'var(--red-lt)',   dot:'var(--red)'      },
+    don_riski:   { renk:'#7C3AED',         bg:'#F5F3FF',         dot:'#7C3AED'         },
+    cok_sicak:   { renk:'var(--red)',      bg:'var(--red-lt)',   dot:'var(--red)'      },
+    yagmurlu:    { renk:'var(--sky)',      bg:'var(--sky-lt)',   dot:'var(--sky)'      },
+    yagmur_once: { renk:'#B45309',         bg:'var(--gold-lt)',  dot:'var(--gold)'     },
+    ruzgar_fazla:{ renk:'var(--red)',      bg:'var(--red-lt)',   dot:'var(--red)'      },
+    yuksek_nem:  { renk:'#7C3AED',         bg:'#F5F3FF',         dot:'#7C3AED'         },
+    dusuk_nem:   { renk:'#B45309',         bg:'var(--gold-lt)',  dot:'var(--gold)'     },
+    sicak:       { renk:'#B45309',         bg:'var(--gold-lt)',  dot:'var(--gold)'     },
+    kuraklık:    { renk:'#B45309',         bg:'var(--gold-lt)',  dot:'var(--gold)'     },
+    optimal:     { renk:'var(--green-mid)',bg:'var(--green-lt)', dot:'var(--green)'    },
+    ideal:       { renk:'var(--green-mid)',bg:'var(--green-lt)', dot:'var(--green)'    },
+  };
+  const sv = uyariSeviye[kosul] || { renk:'var(--text2)', bg:'var(--bg2)', dot:'var(--text3)' };
+
+  // ── KART 1: Genel hava uyarıları ─────────────────────────────
+  const kart1 = `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
+      <div style="padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${renk};flex-shrink:0;"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">${kural.baslik}</div>
       </div>
-      ${urunMesajlar.map((m,i) => `
-      <div style="padding:10px 16px;${i<urunMesajlar.length-1?'border-bottom:1px solid var(--border);':''}display:flex;gap:10px;align-items:flex-start;">
-        <div style="background:var(--bg2);border-radius:var(--r-pill);padding:2px 8px;font-size:10px;font-weight:700;color:var(--text2);white-space:nowrap;flex-shrink:0;margin-top:1px;">${m.urun}</div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.6;font-family:'Plus Jakarta Sans',sans-serif;">${m.mesaj}</div>
-      </div>`).join('')}
+      ${rozetler}
+      ${kural.mesajlar.map((m, i) => `
+        <div style="padding:11px 16px;${i < kural.mesajlar.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}display:flex;gap:10px;align-items:flex-start;">
+          <span style="color:${renk};font-size:11px;flex-shrink:0;margin-top:2px;">●</span>
+          <div style="font-size:12px;color:var(--text2);line-height:1.65;font-family:'Plus Jakarta Sans',sans-serif;">${m}</div>
+        </div>`).join('')}
+    </div>`;
+
+  // ── KART 2: Tarlanıza özel uyarılar ──────────────────────────
+  const kart2 = urunMesajlar.length > 0 ? `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:10px;">
+      <div style="padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${sv.dot};flex-shrink:0;"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Tarlanıza Özel Uyarılar</div>
+      </div>
+      ${urunMesajlar.map((m, i) => `
+        <div style="padding:11px 16px;${i < urunMesajlar.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}display:flex;gap:0;align-items:center;">
+          <div style="min-width:72px;width:72px;flex-shrink:0;padding-right:10px;display:flex;justify-content:flex-start;align-items:center;">
+            <div style="display:inline-block;background:${sv.bg};border:1px solid ${sv.renk}33;border-radius:var(--r-pill);padding:3px 9px;font-size:11px;font-weight:700;color:${sv.renk};white-space:nowrap;">${m.urun}</div>
+          </div>
+          <div style="flex:1;font-size:12px;color:var(--text2);line-height:1.65;font-family:'Plus Jakarta Sans',sans-serif;">${m.mesaj}</div>
+        </div>`).join('')}
     </div>` : '';
 
-  body.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
-    <div style="padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:${renk};flex-shrink:0;"></div>
-      <div style="font-size:13px;font-weight:700;color:var(--text);">${kural.baslik}</div>
-    </div>${rozetler}
-    ${kural.mesajlar.map((m,i)=>`<div style="padding:11px 16px;${i<kural.mesajlar.length-1?'border-bottom:1px solid var(--border);':''}display:flex;gap:10px;align-items:flex-start;"><span style="color:${renk};font-size:13px;flex-shrink:0;margin-top:1px;font-weight:700;">•</span><div style="font-size:12px;color:var(--text2);line-height:1.6;font-family:'Plus Jakarta Sans',sans-serif;">${m}</div></div>`).join('')}
-  </div>${urunBlok}`;
+  body.innerHTML = kart1 + kart2;
 }
 
 function selHavaSenaryo(s) {
@@ -4465,21 +4495,21 @@ function renderBugünNeYapmali() {
 
   // Başlık + kart border rengini hava koşuluna göre güncelle
   const kosulRenk = {
-    firtina:        { bg:'#FEF2F2', border:'#FCA5A5', dot:'var(--red)',       baslik:'⚠\u00A0 Fırtına — Tarlaya çıkma!' },
-    don_riski:      { bg:'#EFF6FF', border:'#BFDBFE', dot:'#6366F1',          baslik:'🌡\u00A0 Don riski var' },
-    cok_sicak:      { bg:'#FFF7ED', border:'#FED7AA', dot:'#EA580C',          baslik:'🌡\u00A0 Aşırı sıcak — Sabah saatlerini kullan' },
-    sicak:          { bg:'#FFFBEB', border:'#FDE68A', dot:'#D97706',          baslik:'☀\u00A0 Sıcak — Sabah/akşam saatlerini tercih et' },
-    serin:          { bg:'#EFF6FF', border:'#BFDBFE', dot:'#3B82F6',          baslik:'🌤\u00A0 Serin — Öğlen saatlerinde çalış' },
-    yagmurlu:       { bg:'#EFF6FF', border:'#BFDBFE', dot:'var(--sky)',       baslik:'🌧\u00A0 Yağmurlu — Tarla işlemleri sınırlı' },
-    yagmur_once:    { bg:'#FFFBEB', border:'#FDE68A', dot:'#D97706',          baslik:'⏳\u00A0 Yağmur geliyor — Bugün bitir' },
-    yagmur_sonrasi: { bg:'#F0FDF4', border:'#A7F3D0', dot:'#059669',          baslik:'🌱\u00A0 Yağmur sonrası — Toprak ağır' },
-    ruzgar_fazla:   { bg:'#F5F3FF', border:'#DDD6FE', dot:'#7C3AED',          baslik:'💨\u00A0 Rüzgar fazla — İlaçlama yapma' },
-    ruzgar_uygun:   { bg:'#F0FDF4', border:'#A7F3D0', dot:'var(--green-mid)', baslik:'✓\u00A0 Hava güzel — İşlemler için uygun' },
-    yuksek_nem:     { bg:'#ECFDF5', border:'#A7F3D0', dot:'#059669',          baslik:'💧\u00A0 Nem yüksek — Mantar hastalıkları riski' },
-    dusuk_nem:      { bg:'#FFF7ED', border:'#FED7AA', dot:'#B45309',          baslik:'☀\u00A0 Kuru hava — Sulamayı kontrol et' },
-    kuraklık:       { bg:'#FFF7ED', border:'#FED7AA', dot:'#B45309',          baslik:'🌵\u00A0 Kuraklık — Sulamayı artır' },
+    firtina:        { bg:'#FEF2F2', border:'#FCA5A5', dot:'var(--red)',       baslik:'Fırtına — Tarlaya çıkma!' },
+    don_riski:      { bg:'#EFF6FF', border:'#BFDBFE', dot:'#6366F1',          baslik:'Don riski var' },
+    cok_sicak:      { bg:'#FFF7ED', border:'#FED7AA', dot:'#EA580C',          baslik:'Aşırı sıcak — Sabah saatlerini kullan' },
+    sicak:          { bg:'#FFFBEB', border:'#FDE68A', dot:'#D97706',          baslik:'Sıcak — Sabah/akşam saatlerini tercih et' },
+    serin:          { bg:'#EFF6FF', border:'#BFDBFE', dot:'#3B82F6',          baslik:'Serin — Öğlen saatlerinde çalış' },
+    yagmurlu:       { bg:'#EFF6FF', border:'#BFDBFE', dot:'var(--sky)',       baslik:'Yağmurlu — Tarla işlemleri sınırlı' },
+    yagmur_once:    { bg:'#FFFBEB', border:'#FDE68A', dot:'#D97706',          baslik:'Yağmur geliyor — Bugün bitir' },
+    yagmur_sonrasi: { bg:'#F0FDF4', border:'#A7F3D0', dot:'#059669',          baslik:'Yağmur sonrası — Toprak ağır' },
+    ruzgar_fazla:   { bg:'#F5F3FF', border:'#DDD6FE', dot:'#7C3AED',          baslik:'Rüzgar fazla — İlaçlama yapma' },
+    ruzgar_uygun:   { bg:'#F0FDF4', border:'#A7F3D0', dot:'var(--green-mid)', baslik:'Hava güzel — İşlemler için uygun' },
+    yuksek_nem:     { bg:'#ECFDF5', border:'#A7F3D0', dot:'#059669',          baslik:'Nem yüksek — Mantar hastalıkları riski' },
+    dusuk_nem:      { bg:'#FFF7ED', border:'#FED7AA', dot:'#B45309',          baslik:'Kuru hava — Sulamayı kontrol et' },
+    kuraklık:       { bg:'#FFF7ED', border:'#FED7AA', dot:'#B45309',          baslik:'Kuraklık — Sulamayı artır' },
     optimal:        { bg:'var(--card)', border:'var(--border)', dot:'var(--text2)', baslik:'Bugün ne yapmalıyım?' },
-    ideal:          { bg:'#F0FDF4', border:'#A7F3D0', dot:'var(--green-mid)', baslik:'✓\u00A0 İdeal hava — Her şey uygun' },
+    ideal:          { bg:'#F0FDF4', border:'#A7F3D0', dot:'var(--green-mid)', baslik:'İdeal hava — Her şey uygun' },
   };
   const havaKosul = havaDurumundanKosul(bugun);
   const stil = kosulRenk[havaKosul] || kosulRenk.optimal;
@@ -5278,119 +5308,14 @@ function formatGun(tarihStr) {
 }
 
 // ── DETAY ──
-function openKayitDetay(id) {
-  const k = kayitlar.find(x => x.id === id);
-  if (!k) return;
-  const tb = tipBilgi[k.tip];
-  const tutar = k.toplam > 0
-    ? '+₺' + k.toplam.toLocaleString('tr-TR')
-    : '−₺' + Math.abs(k.toplam).toLocaleString('tr-TR');
-  const pos = k.toplam > 0;
-
-  // hero
-  document.getElementById('kd-hero').innerHTML = `
-    <div class="detay-hero-ic" style="background:${tb.bg}">${tb.ic}</div>
-    <div class="detay-hero-body">
-      <div class="detay-hero-tip">${tb.ad}</div>
-      <div class="detay-hero-baslik">${k.tarla || 'Genel Gider'}</div>
-      <div class="detay-hero-meta">${formatGun(k.tarih)} · ${k.saat}${k.urun ? ' · ' + k.urun : ''}</div>
-    </div>
-    <div class="detay-hero-maliyet ${pos ? 'pos' : ''}">${tutar}</div>`;
-
-  // içerik
-  let html = '<div style="margin-top:4px;">';
-
-  // çoklu ilaç/gübre
-  if (k.urunler) {
-    html += `<div class="sec" style="margin-top:14px;"><div class="sec-title">${k.tip === 'ilac' ? 'Uygulanan İlaçlar' : 'Uygulanan Gübreler'}</div></div>`;
-    k.urunler.forEach(u => {
-      html += `
-        <div class="urun-satir">
-          <div class="urun-satir-ust">
-            <div class="urun-satir-ad">${u.ad}</div>
-            <div class="urun-satir-fiyat">₺${u.maliyet.toLocaleString('tr-TR')}</div>
-          </div>
-          <div class="urun-satir-badges">
-            ${u.doz ? `<div class="urun-satir-badge">${u.doz}</div>` : ''}
-            ${u.miktar ? `<div class="urun-satir-badge">${u.miktar}</div>` : ''}
-            ${u.toplam ? `<div class="urun-satir-badge green">📦 ${u.toplam} toplam</div>` : ''}
-            ${u.donum ? `<div class="urun-satir-badge green">🌾 ${u.donum}</div>` : ''}
-          </div>
-        </div>`;
-    });
-  }
-
-  // detay bilgileri
-  const satirlar = [];
-  if (k.yontem)    satirlar.push({ lbl: 'Uygulama Yöntemi', val: k.yontem });
-  if (k.su)        satirlar.push({ lbl: 'Su Miktarı', val: k.su });
-  if (k.cesit)     satirlar.push({ lbl: 'Çeşit', val: k.cesit });
-  if (k.miktar && k.tip !== 'satin') satirlar.push({ lbl: 'Miktar', val: k.miktar });
-  if (k.toplamKg)  satirlar.push({ lbl: 'Toplam', val: k.toplamKg });
-  if (k.verim)     satirlar.push({ lbl: 'Verim', val: k.verim });
-  if (k.nem)       satirlar.push({ lbl: 'Nem Oranı', val: k.nem });
-  if (k.depo)      satirlar.push({ lbl: 'Depo/Konum', val: k.depo });
-  if (k.birimFiyat)satirlar.push({ lbl: 'Birim Fiyat', val: k.birimFiyat });
-  if (k.alici)     satirlar.push({ lbl: 'Alıcı', val: k.alici });
-  if (k.odeme)     satirlar.push({ lbl: 'Ödeme', val: k.odeme });
-  if (k.sure)      satirlar.push({ lbl: 'Süre', val: k.sure });
-  if (k.kategori)  satirlar.push({ lbl: 'Kategori', val: k.kategori });
-  if (k.urunAdi)   satirlar.push({ lbl: 'Ürün', val: k.urunAdi });
-  if (k.miktar && k.tip === 'satin') satirlar.push({ lbl: 'Miktar', val: k.miktar });
-
-  if (satirlar.length) {
-    html += `<div class="sec" style="margin-top:14px;"><div class="sec-title">Detaylar</div></div>
-      <div class="detay-info-kart">
-        ${satirlar.map(s => `
-          <div class="detay-info-row">
-            <div class="detay-info-lbl">${s.lbl}</div>
-            <div class="detay-info-val">${s.val}</div>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  // toplam
-  html += `
-    <div class="detay-toplam">
-      <div class="detay-toplam-lbl">${pos ? 'Toplam Gelir' : 'Toplam Maliyet'}</div>
-      <div class="detay-toplam-val ${pos ? '' : 'red'}">${tutar}</div>
-    </div>`;
-
-  // not
-  if (k.not) {
-    html += `
-      <div class="detay-not">
-        <div class="detay-not-lbl">Not</div>
-        <div class="detay-not-txt">${k.not}</div>
-      </div>`;
-  }
-
-  // satin alma bilgi notu
-  if (k.tip === 'satin') {
-    html += `
-      <div style="margin:0 16px 14px;background:var(--gold-lt);border:1px solid rgba(200,133,26,.18);border-radius:var(--r);padding:11px 13px;display:flex;gap:8px;">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="7" cy="7" r="5.5" stroke="var(--gold)" stroke-width="1.3"/><path d="M7 4.5v3" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/><circle cx="7" cy="9.5" r=".7" fill="var(--gold)"/></svg>
-        <div style="font-size:11px;color:var(--text2);font-weight:500;line-height:1.5;">Bu kayıt <strong>genel gider havuzuna</strong> düştü. Tarlaya uyguladığında ayrıca kayıt girmeyi unutma.</div>
-      </div>`;
-  }
-
-  // sil
-  html += `
-    <div class="detay-sil" onclick="kayitSil(${k.id})">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M5.5 4V2.5h5V4M6.5 7v5M9.5 7v5M3.5 4l.5 9.5h8L13 4" stroke="var(--red)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div class="detay-sil-txt">Kaydı Sil</div>
-    </div>`;
-
-  html += '</div>';
-  document.getElementById('kd-icerik').innerHTML = html;
-
-  // kayıtlarım'dan geliyoruz
-  prevScreen = 'kayitlarim';
-  navTo('kayitlarim');
-}
-
 function kayitSil(id) {
-  if (confirm('Bu kayıt silinsin mi?')) navBack();
+  if (confirm('Bu kayıt silinsin mi?')) {
+    const idx = kayitlar.findIndex(k => k.id === id);
+    if (idx !== -1) kayitlar.splice(idx, 1);
+    closeKayitSheetBtn();
+    renderKayitlar(aktifFiltre);
+    syncKasaFromKayitlar();
+  }
 }
 
 // ═══════════════════════════════
@@ -5582,7 +5507,7 @@ function buildKayitForm(tip) {
                     <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px;">Maliyet (₺)</div>
                     <div class="maliyet-wrap">
                       <span class="maliyet-prefix">₺</span>
-                      <input class="form-input maliyet-input" type="number" placeholder="0" style="font-size:13px;padding:9px 11px 9px 26px;" oninput="calcGubreToplam()">
+                      <input class="form-input maliyet-input" type="number" placeholder="0" style="font-size:13px;padding:9px 11px 9px 26px;" oninput="calcGubreToplam();updateGubreHesap(this.closest('.karisim-item'))">
                     </div>
                   </div>
                 </div>
@@ -5785,22 +5710,48 @@ function buildKayitForm(tip) {
 function saveKayit() {
   if (!kayitIslem) { alert('İşlem tipi seçiniz'); return; }
   if (kayitIslem !== 'satin' && kayitIslem !== 'not' && !kayitTarla) { alert('Tarla seçiniz'); return; }
-  const maliyetInput = document.querySelector('#kayit-form-fields .maliyet-input');
-  if (maliyetInput && !maliyetInput.value) { alert('Maliyet giriniz'); return; }
 
-  // Formdaki değerleri oku
-  const miktar    = document.querySelector('#kayit-form-fields .miktar-input')?.value  || '';
-  const notInput  = document.querySelector('#kayit-form-fields textarea')?.value       || '';
-  const maliyetVal = maliyetInput ? parseFloat(maliyetInput.value.replace(/\D/g,'')) || 0 : 0;
-  const now       = new Date();
-  const tarihStr  = now.toISOString().split('T')[0];
-  const saatStr   = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  // Tipe göre toplam maliyet hesapla
+  let maliyetVal = 0;
 
-  // İşlem tipine göre toplam işareti
-  const gelirTipleri = ['satis','hasat'];
+  if (kayitIslem === 'satis') {
+    // Satış: miktar(ton) × birim_fiyat(₺/ton)
+    const inputs = document.querySelectorAll('#kayit-form-fields input[type=number]');
+    const miktar = parseFloat(inputs[0]?.value) || 0;
+    const fiyat  = parseFloat(inputs[1]?.value) || 0;
+    maliyetVal = miktar > 0 && fiyat > 0 ? miktar * fiyat : fiyat;
+    if (maliyetVal === 0) { alert('Miktar ve birim fiyatı giriniz'); return; }
+
+  } else if (kayitIslem === 'ilac') {
+    // İlaç: tüm ilaçların maliyet toplamı (calcIlacToplam'ın hesapladığı)
+    const inputs = document.querySelectorAll('#ilac-list .maliyet-input');
+    inputs.forEach(inp => maliyetVal += parseFloat(inp.value) || 0);
+    if (maliyetVal === 0) { alert('En az bir ilaç maliyeti giriniz'); return; }
+
+  } else if (kayitIslem === 'gubre') {
+    // Gübre: tüm gübre maliyet toplamı
+    const inputs = document.querySelectorAll('#gubre-list .maliyet-input');
+    inputs.forEach(inp => maliyetVal += parseFloat(inp.value) || 0);
+    if (maliyetVal === 0) { alert('En az bir gübre maliyeti giriniz'); return; }
+
+  } else {
+    // Diğer tipler: tek maliyet input
+    const maliyetInput = document.querySelector('#kayit-form-fields .maliyet-input');
+    if (maliyetInput && !maliyetInput.value) { alert('Maliyet giriniz'); return; }
+    maliyetVal = maliyetInput ? parseFloat(maliyetInput.value) || 0 : 0;
+  }
+
+  // Miktar, not
+  const miktar   = document.querySelector('#kayit-form-fields .miktar-input')?.value || '';
+  const notInput = document.querySelector('#kayit-form-fields textarea')?.value || '';
+  const now      = new Date();
+  const tarihStr = now.toISOString().split('T')[0];
+  const saatStr  = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  // Gelir mi gider mi
+  const gelirTipleri = ['satis', 'hasat'];
   const toplam = gelirTipleri.includes(kayitIslem) ? maliyetVal : -maliyetVal;
 
-  // Yeni kayıt nesnesi
   const yeniKayit = {
     id:     Date.now(),
     tip:    kayitIslem,
@@ -5812,7 +5763,6 @@ function saveKayit() {
     toplam: toplam,
   };
 
-  // Başa ekle
   kayitlar.unshift(yeniKayit);
 
   const btn = document.getElementById('kayit-save-btn');
@@ -5822,13 +5772,10 @@ function saveKayit() {
     btn.innerHTML = 'Kaydet';
     btn.style.background = '';
     closeKayit();
-    // Listeyi güncelle — aktif filtreyi koru
     renderKayitlar(aktifFiltre);
-    // Filtre chip'ini senkronize et
     document.querySelectorAll('.filtre-chip').forEach(c => {
       c.classList.toggle('active', c.dataset.tip === aktifFiltre);
     });
-    // Kasa verilerini kayıtlardan senkronize et
     syncKasaFromKayitlar();
   }, 1300);
 }
@@ -6029,24 +5976,24 @@ function updateIlacHesap(itemEl) {
   const kutu = itemEl.querySelector('.hesap-kutu');
   if (!kutu) return;
 
+  const sprey = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="3.5" width="3.5" height="5" rx="1" stroke="var(--sky)" stroke-width="1.2"/><path d="M5.5 5h1" stroke="var(--sky)" stroke-width="1.1" stroke-linecap="round"/><circle cx="7.8" cy="4.2" r=".6" fill="var(--sky)" opacity=".7"/><circle cx="8.5" cy="5.5" r=".6" fill="var(--sky)" opacity=".55"/><circle cx="8" cy="7" r=".6" fill="var(--sky)" opacity=".4"/></svg>`;
+  const toprakIc = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M6 5C6 5 4.2 4 3.8 2.5c1-.15 2.3.5 2.2 2.5z" fill="var(--green)" fill-opacity=".55"/><path d="M6 5C6 5 7.8 4 8.2 2.5c-1-.15-2.3.5-2.2 2.5z" fill="var(--green)" fill-opacity=".38"/><path d="M2.5 10.5h7" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round" opacity=".4"/></svg>`;
+  const suIc = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4h7a1.5 1.5 0 011.5 1.5v.3" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><path d="M2 4V2.5" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><path d="M2 2.5h1.5" stroke="var(--sky)" stroke-width="1.1" stroke-linecap="round"/><path d="M4.5 6.5v2.5" stroke="var(--sky)" stroke-width="1.1" stroke-linecap="round"/><path d="M6.5 6.5v3" stroke="var(--sky)" stroke-width="1.1" stroke-linecap="round"/><path d="M8.5 6.5v2.5" stroke="var(--sky)" stroke-width="1.1" stroke-linecap="round"/></svg>`;
+
   if (doz > 0) {
     kutu.classList.add('show');
     kutu.innerHTML = '';
-
-    // Toplam ilaç (doz × su)
     if (su > 0) {
       const toplamIlac = doz * su;
       const birimStr = birim === 'gr/lt' ? 'gr' : 'ml';
-      kutu.innerHTML += `<div class="hesap-badge">🧪 ${toplamIlac % 1 === 0 ? toplamIlac : toplamIlac.toFixed(1)} ${birimStr} toplam</div>`;
+      kutu.innerHTML += `<div class="hesap-badge">${sprey} ${toplamIlac % 1 === 0 ? toplamIlac : toplamIlac.toFixed(1)} ${birimStr} toplam ilaç</div>`;
     }
-
-    // Dönüm başı (su varsa)
     if (su > 0 && donum > 0) {
       const suPerDonum = (su / donum).toFixed(1);
       const ilacPerDonum = (doz * su / donum).toFixed(1);
       const birimStr = birim === 'gr/lt' ? 'gr' : 'ml';
-      kutu.innerHTML += `<div class="hesap-badge">🌾 ${ilacPerDonum} ${birimStr}/dönüm</div>`;
-      kutu.innerHTML += `<div class="hesap-badge">💧 ${suPerDonum} lt/dönüm</div>`;
+      kutu.innerHTML += `<div class="hesap-badge">${toprakIc} ${ilacPerDonum} ${birimStr}/dönüm</div>`;
+      kutu.innerHTML += `<div class="hesap-badge">${suIc} ${suPerDonum} lt/dönüm su</div>`;
     } else if (donum > 0) {
       kutu.innerHTML += `<div class="hesap-badge" style="color:var(--text3)">Su miktarı gir → dönüm hesabı</div>`;
     }
@@ -6057,20 +6004,31 @@ function updateIlacHesap(itemEl) {
 
 function updateGubreHesap(itemEl) {
   const donum = getSeciliDonum();
-  const miktarInput = itemEl.querySelectorAll('input[type=number]')[0];
-  const miktar = parseFloat(miktarInput?.value) || 0;
+  const inputs = itemEl.querySelectorAll('input[type=number]');
+  const miktar  = parseFloat(inputs[0]?.value) || 0; // kg/dönüm
+  const maliyet = parseFloat(itemEl.querySelector('.maliyet-input')?.value) || 0;
   const kutu = itemEl.querySelector('.hesap-kutu');
   if (!kutu) return;
 
-  if (miktar > 0 && donum > 0) {
-    const toplam = miktar * donum;
+  if (miktar > 0 || maliyet > 0) {
     kutu.classList.add('show');
-    kutu.innerHTML = `
-      <div class="hesap-badge">⚖️ ${toplam.toLocaleString('tr-TR')} kg toplam</div>
-      <div class="hesap-badge">🌾 ${miktar} kg/dönüm × ${donum} dönüm</div>`;
-  } else if (miktar > 0) {
-    kutu.classList.add('show');
-    kutu.innerHTML = `<div class="hesap-badge" style="color:var(--text3)">Tarla seç → toplam hesabı</div>`;
+    kutu.innerHTML = '';
+    if (miktar > 0 && donum > 0) {
+      const toplamKg = miktar * donum;
+      kutu.innerHTML += `<div class="hesap-badge">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        ${toplamKg.toLocaleString('tr-TR')} kg toplam (${miktar} kg × ${donum} dönüm)
+      </div>`;
+    } else if (miktar > 0) {
+      kutu.innerHTML += `<div class="hesap-badge" style="color:var(--text3)">Tarla seç → toplam kg hesabı</div>`;
+    }
+    if (maliyet > 0 && donum > 0) {
+      const maliyetPerDonum = (maliyet / donum).toFixed(0);
+      kutu.innerHTML += `<div class="hesap-badge">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="var(--gold)" stroke-width="1.3"/><path d="M6 3.5v5M4.5 5h2.5" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/></svg>
+        ₺${maliyetPerDonum}/dönüm maliyet
+      </div>`;
+    }
   } else {
     kutu.classList.remove('show');
   }
@@ -6214,7 +6172,7 @@ function toggleFoto(el) {
     const preview = el.nextElementSibling;
     if (preview && preview.classList.contains('foto-preview')) {
       preview.innerHTML = kayitFotolar.map((f,i) =>
-        `<div class="foto-thumb" onclick="delFoto(${i})">${f}<div class="foto-thumb-del">✕</div></div>`
+        `<div class="foto-thumb" onclick="delFoto(${i})">${f}<div class="foto-thumb-del">&times;</div></div>`
       ).join('') + '<div class="foto-thumb" style="border-style:dashed;font-size:18px;color:var(--text3)">+</div>';
       preview.style.display = 'flex';
     }
@@ -6952,7 +6910,7 @@ function openKasaSheet(tip, key) {
   let ic, title, meta, cost, body, costClass = '';
 
   if (tip === 'gider') {
-    ic    = `<div style="width:42px;height:42px;border-radius:50%;background:${d.bg};display:flex;align-items:center;justify-content:center;font-size:18px;">💸</div>`;
+    ic    = `<div style="width:42px;height:42px;border-radius:50%;background:${d.bg};display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 17V7.5L6.5 5h9L18 7.5V17" stroke="${d.renk}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17h14" stroke="${d.renk}" stroke-width="1.6" stroke-linecap="round"/><path d="M7 5h8" stroke="${d.renk}" stroke-width="1.4" stroke-linecap="round" opacity=".45"/><circle cx="9"  cy="11" r="1.1" fill="${d.renk}" opacity=".5"/><circle cx="13" cy="11" r="1.1" fill="${d.renk}" opacity=".4"/><circle cx="11" cy="13.5" r="1.1" fill="${d.renk}" opacity=".45"/></svg></div>`;
     title = d.ad; meta = d.pct + ' toplam giderin'; cost = d.tutar;
     body  = buildGiderBody(d);
   } else if (tip === 'tarla') {
@@ -6964,7 +6922,7 @@ function openKasaSheet(tip, key) {
     const toplamMiktar = d.cesitler.reduce((s, c) => {
       const ton = parseFloat(c.miktar); return s + (isNaN(ton) ? 0 : ton);
     }, 0);
-    ic    = `<div style="width:42px;height:42px;border-radius:50%;background:${d.bg};display:flex;align-items:center;justify-content:center;font-size:20px;">🌾</div>`;
+    ic    = `<div style="width:42px;height:42px;border-radius:50%;background:${d.bg};display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" style="color:${d.renk||'#8A6914'}"><path d="M11 18V8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M11 13C11 13 8 11 7 8c2-.3 4.5 1 4 5C11.5 9.5 14 8 15.5 8c-1 3.5-4.5 5-4.5 5z" fill="currentColor" fill-opacity=".6"/></svg></div>`;
     title = d.ad + ' Satışları';
     meta  = d.cesitler.length > 1
       ? `${d.cesitler.length} çeşit · ${toplamMiktar} ton toplam`
@@ -7302,16 +7260,14 @@ function autoCalc(inputEl, type) {
   }
 
   if (type === 'satis_miktar' || type === 'satis_fiyat') {
-    // miktar × fiyat = toplam — her iki input değişince de hesapla
-    const wrap = inputEl.closest('.form-row') || form;
-    const allInputs = wrap ? wrap.querySelectorAll('input[type=number]') : [];
+    // Satış: tüm form içindeki ilk iki number input = miktar, fiyat
+    const allInputs = document.querySelectorAll('#kayit-form-fields input[type=number]');
     const miktar = parseFloat(allInputs[0]?.value) || 0;
     const fiyat  = parseFloat(allInputs[1]?.value) || 0;
-    // sonucu her zaman miktar inputunun form-group'una yaz
     const miktarEl = allInputs[0] || inputEl;
     if (miktar > 0 && fiyat > 0) {
-      const toplam = (miktar * fiyat).toLocaleString('tr-TR');
-      showCalcResult(miktarEl, `${miktar} ton × ₺${fiyat.toLocaleString('tr-TR')} = ₺${toplam}`);
+      const toplam = miktar * fiyat;
+      showCalcResult(miktarEl, `${miktar} ton × ₺${fiyat.toLocaleString('tr-TR')} = ₺${toplam.toLocaleString('tr-TR')}`);
     }
   }
 }
@@ -7596,6 +7552,17 @@ function appendTarlaKarti(key, t) {
         </div>
       </div>`;
     fieldList.insertAdjacentHTML('beforeend', flHtml);
+  }
+
+  // Kayıt Gir sheet - tarla chip listesine ekle
+  const chipScroll = document.getElementById('kayit-tarla-scroll');
+  if (chipScroll) {
+    const dönüm = t.alan ? t.alan.replace(/[^0-9]/g,'') : '0';
+    const chipHtml = `<div class="tarla-chip" onclick="selKayitTarla(this,'${key}')">
+      <div class="tarla-chip-name">${t.ad}</div>
+      <div class="tarla-chip-sub">${urunAdi} · ${dönüm} dön</div>
+    </div>`;
+    chipScroll.insertAdjacentHTML('beforeend', chipHtml);
   }
 }
 
@@ -8060,7 +8027,7 @@ function selChip(el) {
   // Sheet açma fonksiyonları
   var openFns  = ['openKayit','openSheet','openHavaSheet','openOpSheet',
                   'openKasaYilSheet','openKasaSezonSec','openSezonSheet',
-                  'openKonumPicker','openProfilEdit','openGeriBildirim','openModal',
+                  'openKonumPicker','openProfilDuzenle','openGeriBildirim','openModal',
                   'openYilSheet'];
   // Sheet kapama fonksiyonları
   var closeFns = ['closeKayit','closeSheet','closeHavaSheetBtn',
