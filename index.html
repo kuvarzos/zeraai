@@ -1866,49 +1866,112 @@ body {
 }
 .ob-wrap {
   flex: 1; display: flex; flex-direction: column;
-  padding: 24px 24px 32px;
+  padding: 0 28px 36px;
 }
+
+/* Progress dots — ince, üstte ortalı */
 .ob-progress {
-  display: flex; gap: 6px; margin-bottom: 32px;
+  display: flex; gap: 5px;
+  justify-content: center;
+  padding-top: 20px;
+  margin-bottom: 0;
 }
 .ob-dot {
-  height: 4px; border-radius: 2px;
-  background: var(--border); transition: all .3s;
+  height: 3px; border-radius: 2px;
+  background: var(--border); transition: all .4s cubic-bezier(.34,1.2,.64,1);
+  width: 28px;
 }
-.ob-dot.done { background: var(--green); flex: 1; }
-.ob-dot.active { background: var(--green); flex: 2; }
-.ob-dot.pending { flex: 1; }
+.ob-dot.done   { background: var(--green); }
+.ob-dot.active { background: var(--green); width: 44px; }
+.ob-dot.pending { background: var(--border); }
 
-.ob-step { display: none; flex-direction: column; flex: 1; }
-.ob-step.active { display: flex; animation: fadeUp .3s ease; }
+/* Step — ortalanmış içerik */
+.ob-step { display: none; flex-direction: column; flex: 1; align-items: center; text-align: center; }
+.ob-step.active { display: flex; animation: obFadeUp .4s cubic-bezier(.22,.68,0,1.05) both; }
 
-.ob-emoji { font-size: 48px; margin-bottom: 16px; line-height: 1; }
-.ob-icon  { width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; flex-shrink: 0; }
+@keyframes obFadeUp {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* İkon — büyük, merkezde */
+.ob-icon-wrap {
+  margin-top: 52px;
+  margin-bottom: 36px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ob-icon {
+  width: 88px; height: 88px; border-radius: 28px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,.07);
+}
+
 .ob-title {
   font-family: 'Fraunces', serif;
-  font-size: 26px; font-weight: 500;
-  color: var(--text); margin-bottom: 8px; line-height: 1.2;
+  font-size: 30px; font-weight: 500;
+  color: var(--text); margin-bottom: 10px;
+  line-height: 1.18; letter-spacing: -.4px;
 }
 .ob-desc {
   font-size: 14px; color: var(--text2);
-  font-weight: 500; line-height: 1.6;
-  margin-bottom: 28px;
+  font-weight: 500; line-height: 1.65;
+  margin-bottom: 36px;
+  max-width: 260px;
 }
+
+/* Input — tam genişlik, ortalanmış */
 .ob-input {
   background: var(--card); border: 1.5px solid var(--border);
-  border-radius: var(--r); padding: 14px 16px;
+  border-radius: var(--r); padding: 15px 18px;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 16px; color: var(--text);
   outline: none; width: 100%;
-  transition: border-color .2s; margin-bottom: 12px;
+  text-align: center;
+  transition: border-color .2s, box-shadow .2s;
+  margin-bottom: 12px;
   -webkit-appearance: none;
+  box-sizing: border-box;
 }
-.ob-input:focus { border-color: var(--green); }
+.ob-input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(34,127,131,.1);
+}
 .ob-input::placeholder { color: var(--text3); }
+
+/* İşletme tipi — compact, yatay */
+.ob-isletme-label {
+  font-size: 11px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .8px;
+  margin-bottom: 10px; margin-top: 4px;
+}
+.isletme-grid {
+  display: flex; gap: 8px;
+  width: 100%;
+}
+.isletme-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  padding: 12px 8px;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: var(--r); cursor: pointer;
+  transition: border-color .18s, background .18s, transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.isletme-btn.sel {
+  border-color: var(--green);
+  background: var(--green-lt);
+}
+.isletme-btn:active { transform: scale(.95); }
+.isletme-ic { display: flex; }
+.isletme-lbl {
+  font-size: 10px; font-weight: 700; color: var(--text2);
+  text-align: center; line-height: 1.3; letter-spacing: .2px;
+}
+.isletme-btn.sel .isletme-lbl { color: var(--green-mid); }
 
 .ob-konum-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 12px; width: 100%;
 }
 .ob-select {
   background: var(--card); border: 1.5px solid var(--border);
@@ -1917,27 +1980,32 @@ body {
   font-size: 15px; color: var(--text);
   outline: none; width: 100%;
   -webkit-appearance: none; cursor: pointer;
+  transition: border-color .2s;
 }
 .ob-select:focus { border-color: var(--green); }
 
-.ob-spacer { flex: 1; }
+.ob-spacer { flex: 1; min-height: 20px; }
 
+/* CTA butonlar */
 .ob-next {
   background: var(--green); color: white;
   border: none; border-radius: var(--r-pill);
-  padding: 16px; width: 100%;
+  padding: 17px; width: 100%;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 16px; font-weight: 700;
-  cursor: pointer; letter-spacing: .3px;
-  box-shadow: 0 4px 16px rgba(34,127,131,.35);
-  transition: transform .15s, opacity .15s;
+  cursor: pointer; letter-spacing: .2px;
+  box-shadow: 0 6px 20px rgba(34,127,131,.32);
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
 }
-.ob-next:active { transform: scale(.97); }
+.ob-next:active { transform: scale(.97); box-shadow: 0 2px 8px rgba(34,127,131,.2); }
 .ob-skip {
-  text-align: center; margin-top: 14px;
+  text-align: center; margin-top: 16px;
   font-size: 13px; color: var(--text3);
   font-weight: 500; cursor: pointer;
+  padding: 4px;
+  transition: color .15s;
 }
+.ob-skip:active { color: var(--text2); }
 
 /* bildirim toggle */
 .ob-toggle-row {
@@ -1945,8 +2013,10 @@ body {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--r); padding: 14px 16px;
   margin-bottom: 10px; cursor: pointer;
+  width: 100%; text-align: left;
+  transition: background .15s;
 }
-.ob-toggle-left {}
+.ob-toggle-row:active { background: var(--bg2); }
 .ob-toggle-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
 .ob-toggle-sub   { font-size: 12px; color: var(--text2); font-weight: 500; }
 .toggle-sw {
@@ -2605,10 +2675,9 @@ body {
 
   <!-- ═══════ ONBOARDING ═══════ -->
   <div class="screen" id="onboarding">
-    <div style="height:58px;flex-shrink:0;"></div>
     <div class="ob-wrap">
 
-      <!-- progress -->
+      <!-- progress dots -->
       <div class="ob-progress">
         <div class="ob-dot active" id="ob-dot-0"></div>
         <div class="ob-dot pending" id="ob-dot-1"></div>
@@ -2617,28 +2686,28 @@ body {
 
       <!-- adım 1: isim -->
       <div class="ob-step active" id="ob-0">
-        <div class="ob-icon" style="background:var(--green-lt)">
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-            <!-- gövde / omuzlar -->
-            <path d="M6 30 C6 24 10.5 20.5 17 20.5 C23.5 20.5 28 24 28 30" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
-            <!-- baş -->
-            <circle cx="17" cy="13" r="5" stroke="var(--green)" stroke-width="2"/>
-            <!-- şapka kenarlığı -->
-            <path d="M9 11 Q17 8 25 11" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
-            <!-- şapka tepesi -->
-            <path d="M13 11 Q13 6.5 17 6 Q21 6.5 21 11" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <div class="ob-icon-wrap">
+          <div class="ob-icon" style="background:var(--green-lt)">
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <path d="M8 38 C8 30 13.5 26 22 26 C30.5 26 36 30 36 38" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round"/>
+              <circle cx="22" cy="17" r="7" stroke="var(--green)" stroke-width="2.2"/>
+              <path d="M12 14.5 Q22 10.5 32 14.5" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M17 14.5 Q17 8 22 7.5 Q27 8 27 14.5" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
         </div>
+
         <div class="ob-title">Merhaba!<br>Seni tanıyalım</div>
         <div class="ob-desc">Adın ne? Sana nasıl hitap edelim?</div>
-        <input class="ob-input" id="ob-isim" placeholder="Adın ve soyadın..." maxlength="30">
 
-        <div style="margin-top:4px;">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">İşletme Tipin</div>
+        <input class="ob-input" id="ob-isim" placeholder="Adın ve soyadın…" maxlength="30" autocomplete="name">
+
+        <div style="width:100%;margin-top:20px;">
+          <div class="ob-isletme-label">İşletme Tipin</div>
           <div class="isletme-grid" id="isletme-grid">
             <div class="isletme-btn sel" onclick="selIsletme(this,'aile')">
               <div class="isletme-ic">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
                   <path d="M14 4L3 12v13h8v-7h6v7h8V12L14 4z" stroke="var(--green-mid)" stroke-width="1.7" stroke-linejoin="round"/>
                   <circle cx="14" cy="10" r="2.5" stroke="var(--green-mid)" stroke-width="1.5"/>
                 </svg>
@@ -2647,7 +2716,7 @@ body {
             </div>
             <div class="isletme-btn" onclick="selIsletme(this,'orta')">
               <div class="isletme-ic">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
                   <path d="M14 22V12" stroke="var(--green-mid)" stroke-width="1.8" stroke-linecap="round"/>
                   <path d="M14 18C14 18 10 16 9 12c2.2-.4 5 1.5 5 6C19 14 21.5 12.5 20 10c-1 4-6 8-6 8z" fill="var(--green-mid)" fill-opacity=".6"/>
                   <path d="M8 24h12" stroke="var(--green-mid)" stroke-width="1.6" stroke-linecap="round"/>
@@ -2658,7 +2727,7 @@ body {
             </div>
             <div class="isletme-btn" onclick="selIsletme(this,'buyuk')">
               <div class="isletme-ic">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
                   <rect x="4" y="14" width="20" height="10" rx="1.5" stroke="var(--green-mid)" stroke-width="1.6"/>
                   <rect x="8" y="9" width="12" height="5" rx="1" stroke="var(--green-mid)" stroke-width="1.5"/>
                   <rect x="12" y="5" width="4" height="4" rx="1" stroke="var(--green-mid)" stroke-width="1.4"/>
@@ -2671,45 +2740,46 @@ body {
         </div>
 
         <div class="ob-spacer"></div>
-        <button class="ob-next" onclick="obNext(1)">Devam →</button>
+        <button class="ob-next" onclick="obNext(1)">Devam</button>
         <div class="ob-skip" onclick="navTo('home')">Şimdi değil, atla</div>
       </div>
 
       <!-- adım 2: konum -->
       <div class="ob-step" id="ob-1">
-        <div class="ob-icon" style="background:var(--gold-lt)">
-          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path d="M15 2C10.6 2 7 5.6 7 10c0 7 8 18 8 18s8-11 8-18c0-4.4-3.6-8-8-8z" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/>
-            <circle cx="15" cy="10" r="3.5" stroke="var(--gold)" stroke-width="1.8"/>
-          </svg>
+        <div class="ob-icon-wrap">
+          <div class="ob-icon" style="background:var(--gold-lt)">
+            <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+              <path d="M21 4C15 4 10 9 10 15c0 9 11 23 11 23s11-14 11-23c0-6-5-11-11-11z" stroke="var(--gold)" stroke-width="2.2" stroke-linejoin="round"/>
+              <circle cx="21" cy="15" r="5" stroke="var(--gold)" stroke-width="2"/>
+            </svg>
+          </div>
         </div>
         <div class="ob-title">Tarlaların<br>nerede?</div>
-        <div class="ob-desc">Hava durumu ve bölgesel bilgiler için konumunu seç.</div>
+        <div class="ob-desc">Hava durumu ve bölgesel öneriler için konumunu seç.</div>
         <div class="ob-konum-row">
-          <select class="ob-select" id="ob-il"><option value="">İl seç...</option></select>
-          <select class="ob-select" id="ob-ilce">
-            <option value="">Önce il seçin...</option>
-          </select>
+          <select class="ob-select" id="ob-il"><option value="">İl seç…</option></select>
+          <select class="ob-select" id="ob-ilce"><option value="">Önce il seç…</option></select>
         </div>
         <div class="ob-spacer"></div>
-        <button class="ob-next" onclick="obNext(2)">Devam →</button>
+        <button class="ob-next" onclick="obNext(2)">Devam</button>
         <div class="ob-skip" onclick="navTo('home')">Şimdi değil, atla</div>
       </div>
 
       <!-- adım 3: bildirimler -->
       <div class="ob-step" id="ob-2">
-        <div class="ob-icon" style="background:var(--green-lt)">
-          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path d="M6 21c0-4.5 3-8 7-10" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M15 27c-1.7 0-3-1.3-3-3h6c0 1.7-1.3 3-3 3z" stroke="var(--green)" stroke-width="1.6"/>
-            <path d="M15 5v2" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M8 7.5l1.5 1.5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M22 7.5l-1.5 1.5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M10 21c0-3.5 2.2-6 5-6s5 2.5 5 6v1.5H10V21z" stroke="var(--green)" stroke-width="1.8"/>
-          </svg>
+        <div class="ob-icon-wrap">
+          <div class="ob-icon" style="background:var(--sky-lt)">
+            <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+              <path d="M9 29c0-6 4-11 10-13" stroke="var(--sky)" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M21 37c-2.2 0-4-1.8-4-4h8c0 2.2-1.8 4-4 4z" stroke="var(--sky)" stroke-width="1.8"/>
+              <path d="M21 8v2.5" stroke="var(--sky)" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M11 11l2 2M31 11l-2 2" stroke="var(--sky)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M14 29c0-4.5 3-8 7-8s7 3.5 7 8v2H14z" stroke="var(--sky)" stroke-width="2"/>
+            </svg>
+          </div>
         </div>
         <div class="ob-title">Seni haberdar<br>edelim mi?</div>
-        <div class="ob-desc">Önemli durumlarda bildirim gönderelim.</div>
+        <div class="ob-desc">Don riski, yağmur uyarısı ve sezon hatırlatıcıları için bildirim açalım.</div>
 
         <div class="ob-toggle-row" onclick="toggleOb(this)">
           <div class="ob-toggle-left">
@@ -2717,7 +2787,7 @@ body {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 11.5c0-2 1.5-4.5 4-6" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 15c-1.2 0-2-.7-2-2h4c0 1.3-.8 2-2 2z" stroke="var(--sky)" stroke-width="1.2"/><path d="M8 2v1.2" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M4.2 3.8l.8.8M11.8 3.8l-.8.8" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M5 11.5c0-1.8 1.3-3 3-3s3 1.2 3 3v.8H5z" stroke="var(--sky)" stroke-width="1.3"/></svg>
               Hava uyarıları
             </div>
-            <div class="ob-toggle-sub">Yarın yağmur, don riski...</div>
+            <div class="ob-toggle-sub">Yarın yağmur, don riski…</div>
           </div>
           <div class="toggle-sw on"></div>
         </div>
