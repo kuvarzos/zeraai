@@ -166,13 +166,11 @@ body {
 @keyframes splashExit {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 0; transform: translateY(-8px); }
 }
 
 /* Onboarding giriş: aşağıdan toprak gibi yükselir */
 @keyframes earthRise {
   from { opacity: 0; transform: translateY(28px); }
-  to   { opacity: 1; transform: translateY(0); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -184,23 +182,20 @@ body {
   position: absolute; inset: 0; z-index: 10;
 }
 
-/* Onboarding girişi */
-/* ob-entering: onboarding ilk açılışta yükseliş animasyonu
-   active class'ı ekranı gösterir, bu class animasyonu tanımlar */
+/* Onboarding earth-rise girişi */
 #onboarding.ob-entering {
   animation: earthRise .55s cubic-bezier(.25,.46,.45,.94) both;
 }
 
-/* Tab geçişi — giren ekran */
+/* Ekranı görünür kıl — animasyon yok */
 .screen.active {
   display: flex;
+}
+/* Tab geçiş animasyonu — active'den AYRI sınıf */
+.screen.tab-enter {
   animation: tabFadeIn .22s cubic-bezier(.25,.46,.45,.94) both;
 }
-/* Onboarding özel giriş sırasında tabFadeIn'i iptal et */
-#onboarding.ob-entering.active {
-  animation: earthRise .55s cubic-bezier(.25,.46,.45,.94) both;
-}
-/* Tab geçişi — geri (aynı fade, tab'da yön fark etmez) */
+/* Tab geri */
 .screen.back {
   display: flex;
   animation: tabFadeIn .22s cubic-bezier(.25,.46,.45,.94) both;
@@ -4966,15 +4961,10 @@ function navTo(id) {
       splashEl.style.display = 'none';
     }, 420);
 
-    // Adım 4: ob-entering kaldırılınca .screen.active'in tabFadeIn'i
-    // yeniden tetiklenmemesi için: önce animation:none inline ata,
-    // requestAnimationFrame ile tarayıcı repaint yaptıktan sonra temizle
+    // Adım 4: animasyon bittikten sonra ob-entering kaldır
+    // .screen.active artık animasyon içermiyor → güvenle kaldırılabilir
     setTimeout(() => {
-      obEl.style.animation = 'none';     // tabFadeIn'i durdur
       obEl.classList.remove('ob-entering');
-      requestAnimationFrame(() => {
-        obEl.style.animation = '';       // inline override'ı temizle
-      });
     }, 620);
 
     currentScreen = 'onboarding';
@@ -5005,10 +4995,14 @@ function navTo(id) {
     fromScreen = id;
   }
 
-  screens.forEach(s => s.classList.remove('active','back','slide-in','slide-left'));
+  screens.forEach(s => s.classList.remove('active','back','slide-in','slide-left','tab-enter'));
   currentScreen = id;
   const s = document.getElementById(id);
   s.classList.add(animClass);
+  // Tab geçişlerinde ayrıca tab-enter ekle (animasyon active'den ayrıldı)
+  if (animClass === 'active') {
+    s.classList.add('tab-enter');
+  }
 
   // kayitlarim ekranına geçince listeyi render et (aktif filtreyi koru)
   if (id === 'kayitlarim') {
