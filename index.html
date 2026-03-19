@@ -4,7 +4,7 @@
 ║  Bu bloğu yeni konuşma başında dosyayla birlikte upload et.     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  UYGULAMA ADI   : Zeraai (Hasat)                                ║
-║  VERSİYON       : v38                                           ║
+║  VERSİYON       : v39                                           ║
 ║  PLATFORM       : iOS-benzeri mobil prototype (393×852px)       ║
 ║  YAPI           : Tek HTML dosyası — CSS + JS içinde            ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -52,15 +52,17 @@
 ║  • Navigasyon: navTo(), showScreen() fonksiyonları             ║
 ║  • Tüm veri: localStorage'da (FIELDS, KAYITLAR, USER_PREFS)    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  SON DURUM (v38 itibarıyla tamamlanan)                          ║
-║  ✅ v37'deki her şey korundu                                    ║
-║  ✅ Font sistemi: Fraunces + Inter (Outfit ve Plus Jakarta Sans  ║
-║     tamamen kaldırıldı)                                         ║
-║  ✅ Tüm sayısal sınıflara tabular-nums + lining-nums eklendi    ║
-║  ✅ Google Fonts linki güncellendi (2 font, daha hızlı yükleme) ║
+║  SON DURUM (v39 itibarıyla tamamlanan)                          ║
+║  ✅ v38'deki her şey korundu                                    ║
+║  ✅ Onboarding header yenilendi:                                ║
+║     • Avatar kaldırıldı (kayıtsız kullanıcıya profil saçma)    ║
+║     • Logo-mark ortada kalıyor, wordmark gizleniyor             ║
+║     • Sağa "Atla" butonu eklendi (--c-dismiss rengi)           ║
+║     • Header altına teal progress bar eklendi (33/66/100%)     ║
+║     • obBitir() ve "Atla" tıklandığında ob-mode kapanıyor      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  SIRADAKI / AÇIK KONULAR                                        ║
-║  → Punto skalası uygulanacak (başlık/gövde/caption px değerleri)║
+║  → Onboarding gövde içeriği (ikon, başlık, form) düzenlenecek  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  BİLİNEN SORUNLAR / NOTLAR                                      ║
 ║  → sheet-close ve op-sheet-close zaten nötr renk kullanıyor,   ║
@@ -229,6 +231,41 @@ body.app-ready { background: var(--bg); }
   box-shadow: 0 1px 4px rgba(34,127,131,.15);
 }
 .app-avatar:active { transform: scale(.88); }
+
+/* ── Onboarding header modu ───────────────────────────────────
+   Onboarding'de: wordmark gizlenir, avatar → Atla butonu,
+   header altına ince teal progress bar eklenir
+──────────────────────────────────────────────────────────── */
+.sb.ob-mode { background: var(--bg-header); }
+.sb.ob-mode .app-logo-name { display: none; }
+.sb.ob-mode .app-logo { cursor: default; pointer-events: none; }
+
+/* Atla butonu */
+.ob-skip-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--c-dismiss); cursor: pointer;
+  padding: 6px 2px; z-index: 1; flex-shrink: 0;
+  transition: opacity .15s;
+  width: 40px; text-align: right;
+}
+.ob-skip-btn:active { opacity: .6; }
+
+/* Progress bar — header'ın hemen altında */
+.ob-progress-bar {
+  position: absolute;
+  top: 68px; left: 0; right: 0;
+  height: 3px;
+  background: var(--border);
+  z-index: 101;
+  overflow: hidden;
+}
+.ob-progress-bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 0 2px 2px 0;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
 
 /* SCREENS */
 .screen {
@@ -2423,8 +2460,12 @@ body.app-ready { background: var(--bg); }
       </div>
       <div class="app-logo-name">zeraai</div>
     </div>
-    <!-- Sağ: Profil avatarı -->
+    <!-- Sağ: Profil avatarı (onboarding'de gizlenir) -->
     <div class="app-avatar" id="sb-avatar" onclick="navTo('profil')">A</div>
+  </div>
+  <!-- Onboarding progress bar — sadece ob-mode'da görünür -->
+  <div class="ob-progress-bar" id="ob-progress-bar" style="display:none;">
+    <div class="ob-progress-bar-fill" id="ob-progress-fill" style="width:33%;"></div>
   </div>
 
   <!-- ═══════ ANA SAYFA ═══════ -->
@@ -5024,6 +5065,49 @@ function setSbLeft(screenId) {
   } else {
     el.innerHTML = '';
   }
+  // Onboarding modu: header değişir
+  setObMode(screenId === 'onboarding');
+}
+
+function setObMode(aktif) {
+  const sb     = document.getElementById('sb-bar');
+  const avatar = document.getElementById('sb-avatar');
+  const bar    = document.getElementById('ob-progress-bar');
+  if (!sb || !avatar || !bar) return;
+  if (aktif) {
+    sb.classList.add('ob-mode');
+    // Avatar → Atla butonu
+    avatar.style.display = 'none';
+    // Sağa Atla butonu ekle (yoksa)
+    if (!document.getElementById('ob-skip-hdr')) {
+      const skip = document.createElement('div');
+      skip.id = 'ob-skip-hdr';
+      skip.className = 'ob-skip-btn';
+      skip.textContent = 'Atla';
+      skip.onclick = function() { obModKapat(); navTo('home'); };
+      sb.appendChild(skip);
+    }
+    bar.style.display = 'block';
+    obProgressGuncelle(0);
+  } else {
+    sb.classList.remove('ob-mode');
+    avatar.style.display = '';
+    const skip = document.getElementById('ob-skip-hdr');
+    if (skip) skip.remove();
+    bar.style.display = 'none';
+  }
+}
+
+function obProgressGuncelle(adim) {
+  const fill = document.getElementById('ob-progress-fill');
+  if (!fill) return;
+  // 3 adım: 0→33%, 1→66%, 2→100%
+  const yuzdeler = ['33%', '66%', '100%'];
+  fill.style.width = yuzdeler[adim] || '33%';
+}
+
+function obModKapat() {
+  setObMode(false);
 }
 
 
@@ -5561,6 +5645,8 @@ function obNext(adim) {
     const dot = document.getElementById('ob-dot-' + i);
     dot.className = 'ob-dot ' + (i < adim ? 'done' : i === adim ? 'active' : 'pending');
   }
+  // header progress bar
+  obProgressGuncelle(adim);
 }
 
 function obBitir() {
@@ -5569,6 +5655,7 @@ function obBitir() {
   const finalIsim  = document.getElementById('p-isim')?.textContent || '';
   const finalKonum = document.getElementById('p-konum-satir')?.textContent || '';
   if (finalIsim) lsProfilKaydet(finalIsim, finalKonum);
+  obModKapat();
   updateGreeting();
   navTo('home');
 }
