@@ -147,33 +147,52 @@ body {
 }
 
 /* ── iOS premium geçiş animasyonları ─────────────────────────
-   Sağdan gelme (ileri nav): tam genişlik slide + hafif fade
-   Soldan gelme (geri nav):  tam genişlik slide + hafif fade
-   Hiçbir scale yok — iOS native gibi pür translasyon
+   Tab geçişi (home/fields/kayitlarim/kasa): Instagram/X tarzı
+   cross-fade + hafif scale — slayt yok
+   Detay geçişi (detail/profil): klasik iOS sağdan slayt
 ──────────────────────────────────────────────────────────── */
+
+/* Tab geçişi — giren ekran */
 .screen.active {
+  display: flex;
+  animation: tabFadeIn .22s cubic-bezier(.25,.46,.45,.94) both;
+}
+/* Tab geçişi — geri (aynı fade, tab'da yön fark etmez) */
+.screen.back {
+  display: flex;
+  animation: tabFadeIn .22s cubic-bezier(.25,.46,.45,.94) both;
+}
+/* Detay geçişi — sağdan slayt (ileri) */
+.screen.slide-in {
   display: flex;
   animation: iosSlideIn .38s cubic-bezier(.4,0,.2,1) both;
 }
-.screen.back {
+/* Detay geri — soldan slayt */
+.screen.slide-left {
   display: flex;
   animation: iosSlideBack .38s cubic-bezier(.4,0,.2,1) both;
 }
-.screen.slide-left {
-  display: flex;
-  animation: iosSlideLeft .38s cubic-bezier(.4,0,.2,1) both;
+
+/* Cross-fade + hafif scale — Instagram/X tab geçişi */
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
+/* Detay ekranı sağdan gelme */
 @keyframes iosSlideIn {
-  from { opacity: .55; transform: translateX(100%); }
+  from { opacity: .6; transform: translateX(100%); }
   to   { opacity: 1;   transform: translateX(0); }
 }
+/* Detay ekranı soldan gelme (geri) */
 @keyframes iosSlideBack {
-  from { opacity: .55; transform: translateX(-40%); }
-  to   { opacity: 1;   transform: translateX(0); }
-}
-@keyframes iosSlideLeft {
-  from { opacity: .55; transform: translateX(-100%); }
+  from { opacity: .6; transform: translateX(-30%); }
   to   { opacity: 1;   transform: translateX(0); }
 }
 
@@ -4671,7 +4690,18 @@ function navTo(id) {
   const screens = document.querySelectorAll('.screen');
   const fromIdx = navOrder.indexOf(currentScreen);
   const toIdx   = navOrder.indexOf(id);
-  const dir = (fromIdx === -1 || toIdx >= fromIdx) ? 'active' : 'slide-left';
+
+  // Tab geçişi mi, detay geçişi mi?
+  const isTabTransition = navOrder.includes(id);
+
+  // Tab geçişlerinde yön fark etmez — her zaman cross-fade
+  // Detay geçişlerinde yön önemli — ileri sağdan, geri soldan
+  let animClass;
+  if (isTabTransition) {
+    animClass = 'active'; // cross-fade — yön yok
+  } else {
+    animClass = (fromIdx === -1 || toIdx >= fromIdx) ? 'slide-in' : 'slide-left';
+  }
 
   // Geri butonu gösterilecek ekranlara geçerken gelinen ekranı kaydet
   if (DETAIL_SCREENS.includes(id)) {
@@ -4681,10 +4711,10 @@ function navTo(id) {
     fromScreen = id;
   }
 
-  screens.forEach(s => s.classList.remove('active','back','slide-left'));
+  screens.forEach(s => s.classList.remove('active','back','slide-in','slide-left'));
   currentScreen = id;
   const s = document.getElementById(id);
-  s.classList.add(dir);
+  s.classList.add(animClass);
 
   // kayitlarim ekranına geçince listeyi render et (aktif filtreyi koru)
   if (id === 'kayitlarim') {
@@ -4710,20 +4740,22 @@ function openDetail(key) {
   currentDetailKey = key;
   buildDetail(key);
   fromScreen = currentScreen; // gelinen ekranı kaydet
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-left'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-in','slide-left'));
   currentScreen = 'detail';
-  document.getElementById('detail').classList.add('active');
+  document.getElementById('detail').classList.add('slide-in');
   setSbLeft('detail');
 }
 
 function navBack() {
   const target = fromScreen; // geri dönülecek ekran
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-left'));
+  const isTab = navOrder.includes(target);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-in','slide-left'));
   const t = document.getElementById(target);
   t.style.animation = 'none';
-  t.offsetHeight;
+  t.offsetHeight; // reflow
   t.style.animation = '';
-  t.classList.add('back');
+  // Tab'a dönüş: cross-fade | Detaydan detaya geri: slide-left
+  t.classList.add(isTab ? 'active' : 'slide-left');
   currentScreen = target;
   // fromScreen'i bir üst seviyeye sıfırla
   fromScreen = navOrder.includes(target) ? target : 'home';
