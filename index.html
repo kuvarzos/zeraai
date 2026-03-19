@@ -1813,20 +1813,38 @@ body {
   overflow: hidden;
 }
 
-/* ── Fotoğraf & overlay ───────────────────────────── */
+/* ─────────────────────────────────────────────────────
+   SPLASH ANİMASYON FELSEFESİ
+   
+   "Çarşaf silkme" = iki aşamalı sahne:
+   
+   AŞAMA 1 — Ortam (0-1.6s):
+     Fotoğraf yavaşça belirir. Overlay yerleşir.
+     Kullanıcı "neredeyim?" sorusunu yanıtlar.
+   
+   AŞAMA 2 — İçerik (1.2s sonra, hep birlikte):
+     İkon, yazı, slogan, buton AYNI ANDA gelir.
+     Ama 1.4s boyunca — ağır, sakin, ipek gibi.
+     Sıralanmazlar — birlikte "düşerler".
+   
+   translateY: sadece 6px — neredeyse sıfır hareket,
+   fade ağırlıklı. Easing: klasik ease-out — doğal.
+───────────────────────────────────────────────────── */
+
+/* ── Fotoğraf: çok yavaş, sinematik ─────────────── */
 .splash-photo {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover; object-position: center 18%;
   z-index: 0;
-  /* Fotoğraf önce görünür — yavaş fade in */
-  animation: splashPhoto .9s cubic-bezier(.16,1,.3,1) both;
+  animation: splashPhoto 2s cubic-bezier(.25,.46,.45,.94) both;
 }
 @keyframes splashPhoto {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
+/* ── Overlay: fotoğraftan kısa sonra ────────────── */
 .splash-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(
@@ -1838,26 +1856,22 @@ body {
     rgba(10,8,4,0.94)  100%
   );
   z-index: 1;
-  /* Overlay fotoğraftan kısa sonra */
-  animation: splashPhoto .7s .15s cubic-bezier(.16,1,.3,1) both;
+  animation: splashPhoto 1.6s .3s cubic-bezier(.25,.46,.45,.94) both;
 }
 
-/* ── İçerik wrapper ────────────────────────────────── */
+/* ── İçerik wrapper ──────────────────────────────── */
 .splash-logo-wrap {
   position: relative; z-index: 2;
   display: flex; flex-direction: column;
   align-items: center; gap: 10px;
   padding-bottom: 64px;
-  /* wrapper'ın kendi animasyonu yok — çocuklar ayrı ayrı animate */
+  /* wrapper animasyonu yok — çocuklar kendi CSS'i ile */
 }
 
-/* ── Stagger animasyonu — örtüşen, organik ────────────
-   Prensip: %40 overlap, 80ms aralık, 700ms uzun süre
-   Disney "Follow Through & Overlapping Action" — elementler
-   bir önceki bitmeden başlar → akışkan, robotik değil
-──────────────────────────────────────────────────── */
+/* ── İçerik elementleri: hepsi AYNI ANDA, 1.2s sonra ──
+   Tek bir nefes gibi — sıralanma yok, hep beraber gelir
+   1.4s süre + ease-out = ipek, ağır, sakin            */
 
-/* 1. İkon: 280ms sonra, 700ms süre */
 .splash-icon {
   width: 76px; height: 76px;
   background: rgba(255,255,255,0.14);
@@ -1869,27 +1883,24 @@ body {
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   margin-bottom: 6px;
-  animation: splashRise .7s .28s cubic-bezier(.16,1,.3,1) both;
+  animation: splashContent 1.4s 1.2s ease-out both;
 }
 
-/* 2. "zeraai": 360ms — ikon henüz bitmeden başlar */
 .splash-title {
   font-family: 'Fraunces', serif;
   font-size: 52px; font-weight: 600;
   color: white; letter-spacing: -2px; line-height: 1;
   text-shadow: 0 2px 20px rgba(0,0,0,.4);
-  animation: splashRise .7s .36s cubic-bezier(.16,1,.3,1) both;
+  animation: splashContent 1.4s 1.2s ease-out both;
 }
 
-/* 3. Slogan: 440ms — başlık akarken başlar */
 .splash-tagline {
   font-size: 12px; color: rgba(255,255,255,.65);
   font-weight: 600; letter-spacing: 2.5px;
   text-transform: uppercase; margin-top: -2px;
-  animation: splashRise .65s .44s cubic-bezier(.16,1,.3,1) both;
+  animation: splashContent 1.4s 1.2s ease-out both;
 }
 
-/* 4. Buton: 540ms — tüm yazılar hareket halindeyken çıkar */
 .splash-btn {
   margin-top: 44px;
   background: white; color: #1a3a1a;
@@ -1900,18 +1911,21 @@ body {
   cursor: pointer; letter-spacing: .3px;
   box-shadow: 0 8px 28px rgba(0,0,0,.35);
   transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
-  animation: splashRise .65s .54s cubic-bezier(.16,1,.3,1) both;
+  /* Buton biraz daha sonra — son "mühür" gibi */
+  animation: splashContent 1.3s 1.45s ease-out both;
 }
 .splash-btn:active { transform: scale(.96); box-shadow: 0 4px 12px rgba(0,0,0,.25); }
 
-/* ── Keyframe'ler ──────────────────────────────────── */
-/* Tek keyframe — hepsi aynı hareketi yapar: rise + fade
-   translateY: 20px → 12px — daha subtle, daha organik */
-@keyframes splashRise {
-  from { opacity: 0; transform: translateY(12px); }
+/* ── Keyframe'ler ─────────────────────────────────── */
+
+/* Ana içerik hareketi: 6px — neredeyse sıfır.
+   Fade ağırlıklı. Çarşaf yere inerken son salınım gibi. */
+@keyframes splashContent {
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-/* splashFade alias — overlay için */
+
+/* Sadece fade — fotoğraf ve overlay için */
 @keyframes splashFade {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -1921,7 +1935,7 @@ body {
   position: absolute; bottom: 20px; z-index: 2;
   font-size: 11px; color: rgba(255,255,255,.25);
   font-weight: 500; letter-spacing: .5px;
-  animation: splashFade .4s .9s both;
+  animation: splashFade .8s 2.2s both;
 }
 
 /* ONBOARDING */
