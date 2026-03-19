@@ -4,7 +4,7 @@
 ║  Bu bloğu yeni konuşma başında dosyayla birlikte upload et.     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  UYGULAMA ADI   : Zeraai (Hasat)                                ║
-║  VERSİYON       : v37                                           ║
+║  VERSİYON       : v38                                           ║
 ║  PLATFORM       : iOS-benzeri mobil prototype (393×852px)       ║
 ║  YAPI           : Tek HTML dosyası — CSS + JS içinde            ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -47,22 +47,20 @@
 ╠══════════════════════════════════════════════════════════════════╣
 ║  TEKNİK NOTLAR                                                  ║
 ║  • Animasyonlar: iOS-benzeri sheet drag-to-dismiss (altta JS)  ║
-║  • Fontlar: Fraunces (başlık), Plus Jakarta Sans (gövde),       ║
+║  • Fontlar: Fraunces (başlık), Inter (gövde+sayılar)           ║
 ║             Outfit (sayılar — .num class)                       ║
 ║  • Navigasyon: navTo(), showScreen() fonksiyonları             ║
 ║  • Tüm veri: localStorage'da (FIELDS, KAYITLAR, USER_PREFS)    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  SON DURUM (v37 itibarıyla tamamlanan)                          ║
-║  ✅ v36'daki her şey korundu                                    ║
-║  ✅ Buğday Tarlası yüzey sistemi uygulandı:                     ║
-║     --bg:#EDE8DD / --bg-header:#E2DCD0 / --bg2:#F0EBE1          ║
-║  ✅ Header (.sb) ve bottom nav (.bnav) --bg-header'a bağlandı   ║
-║  ✅ --text sıcak siyaha (#2C2A25), --border uyarlandı           ║
-║  ✅ --green-lt #EBF5F5 olarak yeni gövdeyle uyumlu hale getirildi║
+║  SON DURUM (v38 itibarıyla tamamlanan)                          ║
+║  ✅ v37'deki her şey korundu                                    ║
+║  ✅ Font sistemi: Fraunces + Inter (Outfit ve Plus Jakarta Sans  ║
+║     tamamen kaldırıldı)                                         ║
+║  ✅ Tüm sayısal sınıflara tabular-nums + lining-nums eklendi    ║
+║  ✅ Google Fonts linki güncellendi (2 font, daha hızlı yükleme) ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  SIRADAKI / AÇIK KONULAR                                        ║
-║  → Tüm uygulamayı tarayıp hardcode renk kalmış mı kontrol et   ║
-║  → Sheet ve modal arka planlarını gözden geçir                  ║
+║  → Punto skalası uygulanacak (başlık/gövde/caption px değerleri)║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  BİLİNEN SORUNLAR / NOTLAR                                      ║
 ║  → sheet-close ve op-sheet-close zaten nötr renk kullanıyor,   ║
@@ -75,7 +73,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Zeraai</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   /* ── Buğday Tarlası yüzey sistemi (v37) ─────────────────────
@@ -104,7 +102,7 @@
   --r:         14px;
   --r-lg:      20px;
   --r-pill:    100px;
-  --num:       'Outfit', sans-serif;
+  --num:       'Inter', sans-serif;
 
   /* ── Semantik renk tokenları ────────────────────────────────
      Rengi değiştirmek için sadece bu tokenları güncelle.
@@ -150,14 +148,14 @@
 .yt-c,
 .bar-val {
   font-family: var(--num);
-  
-  
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: #0e0c08; /* splash rengi — fotoğraf gelene kadar koyu */
   display: flex; justify-content: center; align-items: center;
   min-height: 100vh; padding: 20px;
@@ -393,7 +391,7 @@ body.app-ready { background: var(--bg); }
 /* SHARED */
 .page-hdr { padding:14px 20px 12px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
 .page-title { font-family:'Fraunces',serif; font-size:24px; font-weight:600; color:var(--text); }
-.hdr-btn { background:var(--card); color:var(--green-mid); border:1.5px solid var(--border); border-radius:var(--r-pill); padding:7px 14px; font-family:'Plus Jakarta Sans', sans-serif; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .18s; box-shadow:var(--shadow); }
+.hdr-btn { background:var(--card); color:var(--green-mid); border:1.5px solid var(--border); border-radius:var(--r-pill); padding:7px 14px; font-family:'Inter', sans-serif; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .18s; box-shadow:var(--shadow); }
 .hdr-btn:hover { background:var(--green-lt); border-color:rgba(34,127,131,.3); }
 .hdr-btn:active { background:var(--bg2); transform:scale(.97); }
 .back-btn { background:none; border:none; cursor:pointer; display:flex; align-items:center; padding:2px; transition:opacity .15s; }
@@ -446,7 +444,7 @@ body.app-ready { background: var(--bg); }
 .fc-lbl.today { color:var(--green); }
 .fc-ico { width:20px; height:20px; }
 .fc-t { font-size:13px; font-weight:500; color:var(--text); font-family:var(--num); }
-.fc-t span { font-size:10px; color:var(--text3); font-family:'Plus Jakarta Sans', sans-serif; font-weight:500; }
+.fc-t span { font-size:10px; color:var(--text3); font-family:'Inter', sans-serif; font-weight:500; }
 .fc-pill { font-size:9px; font-weight:700; padding:2px 5px; border-radius:4px; }
 .fc-pill.ok   { background:var(--green-lt); color:var(--green-mid); }
 .fc-pill.rain { background:var(--sky-lt);   color:var(--sky); }
@@ -665,12 +663,12 @@ body.app-ready { background: var(--bg); }
 .modal-title { font-family:'Fraunces',serif; font-size:18px; font-weight:500; color:var(--text); margin-bottom:16px; }
 .modal-form { display:flex; flex-direction:column; gap:12px; }
 .modal-lbl { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
-.modal-input { background:var(--bg); border:1.5px solid var(--border); border-radius:var(--r); padding:11px 13px; font-family:'Plus Jakarta Sans', sans-serif; font-size:14px; color:var(--text); outline:none; width:100%; }
+.modal-input { background:var(--bg); border:1.5px solid var(--border); border-radius:var(--r); padding:11px 13px; font-family:'Inter', sans-serif; font-size:14px; color:var(--text); outline:none; width:100%; }
 .modal-input:focus { border-color:var(--green); }
 .modal-chips { display:flex; gap:6px; flex-wrap:wrap; }
 .chip { background:var(--bg2); border:1.5px solid var(--border); border-radius:var(--r-pill); padding:6px 12px; font-size:12px; font-weight:600; color:var(--text2); cursor:pointer; transition:all .15s; }
 .chip.sel { background:var(--green-lt); border-color:var(--green); color:var(--green-mid); }
-.modal-save { background:var(--green); color:white; border:none; border-radius:var(--r-pill); padding:14px; width:100%; font-family:'Plus Jakarta Sans', sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px; box-shadow:0 4px 14px rgba(34,127,131,.32); transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s, background .2s; }
+.modal-save { background:var(--green); color:white; border:none; border-radius:var(--r-pill); padding:14px; width:100%; font-family:'Inter', sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px; box-shadow:0 4px 14px rgba(34,127,131,.32); transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s, background .2s; }
 .modal-save:hover { box-shadow:0 6px 18px rgba(34,127,131,.4); }
 .modal-save:active { transform:scale(.97); background:var(--green-mid); box-shadow:0 2px 6px rgba(34,127,131,.2); }
 
@@ -749,7 +747,7 @@ body.app-ready { background: var(--bg); }
   border: 1.5px solid var(--border);
   border-radius: var(--r);
   padding: 13px 14px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 15px; color: var(--text);
   outline: none; width: 100%;
   transition: border-color .2s, box-shadow .2s;
@@ -812,7 +810,7 @@ body.app-ready { background: var(--bg); }
 .sheet-save {
   background: var(--green); color: white; border: none;
   border-radius: var(--r-pill); padding: 16px;
-  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700;
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
   cursor: pointer; width: 100%;
   box-shadow: 0 4px 16px rgba(34,127,131,.35), 0 1px 3px rgba(34,127,131,.2);
   transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s, background .2s;
@@ -892,7 +890,7 @@ body.app-ready { background: var(--bg); }
 .form-input {
   background: var(--bg); border: 1.5px solid var(--border);
   border-radius: var(--r); padding: 12px 13px;
-  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 15px; color: var(--text);
   outline: none; width: 100%; transition: border-color .2s, box-shadow .2s;
   -webkit-appearance: none;
 }
@@ -929,7 +927,7 @@ body.app-ready { background: var(--bg); }
 .form-textarea {
   background: var(--bg); border: 1.5px solid var(--border);
   border-radius: var(--r); padding: 12px 13px;
-  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text);
   outline: none; width: 100%; resize: none; height: 72px;
   transition: border-color .2s, box-shadow .2s;
 }
@@ -1918,7 +1916,7 @@ body.app-ready { background: var(--bg); }
   font-family: var(--num);
 }
 .op-detail-val.text {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Maliyet banner */
@@ -2054,7 +2052,7 @@ body.app-ready { background: var(--bg); }
   background: white; color: #1a3a1a;
   border: none; border-radius: var(--r-pill);
   padding: 16px 56px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 17px; font-weight: 700;
   cursor: pointer; letter-spacing: .2px;
   box-shadow: 0 8px 28px rgba(0,0,0,.35);
@@ -2150,7 +2148,7 @@ body.app-ready { background: var(--bg); }
 .ob-input {
   background: var(--card); border: 1.5px solid var(--border);
   border-radius: var(--r); padding: 15px 18px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 16px; color: var(--text);
   outline: none; width: 100%;
   text-align: center;
@@ -2202,7 +2200,7 @@ body.app-ready { background: var(--bg); }
 .ob-select {
   background: var(--card); border: 1.5px solid var(--border);
   border-radius: var(--r); padding: 14px 16px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 15px; color: var(--text);
   outline: none; width: 100%;
   -webkit-appearance: none; cursor: pointer;
@@ -2217,7 +2215,7 @@ body.app-ready { background: var(--bg); }
   background: var(--green); color: white;
   border: none; border-radius: var(--r-pill);
   padding: 17px; width: 100%;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 16px; font-weight: 700;
   cursor: pointer; letter-spacing: .2px;
   box-shadow: 0 6px 20px rgba(34,127,131,.32);
@@ -2296,7 +2294,7 @@ body.app-ready { background: var(--bg); }
   border-radius: var(--r-pill);
   padding: 7px 14px; color: white;
   font-size: 12px; font-weight: 700;
-  cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer; font-family: 'Inter', sans-serif;
   border-style: solid;
 }
 
@@ -3242,7 +3240,7 @@ body.app-ready { background: var(--bg); }
               </select>
             </div>
           </div>
-          <button onclick="saveKonum()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Kaydet</button>
+          <button onclick="saveKonum()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Kaydet</button>
         </div>
       </div>
     </div>
@@ -3257,7 +3255,7 @@ body.app-ready { background: var(--bg); }
         </div>
         <div style="padding:0 20px 36px;display:flex;flex-direction:column;gap:12px;">
           <input class="form-input" id="pes-input" style="font-size:16px;padding:14px 16px;" placeholder="">
-          <button onclick="saveProfilField()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Kaydet</button>
+          <button onclick="saveProfilField()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Kaydet</button>
         </div>
       </div>
     </div>
@@ -3271,8 +3269,8 @@ body.app-ready { background: var(--bg); }
           <div style="flex:1"></div>
         </div>
         <div style="padding:0 20px 36px;display:flex;flex-direction:column;gap:12px;">
-          <textarea id="gb-metin" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;resize:none;height:110px;-webkit-appearance:none;" placeholder="Görüşlerini, önerilerini veya karşılaştığın sorunları buraya yaz..."></textarea>
-          <button onclick="sendGeriBildirim()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Gönder</button>
+          <textarea id="gb-metin" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;resize:none;height:110px;-webkit-appearance:none;" placeholder="Görüşlerini, önerilerini veya karşılaştığın sorunları buraya yaz..."></textarea>
+          <button onclick="sendGeriBildirim()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Gönder</button>
         </div>
       </div>
     </div>
@@ -3520,7 +3518,7 @@ body.app-ready { background: var(--bg); }
           </div>
         </div>
         <div class="yil-row" onclick="openKasaYilSheet('2025')">
-          <div class="yil-lbl aktif">2025 <span style="font-size:11px;font-weight:500;color:var(--green-mid);font-family:'Plus Jakarta Sans',sans-serif">devam ediyor</span></div>
+          <div class="yil-lbl aktif">2025 <span style="font-size:11px;font-weight:500;color:var(--green-mid);font-family:'Inter',sans-serif">devam ediyor</span></div>
           <div class="yil-right">
             <div class="yil-val aktif">₺12.470 <span class="arr-up">↑%14</span></div>
             <div class="yil-progress"><div class="yil-prog-fill" style="width:100%;background:var(--green-mid)"></div></div>
@@ -4813,7 +4811,7 @@ function renderHavaTavsiye() {
       ${kural.mesajlar.map((m, i) => `
         <div style="padding:11px 16px;${i < kural.mesajlar.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}display:flex;gap:10px;align-items:flex-start;">
           <span style="color:${renk};font-size:11px;flex-shrink:0;margin-top:2px;">●</span>
-          <div style="font-size:12px;color:var(--text2);line-height:1.65;font-family:'Plus Jakarta Sans',sans-serif;">${m}</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.65;font-family:'Inter',sans-serif;">${m}</div>
         </div>`).join('')}
     </div>`;
 
@@ -4829,7 +4827,7 @@ function renderHavaTavsiye() {
           <div style="min-width:72px;width:72px;flex-shrink:0;padding-right:10px;display:flex;justify-content:flex-start;align-items:center;">
             <div style="display:inline-block;background:${sv.bg};border:1px solid ${sv.renk}33;border-radius:var(--r-pill);padding:3px 9px;font-size:11px;font-weight:700;color:${sv.renk};white-space:nowrap;">${m.urun}</div>
           </div>
-          <div style="flex:1;font-size:12px;color:var(--text2);line-height:1.65;font-family:'Plus Jakarta Sans',sans-serif;">${m.mesaj}</div>
+          <div style="flex:1;font-size:12px;color:var(--text2);line-height:1.65;font-family:'Inter',sans-serif;">${m.mesaj}</div>
         </div>`).join('')}
     </div>` : '';
 
@@ -7117,7 +7115,7 @@ function buildKayitSheetBody(k, tutar, pos) {
     html += `<div class="op-detail-grup">
       <div class="op-detail-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
         <div class="op-detail-lbl">Not</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.55;font-family:'Plus Jakarta Sans',sans-serif">${k.not}</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.55;font-family:'Inter',sans-serif">${k.not}</div>
       </div>
     </div>`;
   }
@@ -8037,7 +8035,7 @@ function renderKasaEkrani(yil, v) {
     const isDev      = y.yil === buYil;
     const badgeTxt   = isDev ? 'devam ediyor' : 'tamamlandı';
     const badgeColor = isDev ? 'var(--green-mid)' : 'var(--text3)';
-    const badge = `<span style="font-size:11px;font-weight:500;color:${badgeColor};font-family:'Plus Jakarta Sans',sans-serif"> ${badgeTxt}</span>`;
+    const badge = `<span style="font-size:11px;font-weight:500;color:${badgeColor};font-family:'Inter',sans-serif"> ${badgeTxt}</span>`;
     const rowBg = isSecili ? 'background:var(--green-lt);' : '';
     return `
     <div class="yil-row" onclick="openKasaYilSheet('${y.yil}')" style="${rowBg}">
@@ -8171,7 +8169,7 @@ function buildGiderBody(d) {
   });
   html += `</div>`;
   if (d.ozet) {
-    html += `<div class="op-detail-grup"><div class="op-detail-row" style="flex-direction:column;align-items:flex-start;gap:6px;"><div class="op-detail-lbl">Özet</div><div style="font-size:13px;color:var(--text2);line-height:1.55;font-family:'Plus Jakarta Sans',sans-serif">${d.ozet}</div></div></div>`;
+    html += `<div class="op-detail-grup"><div class="op-detail-row" style="flex-direction:column;align-items:flex-start;gap:6px;"><div class="op-detail-lbl">Özet</div><div style="font-size:13px;color:var(--text2);line-height:1.55;font-family:'Inter',sans-serif">${d.ozet}</div></div></div>`;
   }
   return html;
 }
@@ -8266,7 +8264,7 @@ function openSezonSheet(yil) {
     <div class="op-detail-grup">
       <div class="op-detail-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
         <div class="op-detail-lbl">Sezon Notu</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.55;font-family:'Plus Jakarta Sans',sans-serif">${d.ozet}</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.55;font-family:'Inter',sans-serif">${d.ozet}</div>
       </div>
     </div>`;
 
