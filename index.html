@@ -4,7 +4,7 @@
 ║  Bu bloğu yeni konuşma başında dosyayla birlikte upload et.     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  UYGULAMA ADI   : Zeraai (Hasat)                                ║
-║  VERSİYON       : v41                                           ║
+║  VERSİYON       : v45                                           ║
 ║  PLATFORM       : iOS-benzeri mobil prototype (393×852px)       ║
 ║  YAPI           : Tek HTML dosyası — CSS + JS içinde            ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -70,6 +70,67 @@
 ║  BİLİNEN SORUNLAR / NOTLAR                                      ║
 ║  → sheet-close ve op-sheet-close zaten nötr renk kullanıyor,   ║
 ║    token'a bağlanmaları yeterli (renk değişmeyecek)            ║
+╠══════════════════════════════════════════════════════════════════╣
+║  DİL & SES TONU STRATEJİSİ — "Topraktan Gelen Otorite" (v45+) ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                 ║
+║  KARAR: A+B MELEZİ — Saygın Usta ağırlığı + Köy Hemşerisi     ║
+║  sıcaklığı. Ne aşırı samimi, ne soğuk kurumsal.                ║
+║                                                                 ║
+║  NEDEN BU STRATEJİ:                                             ║
+║  Granular/Agworld/FieldView rakip analizi + gerçek çiftçi      ║
+║  görüşmesi (yarı zamanlı çiftçi, gazeteci) sonucunda:          ║
+║  → Jargon zorlaması yapay oluyor. Doğallık esas.               ║
+║  → Çiftçi uygulamayı şöyle anlatır: "Aç, kaydet. Unutmak      ║
+║    yok." Bu cümle tagline oldu.                                 ║
+║  → Çiftçi için hava tahmini = "Yüzde kaç yağış veriyor?"      ║
+║    Bu jargon bildirim adımının ruhunu belirliyor.              ║
+║                                                                 ║
+║  BEŞ TEMEL KURAL:                                               ║
+║  1. FİİL ÖNCE — Çiftçi aktif özne, uygulama araç               ║
+║  2. SADELIK ÖNCE — Süsleme yapay hissettirir                   ║
+║  3. TARLA KELİMESİ MERKEZ — field/arazi değil "tarla"          ║
+║  4. SOMUT FAYDA — "verim optimize" değil "yağmur var mı"       ║
+║  5. KISA & KARARLI — Nokta. Özür dilemeyen ton.                ║
+║                                                                 ║
+║  TAGLINE KARARI:                                                ║
+║  "emeğini kaydet." — tamamen küçük harf, nokta korunur.        ║
+║  NEDEN KÜÇÜK HARF: "zeraai" logosu zaten küçük harf.           ║
+║  İkisi aynı kasıtlı sistemin parçası görünür → tutarlılık      ║
+║  premium hissi güçlendirir. Tagline küçük harf = özgüven.      ║
+║  NEDEN BU SLOGAN: Hem literal (kayıt tut) hem metaforik        ║
+║  (emeğin kaybolmasın). İki kelime, nokta. Vurucu.              ║
+║                                                                 ║
+║  ONBOARDING KOPYALARI (v45):                                    ║
+║  Adım 1 başlık: "Adın ne?" — Yön A: karşılama yok, direkt      ║
+║    soru. En az süslü, en sahici. Çiftçi jargonu zorlaması      ║
+║    yapay hissettiriyor; sadelik kazanıyor.                      ║
+║  Adım 1 açıklama: "Kayıtların sana ait olsun." — "ait"         ║
+║    kelimesi "özel"den güçlü; mülkiyet hissi veriyor.           ║
+║  Adım 2: Mevcut metin korundu (beyin fırtınasında              ║
+║    alternatiflerin hiçbiri mevcut metni geçemedi).              ║
+║  Adım 3 başlık: "Seni haberdar edelim" — kullanıcı onayladı,  ║
+║    korundu. Toggle başlıkları değişti (aşağıya bak).           ║
+║                                                                 ║
+║  BİLDİRİM TOGGLE AYRIMI (v45):                                  ║
+║  Eski: "Hava bildirimleri" + "Sezon hatırlatıcıları" — muğlak  ║
+║  Yeni: "Sabah hava özeti" + "Acil hava uyarısı"                ║
+║  NEDEN: Çiftçi hava tahminini iki ayrı ihtiyaçla kullanır:     ║
+║    → Sabah rutini: "Bugün tarlamda ne var?" (planlama)         ║
+║    → Acil durum: Don, dolu, fırtına (aksiyon)                  ║
+║  Kullanıcı birini kapatıp diğerini açabilir — kontrol hissi.   ║
+║  TEKNİK NOT: Her iki bildirim de şu an mockup/pasif.           ║
+║  Gerçek API (OpenWeatherMap veya MGM) entegre edilince          ║
+║  aktif hale getirilecek. Toggle'lar tercihi kaydediyor,        ║
+║  bildirim göndermez henüz.                                      ║
+║                                                                 ║
+║  KAÇINILACAK KALIPLAR:                                          ║
+║  ✗ "Merhaba! Seni tanıyalım" → SaaS karşılama kalıbı          ║
+║  ✗ "Seni ne diye çağıralım?" → Türkçe'de itici çağrışım       ║
+║  ✗ "Hangi topraklarda çalışıyorsun?" → Yazılı dilde tuhaf      ║
+║  ✗ "Don gelmeden haber ver" → "don" = külot çağrışımı riski   ║
+║  ✗ Büyük vaat, soyut fayda → "veriminizi optimize edin"        ║
+║                                                                 ║
 ╚══════════════════════════════════════════════════════════════════╝
 -->
 <!DOCTYPE html>
@@ -2132,9 +2193,12 @@ body.app-ready { background: var(--bg); }
 .splash-logo-wrap {
   position: relative; z-index: 2;
   display: flex; flex-direction: column;
-  align-items: center; gap: 14px;
+  align-items: center;
+  /* gap kaldırıldı — her elemanın margin'i kendi ayarlıyor.
+     Böylece ikon→title, title→tagline, tagline→buton
+     arasındaki boşluklar bağımsız kontrol edilebilir. */
+  gap: 0;
   padding-bottom: 72px;
-  /* wrapper animasyonu yok — çocuklar kendi CSS'i ile */
 }
 
 /* ── İçerik elementleri: hepsi AYNI ANDA, 1.2s sonra ──
@@ -2151,7 +2215,8 @@ body.app-ready { background: var(--bg); }
               inset 0 1px 0 rgba(255,255,255,.3);
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  margin-bottom: 8px;
+  /* ikon → title arası: 14px — sıkı, bir bütün gibi */
+  margin-bottom: 14px;
   animation: splashContent 1.4s 1.2s ease-out both;
 }
 
@@ -2160,18 +2225,24 @@ body.app-ready { background: var(--bg); }
   font-size: 52px; font-weight: 600;
   color: white; letter-spacing: -2px; line-height: 1;
   text-shadow: 0 2px 20px rgba(0,0,0,.4);
+  /* title → tagline arası: 8px — birbirine yakın, grup hissi */
+  margin-bottom: 8px;
   animation: splashContent 1.4s 1.2s ease-out both;
 }
 
 .splash-tagline {
-  font-size: 12px;
-  /* Warm tint — fotoğrafın amber/altın tonlarıyla uyum */
+  /* Punto: 14px — premium standart (logo yüksekliğinin ~%25'i).
+     Headspace, Calm, Notion gibi uygulamalarda tagline 13-15px arası.
+     12px "emeğini kaydet." gibi kısa güçlü bir metin için küçük kalıyordu. */
+  font-size: 14px;
   color: rgba(255, 240, 200, 0.78);
-  font-weight: 500;
-  letter-spacing: 1.8px;
-  /* uppercase kaldırıldı: title case daha otantik, artisanal */
+  font-weight: 400;
+  /* 0.5px tracking: kısa metni optik olarak "zeraai" genişliğiyle dengeler,
+     premium his verir — 0'da metin sıkışık, 1.8px'de fazla açılıyordu. */
+  letter-spacing: 0.5px;
   text-transform: none;
-  margin-top: -2px;
+  margin-top: 0;
+  text-align: center;
   animation: splashContent 1.4s 1.2s ease-out both;
 }
 
@@ -2179,16 +2250,35 @@ body.app-ready { background: var(--bg); }
   margin-top: 32px;
   background: white; color: #1a3a1a;
   border: none; border-radius: var(--r-pill);
-  padding: 16px 56px;
+  padding: 16px 48px;
   font-family: 'Inter', sans-serif;
   font-size: 17px; font-weight: 700;
   cursor: pointer; letter-spacing: .2px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35);
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
-  /* Buton biraz daha sonra — son "mühür" gibi */
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35),
+              0 0 0 0 rgba(255,255,255,.3);
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1),
+              box-shadow .25s ease;
   animation: splashContent 1.3s 1.45s ease-out both;
 }
-.splash-btn:active { transform: scale(.96); box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+.splash-btn:hover {
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 10px 32px rgba(0,0,0,.4);
+}
+.splash-btn:active {
+  transform: scale(.97);
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+/* Pulse — ilk göründükten sonra bir kere, fark ettirmeden dikkat çeker */
+@keyframes btnPulse {
+  0%   { box-shadow: 0 8px 28px rgba(0,0,0,.35), 0 0 0 0 rgba(255,255,255,.4); }
+  60%  { box-shadow: 0 8px 28px rgba(0,0,0,.35), 0 0 0 12px rgba(255,255,255,0); }
+  100% { box-shadow: 0 8px 28px rgba(0,0,0,.35), 0 0 0 0 rgba(255,255,255,0); }
+}
+.splash-btn.pulse-once {
+  animation: splashContent 1.3s 1.45s ease-out both,
+             btnPulse .9s 2.6s ease-out 1;
+}
 
 /* ── Keyframe'ler ─────────────────────────────────── */
 
@@ -3320,8 +3410,19 @@ body.app-ready { background: var(--bg); }
         </svg>
       </div>
       <div class="splash-title">zeraai</div>
-      <div class="splash-tagline">Toprağını Yönet</div>
-      <button class="splash-btn" onclick="navTo('onboarding')">Başla</button>
+      <!-- DİL STRATEJİSİ: Tagline küçük harf — "zeraai" logosu da küçük harf,
+           ikisi aynı kasıtlı sistemin parçası. Premium tutarlılık.
+           "emeğini kaydet." = hem literal (kayıt tut) hem metaforik
+           (emeğin kaybolmasın). İki kelime, nokta. Daha vurucu. -->
+      <div class="splash-tagline">emeğini kaydet.</div>
+      <button class="splash-btn pulse-once" onclick="navTo('onboarding')">
+        Başla
+        <!-- Küçük ok — uygulamaya geçişi ima eder -->
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="#1a3a1a" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
     <div class="splash-version">v1.0 · 2026</div>
   </div>
@@ -3380,8 +3481,12 @@ body.app-ready { background: var(--bg); }
           </div>
         </div>
 
-        <div class="ob-title">Merhaba!<br>Seni tanıyalım</div>
-        <div class="ob-desc">Adın ne? Sana nasıl hitap edelim?</div>
+        <!-- DİL STRATEJİSİ: Yön A — karşılama yok, direkt soru.
+             "Merhaba/Selam/Hayırlı işler" yerine sadece soru.
+             En az süslü, en sahici. Jargon zorlaması yapay hissettiriyor.
+             "ait" kelimesi "özel"den güçlü — mülkiyet/sahiplenme hissi. -->
+        <div class="ob-title">Adın ne?</div>
+        <div class="ob-desc">Kayıtların sana ait olsun.</div>
 
         <input class="ob-input" id="ob-isim" placeholder="" maxlength="30" autocomplete="given-name">
 
