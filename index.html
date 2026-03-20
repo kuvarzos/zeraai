@@ -2368,30 +2368,117 @@ body.app-ready { background: var(--bg); }
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   margin-bottom: 12px; width: 100%;
 }
-/* Custom seçim barı — native select yerine, sheet açar */
+
+/* ── Inline picker — bar + açılan liste ──────────────────────────── */
+.ob-picker-wrap { position: relative; }
+
+/* Bar */
 .ob-select-bar {
   background: #fff;
   border: 1.5px solid var(--border);
   border-radius: 14px;
   padding: 16px 14px;
   font-family: 'Inter', sans-serif;
-  font-size: 16px; color: var(--text);
-  display: flex; align-items: center;
-  justify-content: space-between;
+  font-size: 15px; color: var(--text);
+  display: flex; align-items: center; justify-content: space-between;
   cursor: pointer;
-  transition: border-color .2s, background .15s;
+  /* Tap feedback: scale + border — iOS buton hissi */
+  transition: transform 120ms cubic-bezier(.4,0,.2,1),
+              border-color 200ms ease,
+              background 120ms ease;
   -webkit-tap-highlight-color: transparent;
   box-sizing: border-box; width: 100%;
+  position: relative; z-index: 1;
 }
-.ob-select-bar:active { background: var(--bg2); }
-/* Seçim yapıldıktan sonra border yeşile döner */
+/* Açıkken: alt köşeler düzleşir, liste ile birleşir */
+.ob-select-bar.open {
+  border-color: var(--green);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+/* Seçim sonrası */
 .ob-select-bar.selected { border-color: var(--green); }
-/* Henüz aktif değil (ilçe, il seçilmeden) */
-.ob-select-bar--disabled { opacity: .5; pointer-events: none; }
+/* iOS tap: hafif scale-down */
+.ob-select-bar:active { transform: scale(0.98); }
+/* Disabled (ilçe, il seçilmeden) */
+.ob-select-bar--disabled { opacity: .45; pointer-events: none; }
 .ob-select-bar--disabled.ready { opacity: 1; pointer-events: auto; }
-/* Placeholder vs seçili değer rengi */
-.ob-select-val { color: var(--text3); font-size: 15px; }
+
+/* Placeholder / seçili değer */
+.ob-select-val { color: var(--text3); font-size: 15px; line-height: 1; }
 .ob-select-val.has-value { color: var(--text); font-weight: 500; }
+
+/* Caret — döner */
+.ob-caret {
+  flex-shrink: 0;
+  transition: transform 280ms cubic-bezier(0.32,0.72,0,1); /* iOS spring yaklaşımı */
+  color: var(--text3);
+}
+.ob-caret.up { transform: rotate(180deg); }
+
+/* Açılan liste */
+.ob-picker-list {
+  background: #fff;
+  border: 1.5px solid var(--green);
+  border-top: none;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  overflow: hidden;
+  /* Kapalı başlangıç — max-height + opacity + translateY */
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  /* Kapanış: ease-in, kısa — iOS menu dismiss */
+  transition:
+    max-height 220ms cubic-bezier(0.4,0,1,1),
+    opacity    180ms cubic-bezier(0.4,0,1,1),
+    transform  220ms cubic-bezier(0.4,0,1,1);
+}
+/* Açık durum — ease-out, iOS menu açılış */
+.ob-picker-list.open {
+  max-height: 220px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  overflow-y: auto;
+  /* Açılış: ease-out — hızlı başlar, yavaş biter, anında tepki hissi */
+  transition:
+    max-height 280ms cubic-bezier(0.32,0.72,0,1),
+    opacity    200ms cubic-bezier(0.32,0.72,0,1),
+    transform  280ms cubic-bezier(0.32,0.72,0,1);
+}
+/* Scrollbar — ince, iOS tarzı */
+.ob-picker-list::-webkit-scrollbar { width: 3px; }
+.ob-picker-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Liste öğeleri */
+.ob-picker-item {
+  padding: 13px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px; color: var(--text);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  /* Tap feedback */
+  transition: background 100ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ob-picker-item:last-child { border-bottom: none; }
+.ob-picker-item:active { background: var(--bg2); }
+/* Seçili öğe */
+.ob-picker-item.active {
+  color: var(--green);
+  font-weight: 600;
+}
+.ob-picker-item.active::after {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
 
 .ob-spacer { flex: 1; min-height: 20px; }
 
@@ -3209,18 +3296,25 @@ body.app-ready { background: var(--bg); }
         <div class="ob-title">Tarlalar<br>nerede?</div>
         <div class="ob-desc">Sana özel hava ve uyarılar için bölgeni seçelim.</div>
         <div class="ob-konum-row">
-          <!-- Native select kaldırıldı — sheet sistemi kullanılıyor -->
-          <div class="ob-select-bar" id="ob-il-bar" onclick="obKonumPickerAc()">
-            <span class="ob-select-val" id="ob-il-val">İl</span>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3 5l4 4 4-4" stroke="var(--text3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+          <!-- İl inline picker -->
+          <div class="ob-picker-wrap">
+            <div class="ob-select-bar" id="ob-il-bar" onclick="obPickerToggle('il')">
+              <span class="ob-select-val" id="ob-il-val">İl</span>
+              <svg class="ob-caret" id="ob-il-caret" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 5l4 4 4-4" stroke="var(--text3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="ob-picker-list" id="ob-il-list"></div>
           </div>
-          <div class="ob-select-bar ob-select-bar--disabled" id="ob-ilce-bar" onclick="obKonumPickerAc()">
-            <span class="ob-select-val" id="ob-ilce-val">İlçe</span>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3 5l4 4 4-4" stroke="var(--text3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+          <!-- İlçe inline picker -->
+          <div class="ob-picker-wrap">
+            <div class="ob-select-bar ob-select-bar--disabled" id="ob-ilce-bar" onclick="obPickerToggle('ilce')">
+              <span class="ob-select-val" id="ob-ilce-val">İlçe</span>
+              <svg class="ob-caret" id="ob-ilce-caret" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 5l4 4 4-4" stroke="var(--text3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="ob-picker-list" id="ob-ilce-list"></div>
           </div>
         </div>
         <div class="ob-spacer"></div>
@@ -3451,34 +3545,6 @@ body.app-ready { background: var(--bg); }
           </div>
         </div>
         <div class="op-sheet-scroll" id="sz-body"></div>
-      </div>
-    </div>
-
-    <!-- KONUM PİCKER SHEET -->
-    <div id="konum-picker-sheet" onclick="closeKonumPicker(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
-      <div class="op-sheet-inner" style="max-height:72%">
-        <div class="op-sheet-handle"></div>
-        <div class="op-sheet-head">
-          <div class="op-sheet-title">Konum Seç</div>
-          <div style="flex:1"></div>
-        </div>
-        <div style="padding:0 20px 36px;display:flex;flex-direction:column;gap:12px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <div>
-              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">İl</div>
-              <select id="kp-il" class="form-input" style="font-size:14px;padding:12px 13px;" onchange="kpIlDegis()">
-                <option value="">İl seç...</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">İlçe</div>
-              <select id="kp-ilce" class="form-input" style="font-size:14px;padding:12px 13px;">
-                <option value="">Önce il seçin</option>
-              </select>
-            </div>
-          </div>
-          <button onclick="saveKonum()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Kaydet</button>
-        </div>
       </div>
     </div>
 
@@ -4333,6 +4399,33 @@ body.app-ready { background: var(--bg); }
     </div>
   </div>
 
+  <!-- KONUM PİCKER SHEET — phone container'ın direkt çocuğu, tüm ekranlara erişebilir -->
+  <div id="konum-picker-sheet" onclick="closeKonumPicker(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
+    <div class="op-sheet-inner" style="max-height:72%">
+      <div class="op-sheet-handle"></div>
+      <div class="op-sheet-head">
+        <div class="op-sheet-title">Konum Seç</div>
+        <div style="flex:1"></div>
+      </div>
+      <div style="padding:0 20px 36px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">İl</div>
+            <select id="kp-il" class="form-input" style="font-size:14px;padding:12px 13px;" onchange="kpIlDegis()">
+              <option value="">İl seç...</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">İlçe</div>
+            <select id="kp-ilce" class="form-input" style="font-size:14px;padding:12px 13px;">
+              <option value="">Önce il seçin</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="saveKonum()" style="background:var(--green);color:white;border:none;border-radius:var(--r-pill);padding:15px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(34,127,131,.3);">Kaydet</button>
+      </div>
+    </div>
+  </div>
 
 </div>
 
@@ -5828,111 +5921,188 @@ function fmtDate(str) {
 
 
 const ilceler = {
-  "Adana": ["Aladağ","Ceyhan","Feke","Karaisalı","Karataş","Kozan","Pozantı","Saimbeyli","Sarıçam","Seyhan","Tufanbeyli","Yumurtalık","Yüreğir","Çukurova","İmamoğlu"],
-  "Adıyaman": ["Besni","Gerger","Gölbaşı","Kahta","Merkez","Samsat","Sincik","Tut","Çelikhan"],
-  "Afyonkarahisar": ["Bayat","Başmakçı","Bolvadin","Dazkırı","Dinar","Emirdağ","Evciler","Hocalar","Kızılören","Merkez","Sandıklı","Sinanpaşa","Sultandağı","Çay","Çobanlar","İhsaniye","İscehisar","Şuhut"],
-  "Aksaray": ["Ağaçören","Eskil","Gülağaç","Güzelyurt","Merkez","Ortaköy","Sarıyahşi","Sultanhanı"],
-  "Amasya": ["Göynücek","Gümüşhacıköy","Hamamözü","Merkez","Merzifon","Suluova","Taşova"],
-  "Ankara": ["Akyurt","Altındağ","Ayaş","Bala","Beypazarı","Elmadağ","Etimesgut","Evren","Gölbaşı","Güdül","Haymana","Kahramankazan","Kalecik","Keçiören","Kızılcahamam","Mamak","Nallıhan","Polatlı","Pursaklar","Sincan","Yenimahalle","Çamlıdere","Çankaya","Çubuk","Şereflikoçhisar"],
-  "Antalya": ["Akseki","Aksu","Alanya","Demre","Döşemealtı","Elmalı","Finike","Gazipaşa","Gündoğmuş","Kaş","Kemer","Kepez","Konyaaltı","Korkuteli","Kumluca","Manavgat","Muratpaşa","Serik","İbradı"],
-  "Ardahan": ["Damal","Göle","Hanak","Merkez","Posof","Çıldır"],
-  "Artvin": ["Ardanuç","Arhavi","Borçka","Hopa","Kemalpaşa","Merkez","Murgul","Yusufeli","Şavşat"],
-  "Aydın": ["Bozdoğan","Buharkent","Didim","Efeler","Germencik","Karacasu","Karpuzlu","Koçarlı","Kuyucak","Kuşadası","Köşk","Nazilli","Sultanhisar","Söke","Yenipazar","Çine","İncirliova"],
-  "Ağrı": ["Diyadin","Doğubayazıt","Eleşkirt","Hamur","Merkez","Patnos","Taşlıçay","Tutak"],
-  "Balıkesir": ["Altıeylül","Ayvalık","Balya","Bandırma","Bigadiç","Burhaniye","Dursunbey","Edremit","Erdek","Gömeç","Gönen","Havran","Karesi","Kepsut","Manyas","Marmara","Savaştepe","Susurluk","Sındırgı","İvrindi"],
-  "Bartın": ["Amasra","Kurucaşile","Merkez","Ulus"],
-  "Batman": ["Beşiri","Gercüş","Hasankeyf","Kozluk","Merkez","Sason"],
-  "Bayburt": ["Aydıntepe","Demirözü","Merkez"],
-  "Bilecik": ["Bozüyük","Gölpazarı","Merkez","Osmaneli","Pazaryeri","Söğüt","Yenipazar","İnhisar"],
-  "Bingöl": ["Adaklı","Genç","Karlıova","Kiğı","Merkez","Solhan","Yayladere","Yedisu"],
-  "Bitlis": ["Adilcevaz","Ahlat","Güroymak","Hizan","Merkez","Mutki","Tatvan"],
-  "Bolu": ["Dörtdivan","Gerede","Göynük","Kıbrıscık","Mengen","Merkez","Mudurnu","Seben","Yeniçağa"],
-  "Burdur": ["Altınyayla","Ağlasun","Bucak","Gölhisar","Karamanlı","Kemer","Merkez","Tefenni","Yeşilova","Çavdır","Çeltikçi"],
-  "Bursa": ["Büyükorhan","Gemlik","Gürsu","Harmancık","Karacabey","Keles","Kestel","Mudanya","Mustafakemalpaşa","Nilüfer","Orhaneli","Orhangazi","Osmangazi","Yenişehir","Yıldırım","İnegöl","İznik"],
-  "Denizli": ["Acıpayam","Babadağ","Baklan","Bekilli","Beyağaç","Bozkurt","Buldan","Güney","Honaz","Kale","Merkezefendi","Pamukkale","Sarayköy","Serinhisar","Tavas","Çal","Çameli","Çardak","Çivril"],
-  "Diyarbakır": ["Bağlar","Bismil","Dicle","Ergani","Eğil","Hani","Hazro","Kayapınar","Kocaköy","Kulp","Lice","Merkez","Silvan","Sur","Yenişehir","Çermik","Çüngüş","Çınar"],
-  "Düzce": ["Akçakoca","Cumayeri","Gölyaka","Gümüşova","Kaynaşlı","Merkez","Yığılca","Çilimli"],
-  "Edirne": ["Enez","Havsa","Keşan","Lalapaşa","Meriç","Merkez","Süloğlu","Uzunköprü","İpsala"],
-  "Elazığ": ["Alacakaya","Arıcak","Ağın","Baskil","Karakoçan","Keban","Kovancılar","Maden","Merkez","Palu","Sivrice"],
-  "Erzincan": ["Kemah","Kemaliye","Merkez","Otlukbeli","Refahiye","Tercan","Çayırlı","Üzümlü","İliç"],
-  "Erzurum": ["Aziziye","Aşkale","Horasan","Hınıs","Karayazı","Karaçoban","Köprüköy","Merkez","Narman","Oltu","Olur","Palandöken","Pasinler","Pazaryolu","Tekman","Tortum","Uzundere","Yakutiye","Çat","İspir","Şenkaya"],
-  "Eskişehir": ["Alpu","Beylikova","Günyüzü","Han","Mahmudiye","Mihalgazi","Mihalıççık","Odunpazarı","Sarıcakaya","Seyitgazi","Sivrihisar","Tepebaşı","Çifteler","İnönü"],
-  "Gaziantep": ["Araban","Karkamış","Nizip","Nurdağı","Oğuzeli","Yavuzeli","İslahiye","Şahinbey","Şehitkamil"],
-  "Giresun": ["Alucra","Bulancak","Dereli","Doğankent","Espiye","Eynesil","Görele","Güce","Keşap","Merkez","Piraziz","Tirebolu","Yağlıdere","Çamoluk","Çanakçı","Şebinkarahisar"],
-  "Gümüşhane": ["Kelkit","Köse","Kürtün","Merkez","Torul","Şiran"],
-  "Hakkari": ["Derecik","Merkez","Yüksekova","Çukurca","Şemdinli"],
-  "Hatay": ["Altınözü","Antakya","Arsuz","Belen","Defne","Dörtyol","Erzin","Hassa","Kumlu","Kırıkhan","Payas","Reyhanlı","Samandağ","Yayladağı","İskenderun"],
-  "Isparta": ["Aksu","Atabey","Eğirdir","Gelendost","Gönen","Keçiborlu","Merkez","Senirkent","Sütçüler","Uluborlu","Yalvaç","Yenişarbademli","Şarkikaraağaç"],
-  "Iğdır": ["Aralık","Karakoyunlu","Merkez","Tuzluca"],
-  "Kahramanmaraş": ["Afşin","Andırın","Dulkadiroğlu","Ekinözü","Elbistan","Göksun","Nurhak","Onikişubat","Pazarcık","Türkoğlu","Çağlayancerit"],
-  "Karabük": ["Eflani","Eskipazar","Merkez","Ovacık","Safranbolu","Yenice"],
-  "Karaman": ["Ayrancı","Başyayla","Ermenek","Kazımkarabekir","Merkez","Sarıveliler"],
-  "Kars": ["Akyaka","Arpaçay","Digor","Kağızman","Merkez","Sarıkamış","Selim","Susuz"],
-  "Kastamonu": ["Abana","Araç","Azdavay","Ağlı","Bozkurt","Cide","Daday","Devrekani","Doğanyurt","Hanönü","Küre","Merkez","Pınarbaşı","Seydiler","Taşköprü","Tosya","Çatalzeytin","İhsangazi","İnebolu","Şenpazar"],
-  "Kayseri": ["Akkışla","Bünyan","Develi","Felahiye","Hacılar","Kocasinan","Melikgazi","Pınarbaşı","Sarıoğlan","Sarız","Talas","Tomarza","Yahyalı","Yeşilhisar","Özvatan","İncesu"],
-  "Kilis": ["Elbeyli","Merkez","Musabeyli","Polateli"],
-  "Kocaeli": ["Başiskele","Darıca","Derince","Dilovası","Gebze","Gölcük","Kandıra","Karamürsel","Kartepe","Körfez","Çayırova","İzmit"],
-  "Konya": ["Ahırlı","Akören","Akşehir","Altınekin","Beyşehir","Bozkır","Cihanbeyli","Derbent","Derebucak","Doğanhisar","Emirgazi","Ereğli","Güneysınır","Hadim","Halkapınar","Hüyük","Ilgın","Kadınhanı","Karapınar","Karatay","Kulu","Meram","Sarayönü","Selçuklu","Seydişehir","Taşkent","Tuzlukçu","Yalıhüyük","Yunak","Çeltik","Çumra"],
-  "Kütahya": ["Altıntaş","Aslanapa","Domaniç","Dumlupınar","Emet","Gediz","Hisarcık","Merkez","Pazarlar","Simav","Tavşanlı","Çavdarhisar","Şaphane"],
-  "Kırklareli": ["Babaeski","Demirköy","Kofçaz","Lüleburgaz","Merkez","Pehlivanköy","Pınarhisar","Vize"],
-  "Kırıkkale": ["Bahşili","Balışeyh","Delice","Karakeçili","Keskin","Merkez","Sulakyurt","Yahşihan","Çelebi"],
-  "Kırşehir": ["Akpınar","Akçakent","Boztepe","Kaman","Merkez","Mucur","Çiçekdağı"],
-  "Malatya": ["Akçadağ","Arapgir","Arguvan","Battalgazi","Darende","Doğanyol","Doğanşehir","Hekimhan","Kale","Kuluncak","Pütürge","Yazıhan","Yeşilyurt"],
-  "Manisa": ["Ahmetli","Akhisar","Alaşehir","Demirci","Gölmarmara","Gördes","Kula","Köprübaşı","Kırkağaç","Merkez","Salihli","Saruhanlı","Sarıgöl","Selendi","Soma","Turgutlu","Yunusemre","Şehzadeler"],
-  "Mardin": ["Artuklu","Dargeçit","Derik","Kızıltepe","Mazıdağı","Midyat","Nusaybin","Savur","Yeşilli","Ömerli"],
-  "Mersin": ["Akdeniz","Anamur","Aydıncık","Bozyazı","Erdemli","Gülnar","Mezitli","Mut","Silifke","Tarsus","Toroslar","Yenişehir","Çamlıyayla"],
-  "Muğla": ["Bodrum","Dalaman","Datça","Fethiye","Kavaklıdere","Köyceğiz","Marmaris","Menteşe","Milas","Ortaca","Seydikemer","Ula","Yatağan"],
-  "Muş": ["Bulanık","Hasköy","Korkut","Malazgirt","Merkez","Varto"],
-  "Nevşehir": ["Acıgöl","Avanos","Derinkuyu","Gülşehir","Hacıbektaş","Kozaklı","Merkez","Ürgüp"],
-  "Niğde": ["Altunhisar","Bor","Merkez","Ulukışla","Çamardı","Çiftlik"],
-  "Ordu": ["Akkuş","Altınordu","Aybastı","Fatsa","Gölköy","Gülyalı","Gürgentepe","Kabadüz","Kabataş","Korgan","Kumru","Mesudiye","Perşembe","Ulubey","Çamaş","Çatalpınar","Çaybaşı","Ünye","İkizce"],
-  "Osmaniye": ["Bahçe","Düziçi","Hasanbeyli","Kadirli","Merkez","Sumbas","Toprakkale"],
-  "Rize": ["Ardeşen","Derepazarı","Fındıklı","Güneysu","Hemşin","Kalkandere","Merkez","Pazar","Çamlıhemşin","Çayeli","İkizdere","İyidere"],
-  "Sakarya": ["Adapazarı","Akyazı","Arifiye","Erenler","Ferizli","Geyve","Hendek","Karapürçek","Karasu","Kaynarca","Kocaali","Pamukova","Sapanca","Serdivan","Söğütlü","Taraklı"],
-  "Samsun": ["19 Mayıs","Alaçam","Asarcık","Atakum","Ayvacık","Bafra","Canik","Havza","Kavak","Ladik","Ondokuzmayıs","Salıpazarı","Tekkeköy","Terme","Vezirköprü","Yakakent","Çarşamba","İlkadım"],
-  "Siirt": ["Baykan","Eruh","Kurtalan","Merkez","Pervari","Tillo","Şirvan"],
-  "Sinop": ["Ayancık","Boyabat","Dikmen","Durağan","Erfelek","Gerze","Merkez","Saraydüzü","Türkeli"],
-  "Sivas": ["Akıncılar","Altınyayla","Divriği","Doğanşar","Gemerek","Gölova","Hafik","Kangal","Koyulhisar","Merkez","Suşehri","Ulaş","Yıldızeli","Zara","İmranlı","Şarkışla"],
-  "Tekirdağ": ["Ergene","Hayrabolu","Kapaklı","Malkara","Marmaraereğlisi","Muratlı","Saray","Süleymanpaşa","Çerkezköy","Çorlu","Şarköy"],
-  "Tokat": ["Almus","Artova","Başçiftlik","Erbaa","Merkez","Niksar","Pazar","Reşadiye","Sulusaray","Turhal","Yeşilyurt","Zile"],
-  "Trabzon": ["Akçaabat","Araklı","Arsin","Beşikdüzü","Dernekpazarı","Düzköy","Hayrat","Köprübaşı","Maçka","Of","Ortahisar","Sürmene","Tonya","Vakfıkebir","Yomra","Çarşıbaşı","Çaykara","Şalpazarı"],
-  "Tunceli": ["Hozat","Mazgirt","Merkez","Nazımiye","Ovacık","Pertek","Pülümür","Çemişgezek"],
-  "Uşak": ["Banaz","Eşme","Karahallı","Merkez","Sivaslı","Ulubey"],
-  "Van": ["Bahçesaray","Başkale","Edremit","Erciş","Gevaş","Gürpınar","Muradiye","Saray","Tuşba","Çaldıran","Çatak","Özalp","İpekyolu"],
-  "Yalova": ["Altınova","Armutlu","Merkez","Termal","Çiftlikköy","Çınarcık"],
-  "Yozgat": ["Akdağmadeni","Aydıncık","Boğazlıyan","Kadışehri","Merkez","Saraykent","Sarıkaya","Sorgun","Yenifakılı","Yerköy","Çandır","Çayıralan","Çekerek","Şefaatli"],
-  "Zonguldak": ["Alaplı","Devrek","Ereğli","Gökçebey","Kilimli","Kozlu","Merkez","Çaycuma"],
-  "Çanakkale": ["Ayvacık","Bayramiç","Biga","Bozcaada","Eceabat","Ezine","Gelibolu","Gökçeada","Lapseki","Merkez","Yenice","Çan"],
-  "Çankırı": ["Atkaracalar","Bayramören","Cerkeş","Eldivan","Ilgaz","Korgun","Kurşunlu","Merkez","Orta","Yapraklı","Şabanözü"],
-  "Çorum": ["Alaca","Bayat","Boğazkale","Dodurga","Kargı","Laçin","Mecitözü","Merkez","Ortaköy","Osmancık","Oğuzlar","Sungurlu","Uğurludağ","İskilip"],
-  "İstanbul": ["Adalar","Arnavutköy","Ataşehir","Avcılar","Bahçelievler","Bakırköy","Bayrampaşa","Bağcılar","Başakşehir","Beykoz","Beylikdüzü","Beyoğlu","Beşiktaş","Büyükçekmece","Esenler","Esenyurt","Eyüpsultan","Fatih","Gaziosmanpaşa","Güngören","Kadıköy","Kartal","Kağıthane","Küçükçekmece","Maltepe","Pendik","Sancaktepe","Sarıyer","Silivri","Sultanbeyli","Sultangazi","Tuzla","Zeytinburnu","Çatalca","Çekmeköy","Ümraniye","Üsküdar","Şile","Şişli"],
-  "İzmir": ["Aliağa","Balçova","Bayraklı","Bayındır","Bergama","Beydağ","Bornova","Buca","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Kemalpaşa","Kiraz","Konak","Kınık","Menderes","Menemen","Narlıdere","Seferihisar","Selçuk","Tire","Torbalı","Urla","Çeşme","Çiğli","Ödemiş"],
-  "Şanlıurfa": ["Akçakale","Birecik","Bozova","Ceylanpınar","Eyyübiye","Halfeti","Haliliye","Harran","Hilvan","Karaköprü","Siverek","Suruç","Viranşehir"],
-  "Şırnak": ["Beytüşşebap","Cizre","Güçlükonak","Merkez","Silopi","Uludere","İdil"],
+  "Adana":["Aladağ","Ceyhan","Çukurova","Feke","İmamoğlu","Karaisalı","Karataş","Kozan","Pozantı","Saimbeyli","Sarıçam","Seyhan","Tufanbeyli","Yumurtalık","Yüreğir"],
+  "Adıyaman":["Besni","Çelikhan","Gerger","Gölbaşı","Kahta","Merkez","Samsat","Sincik","Tut"],
+  "Afyonkarahisar":["Bayat","Başmakçı","Bolvadin","Çay","Çobanlar","Çuhur","Dazkırı","Dinar","Emirdağ","Evciler","Hocalar","İhsaniye","İscehisar","Kızılören","Merkez","Sandıklı","Sinanpaşa","Sultandağı","Şuhut"],
+  "Ağrı":["Diyadin","Doğubayazıt","Eleşkirt","Hamur","Merkez","Patnos","Taşlıçay","Tutak"],
+  "Aksaray":["Ağaçören","Eskil","Gülağaç","Güzelyurt","Merkez","Ortaköy","Sarıyahşi","Sultanhanı"],
+  "Amasya":["Göynücek","Gümüşhacıköy","Hamamözü","Merkez","Merzifon","Suluova","Taşova"],
+  "Ankara":["Akyurt","Altındağ","Ayaş","Bala","Beypazarı","Çamlıdere","Çankaya","Çubuk","Elmadağ","Etimesgut","Evren","Gölbaşı","Güdül","Haymana","Kahramankazan","Kalecik","Keçiören","Kızılcahamam","Mamak","Nallıhan","Polatlı","Pursaklar","Sincan","Şereflikoçhisar","Yenimahalle"],
+  "Antalya":["Akseki","Aksu","Alanya","Demre","Döşemealtı","Elmalı","Finike","Gazipaşa","Gündoğmuş","İbradı","Kaş","Kemer","Kepez","Konyaaltı","Korkuteli","Kumluca","Manavgat","Muratpaşa","Serik"],
+  "Ardahan":["Çıldır","Damal","Göle","Hanak","Merkez","Posof"],
+  "Artvin":["Ardanuç","Arhavi","Borçka","Hopa","Kemalpaşa","Merkez","Murgul","Şavşat","Yusufeli"],
+  "Aydın":["Bozdoğan","Buharkent","Çine","Didim","Efeler","Germencik","İncirliova","Karacasu","Karpuzlu","Koçarlı","Köşk","Kuyucak","Kuşadası","Nazilli","Söke","Sultanhisar","Yenipazar"],
+  "Balıkesir":["Altıeylül","Ayvalık","Balya","Bandırma","Bigadiç","Burhaniye","Dursunbey","Edremit","Erdek","Gömeç","Gönen","Havran","İvrindi","Karesi","Kepsut","Manyas","Marmara","Savaştepe","Sındırgı","Susurluk"],
+  "Bartın":["Amasra","Kurucaşile","Merkez","Ulus"],
+  "Batman":["Beşiri","Gercüş","Hasankeyf","Kozluk","Merkez","Sason"],
+  "Bayburt":["Aydıntepe","Demirözü","Merkez"],
+  "Bilecik":["Bozüyük","Gölpazarı","İnhisar","Merkez","Osmaneli","Pazaryeri","Söğüt","Yenipazar"],
+  "Bingöl":["Adaklı","Genç","Karlıova","Kiğı","Merkez","Solhan","Yayladere","Yedisu"],
+  "Bitlis":["Adilcevaz","Ahlat","Güroymak","Hizan","Merkez","Mutki","Tatvan"],
+  "Bolu":["Dörtdivan","Gerede","Göynük","Kıbrıscık","Mengen","Merkez","Mudurnu","Seben","Yeniçağa"],
+  "Burdur":["Ağlasun","Altınyayla","Bucak","Çavdır","Çeltikçi","Gölhisar","Karamanlı","Kemer","Merkez","Tefenni","Yeşilova"],
+  "Bursa":["Büyükorhan","Gemlik","Gürsu","Harmancık","İnegöl","İznik","Karacabey","Keles","Kestel","Mudanya","Mustafakemalpaşa","Nilüfer","Orhaneli","Orhangazi","Osmangazi","Yenişehir","Yıldırım"],
+  "Çanakkale":["Ayvacık","Bayramiç","Biga","Bozcaada","Çan","Eceabat","Ezine","Gelibolu","Gökçeada","Lapseki","Merkez","Yenice"],
+  "Çankırı":["Atkaracalar","Bayramören","Çerkeş","Eldivan","Ilgaz","Korgun","Kurşunlu","Merkez","Orta","Şabanözü","Yapraklı"],
+  "Çorum":["Alaca","Bayat","Boğazkale","Dodurga","İskilip","Kargı","Laçin","Mecitözü","Merkez","Oğuzlar","Ortaköy","Osmancık","Sungurlu","Uğurludağ"],
+  "Denizli":["Acıpayam","Babadağ","Baklan","Bekilli","Beyağaç","Bozkurt","Buldan","Çal","Çameli","Çardak","Çivril","Güney","Honaz","Kale","Merkezefendi","Pamukkale","Sarayköy","Serinhisar","Tavas"],
+  "Diyarbakır":["Bağlar","Bismil","Çermik","Çınar","Çüngüş","Dicle","Eğil","Ergani","Hani","Hazro","Kayapınar","Kocaköy","Kulp","Lice","Silvan","Sur","Yenişehir"],
+  "Düzce":["Akçakoca","Çilimli","Cumayeri","Gölyaka","Gümüşova","Kaynaşlı","Merkez","Yığılca"],
+  "Edirne":["Enez","Havsa","İpsala","Keşan","Lalapaşa","Meriç","Merkez","Süloğlu","Uzunköprü"],
+  "Elazığ":["Ağın","Alacakaya","Arıcak","Baskil","Karakoçan","Keban","Kovancılar","Maden","Merkez","Palu","Sivrice"],
+  "Erzincan":["Çayırlı","İliç","Kemah","Kemaliye","Merkez","Otlukbeli","Refahiye","Tercan","Üzümlü"],
+  "Erzurum":["Aşkale","Aziziye","Çat","Hınıs","Horasan","İspir","Karayazı","Karaçoban","Köprüköy","Merkez","Narman","Oltu","Olur","Palandöken","Pasinler","Pazaryolu","Şenkaya","Tekman","Tortum","Uzundere","Yakutiye"],
+  "Eskişehir":["Alpu","Beylikova","Çifteler","Günyüzü","Han","İnönü","Mahmudiye","Mihalgazi","Mihalıççık","Odunpazarı","Sarıcakaya","Seyitgazi","Sivrihisar","Tepebaşı"],
+  "Gaziantep":["Araban","İslahiye","Karkamış","Nizip","Nurdağı","Oğuzeli","Şahinbey","Şehitkamil","Yavuzeli"],
+  "Giresun":["Alucra","Bulancak","Çamoluk","Çanakçı","Dereli","Doğankent","Espiye","Eynesil","Görele","Güce","Keşap","Merkez","Piraziz","Şebinkarahisar","Tirebolu","Yağlıdere"],
+  "Gümüşhane":["Kelkit","Köse","Kürtün","Merkez","Şiran","Torul"],
+  "Hakkari":["Çukurca","Derecik","Merkez","Şemdinli","Yüksekova"],
+  "Hatay":["Altınözü","Antakya","Arsuz","Belen","Defne","Dörtyol","Erzin","Hassa","İskenderun","Kumlu","Kırıkhan","Payas","Reyhanlı","Samandağ","Yayladağı"],
+  "Iğdır":["Aralık","Karakoyunlu","Merkez","Tuzluca"],
+  "Isparta":["Aksu","Atabey","Eğirdir","Gelendost","Gönen","Keçiborlu","Merkez","Senirkent","Sütçüler","Şarkikaraağaç","Uluborlu","Yalvaç","Yenişarbademli"],
+  "İstanbul":["Adalar","Arnavutköy","Ataşehir","Avcılar","Bağcılar","Bahçelievler","Bakırköy","Başakşehir","Bayrampaşa","Beşiktaş","Beykoz","Beylikdüzü","Beyoğlu","Büyükçekmece","Çatalca","Çekmeköy","Esenler","Esenyurt","Eyüpsultan","Fatih","Gaziosmanpaşa","Güngören","Kadıköy","Kağıthane","Kartal","Küçükçekmece","Maltepe","Pendik","Sancaktepe","Sarıyer","Şile","Şişli","Silivri","Sultanbeyli","Sultangazi","Tuzla","Ümraniye","Üsküdar","Zeytinburnu"],
+  "İzmir":["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Kemalpaşa","Kiraz","Kınık","Konak","Menderes","Menemen","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla"],
+  "Kahramanmaraş":["Afşin","Andırın","Çağlayancerit","Dulkadiroğlu","Ekinözü","Elbistan","Göksun","Nurhak","Onikişubat","Pazarcık","Türkoğlu"],
+  "Karabük":["Eflani","Eskipazar","Merkez","Ovacık","Safranbolu","Yenice"],
+  "Karaman":["Ayrancı","Başyayla","Ermenek","Kazımkarabekir","Merkez","Sarıveliler"],
+  "Kars":["Akyaka","Arpaçay","Digor","Kağızman","Merkez","Sarıkamış","Selim","Susuz"],
+  "Kastamonu":["Abana","Ağlı","Araç","Azdavay","Bozkurt","Cide","Çatalzeytin","Daday","Devrekani","Doğanyurt","Hanönü","İhsangazi","İnebolu","Küre","Merkez","Pınarbaşı","Seydiler","Şenpazar","Taşköprü","Tosya"],
+  "Kayseri":["Akkışla","Bünyan","Develi","Felahiye","Hacılar","İncesu","Kocasinan","Melikgazi","Özvatan","Pınarbaşı","Sarıoğlan","Sarız","Talas","Tomarza","Yahyalı","Yeşilhisar"],
+  "Kilis":["Elbeyli","Merkez","Musabeyli","Polateli"],
+  "Kırıkkale":["Bahşili","Balışeyh","Çelebi","Delice","Karakeçili","Keskin","Merkez","Sulakyurt","Yahşihan"],
+  "Kırklareli":["Babaeski","Demirköy","Kofçaz","Lüleburgaz","Merkez","Pehlivanköy","Pınarhisar","Vize"],
+  "Kırşehir":["Akçakent","Akpınar","Boztepe","Çiçekdağı","Kaman","Merkez","Mucur"],
+  "Kocaeli":["Başiskele","Çayırova","Darıca","Derince","Dilovası","Gebze","Gölcük","İzmit","Kandıra","Karamürsel","Kartepe","Körfez"],
+  "Konya":["Ahırlı","Akören","Akşehir","Altınekin","Beyşehir","Bozkır","Çeltik","Çumra","Cihanbeyli","Derbent","Derebucak","Doğanhisar","Emirgazi","Ereğli","Güneysınır","Hadim","Halkapınar","Hüyük","Ilgın","Kadınhanı","Karapınar","Karatay","Kulu","Meram","Sarayönü","Selçuklu","Seydişehir","Taşkent","Tuzlukçu","Yalıhüyük","Yunak"],
+  "Kütahya":["Altıntaş","Aslanapa","Çavdarhisar","Domaniç","Dumlupınar","Emet","Gediz","Hisarcık","Merkez","Pazarlar","Simav","Şaphane","Tavşanlı"],
+  "Malatya":["Akçadağ","Arapgir","Arguvan","Battalgazi","Darende","Doğanşehir","Doğanyol","Hekimhan","Kale","Kuluncak","Pütürge","Yazıhan","Yeşilyurt"],
+  "Manisa":["Ahmetli","Akhisar","Alaşehir","Demirci","Gölmarmara","Gördes","Kula","Köprübaşı","Kırkağaç","Merkez","Salihli","Saruhanlı","Sarıgöl","Selendi","Şehzadeler","Soma","Turgutlu","Yunusemre"],
+  "Mardin":["Artuklu","Dargeçit","Derik","Kızıltepe","Mazıdağı","Midyat","Nusaybin","Ömerli","Savur","Yeşilli"],
+  "Mersin":["Akdeniz","Anamur","Aydıncık","Bozyazı","Çamlıyayla","Erdemli","Gülnar","Mezitli","Mut","Silifke","Tarsus","Toroslar","Yenişehir"],
+  "Muğla":["Bodrum","Dalaman","Datça","Fethiye","Kavaklıdere","Köyceğiz","Marmaris","Menteşe","Milas","Ortaca","Seydikemer","Ula","Yatağan"],
+  "Muş":["Bulanık","Hasköy","Korkut","Malazgirt","Merkez","Varto"],
+  "Nevşehir":["Acıgöl","Avanos","Derinkuyu","Gülşehir","Hacıbektaş","Kozaklı","Merkez","Ürgüp"],
+  "Niğde":["Altunhisar","Bor","Çamardı","Çiftlik","Merkez","Ulukışla"],
+  "Ordu":["Akkuş","Altınordu","Aybastı","Çamaş","Çatalpınar","Çaybaşı","Fatsa","Gölköy","Gülyalı","Gürgentepe","İkizce","Kabadüz","Kabataş","Korgan","Kumru","Mesudiye","Perşembe","Ulubey","Ünye"],
+  "Osmaniye":["Bahçe","Düziçi","Hasanbeyli","Kadirli","Merkez","Sumbas","Toprakkale"],
+  "Rize":["Ardeşen","Çamlıhemşin","Çayeli","Derepazarı","Fındıklı","Güneysu","Hemşin","İkizdere","İyidere","Kalkandere","Merkez","Pazar"],
+  "Sakarya":["Adapazarı","Akyazı","Arifiye","Erenler","Ferizli","Geyve","Hendek","Karapürçek","Karasu","Kaynarca","Kocaali","Pamukova","Sapanca","Serdivan","Söğütlü","Taraklı"],
+  "Samsun":["19 Mayıs","Alaçam","Asarcık","Atakum","Ayvacık","Bafra","Canik","Çarşamba","Havza","İlkadım","Kavak","Ladik","Ondokuzmayıs","Salıpazarı","Tekkeköy","Terme","Vezirköprü","Yakakent"],
+  "Siirt":["Baykan","Eruh","Kurtalan","Merkez","Pervari","Şirvan","Tillo"],
+  "Sinop":["Ayancık","Boyabat","Dikmen","Durağan","Erfelek","Gerze","Merkez","Saraydüzü","Türkeli"],
+  "Sivas":["Akıncılar","Altınyayla","Divriği","Doğanşar","Gemerek","Gölova","Hafik","İmranlı","Kangal","Koyulhisar","Merkez","Suşehri","Şarkışla","Ulaş","Yıldızeli","Zara"],
+  "Şanlıurfa":["Akçakale","Birecik","Bozova","Ceylanpınar","Eyyübiye","Halfeti","Haliliye","Harran","Hilvan","Karaköprü","Siverek","Suruç","Viranşehir"],
+  "Şırnak":["Beytüşşebap","Cizre","Güçlükonak","İdil","Merkez","Silopi","Uludere"],
+  "Tekirdağ":["Çerkezköy","Çorlu","Ergene","Hayrabolu","Kapaklı","Malkara","Marmaraereğlisi","Muratlı","Saray","Süleymanpaşa","Şarköy"],
+  "Tokat":["Almus","Artova","Başçiftlik","Erbaa","Merkez","Niksar","Pazar","Reşadiye","Sulusaray","Turhal","Yeşilyurt","Zile"],
+  "Trabzon":["Akçaabat","Araklı","Arsin","Beşikdüzü","Çarşıbaşı","Çaykara","Dernekpazarı","Düzköy","Hayrat","Köprübaşı","Maçka","Of","Ortahisar","Şalpazarı","Sürmene","Tonya","Vakfıkebir","Yomra"],
+  "Tunceli":["Çemişgezek","Hozat","Mazgirt","Merkez","Nazımiye","Ovacık","Pertek","Pülümür"],
+  "Uşak":["Banaz","Eşme","Karahallı","Merkez","Sivaslı","Ulubey"],
+  "Van":["Bahçesaray","Başkale","Çaldıran","Çatak","Edremit","Erciş","Gevaş","Gürpınar","İpekyolu","Muradiye","Özalp","Saray","Tuşba"],
+  "Yalova":["Altınova","Armutlu","Çiftlikköy","Çınarcık","Merkez","Termal"],
+  "Yozgat":["Akdağmadeni","Aydıncık","Boğazlıyan","Çandır","Çayıralan","Çekerek","Kadışehri","Merkez","Saraykent","Sarıkaya","Şefaatli","Sorgun","Yenifakılı","Yerköy"],
+  "Zonguldak":["Alaplı","Çaycuma","Devrek","Ereğli","Gökçebey","Kilimli","Kozlu","Merkez"],
 };
 
 // İl değişince ilçeleri doldur
-// ── Onboarding konum picker — bar'a tıklayınca sheet açılır ──────
-function obKonumPickerAc() {
-  // Mevcut sheet fonksiyonunu kullan — il listesi zaten doluysa tekrar doldurma
-  const ilSel = document.getElementById('kp-il');
-  if (!ilSel) return;
-  if (ilSel.options.length <= 1) {
-    const iller = Object.keys(ilceler).sort((a,b) => a.localeCompare(b,'tr'));
-    iller.forEach(il => {
-      const opt = document.createElement('option');
-      opt.value = il; opt.textContent = il;
-      ilSel.appendChild(opt);
-    });
+// ── Onboarding inline picker ──────────────────────────────────────
+// İl listesini doldur (sayfa yüklenince bir kez)
+(function obPickerIlDoldur() {
+  const list = document.getElementById('ob-il-list');
+  if (!list) return;
+  const iller = Object.keys(ilceler).sort((a,b) => a.localeCompare(b,'tr'));
+  iller.forEach(il => {
+    const d = document.createElement('div');
+    d.className = 'ob-picker-item';
+    d.textContent = il;
+    d.onclick = () => obPickerIlSec(il);
+    list.appendChild(d);
+  });
+})();
+
+function obPickerToggle(tip) {
+  const listEl  = document.getElementById('ob-' + tip + '-list');
+  const barEl   = document.getElementById('ob-' + tip + '-bar');
+  const caretEl = document.getElementById('ob-' + tip + '-caret');
+  const isOpen  = listEl.classList.contains('open');
+  // Tüm picker'ları kapat
+  obPickerKapatHepsi();
+  if (!isOpen) {
+    listEl.classList.add('open');
+    barEl.classList.add('open');
+    caretEl.classList.add('up');
   }
-  // Önceki seçimi yansıt
-  const mevcutIl = document.getElementById('ob-il-val').dataset.value || '';
-  ilSel.value = mevcutIl;
-  if (mevcutIl) kpIlDegis();
-  // Sheet'i onboarding modunda aç — kaydet butonu ob barlarını günceller
-  document.getElementById('konum-picker-sheet').__obMode = true;
-  const el = document.getElementById('konum-picker-sheet');
-  el.style.display = 'flex'; el.style.animation = 'overlayIn .22s ease both';
+}
+
+function obPickerKapatHepsi() {
+  ['il','ilce'].forEach(tip => {
+    document.getElementById('ob-' + tip + '-list')?.classList.remove('open');
+    document.getElementById('ob-' + tip + '-bar')?.classList.remove('open');
+    document.getElementById('ob-' + tip + '-caret')?.classList.remove('up');
+  });
+}
+
+function obPickerIlSec(il) {
+  _obIl   = il;
+  _obIlce = '';
+
+  // Bar güncelle
+  const ilVal = document.getElementById('ob-il-val');
+  ilVal.textContent = il;
+  ilVal.classList.add('has-value');
+  document.getElementById('ob-il-bar').classList.add('selected');
+
+  // Aktif işareti
+  document.querySelectorAll('#ob-il-list .ob-picker-item').forEach(d => {
+    d.classList.toggle('active', d.textContent === il);
+  });
+
+  // İlçe listesini doldur
+  const ilceList = document.getElementById('ob-ilce-list');
+  ilceList.innerHTML = '';
+  const sorted = [...(ilceler[il] || [])].sort((a,b) => a.localeCompare(b,'tr'));
+  sorted.forEach(ilce => {
+    const d = document.createElement('div');
+    d.className = 'ob-picker-item';
+    d.textContent = ilce;
+    d.onclick = () => obPickerIlceSec(ilce);
+    ilceList.appendChild(d);
+  });
+
+  // İlçe barını aktif et ve değerini sıfırla
+  const ilceBar = document.getElementById('ob-ilce-bar');
+  const ilceVal = document.getElementById('ob-ilce-val');
+  ilceBar.classList.add('ready');
+  ilceBar.classList.remove('ob-select-bar--disabled','selected');
+  ilceVal.textContent = 'İlçe';
+  ilceVal.classList.remove('has-value');
+
+  // İl listesini kapat, kısa gecikme sonra ilçeyi aç
+  // 180ms: iOS'ta yeni hedef belirmeden önce nefes arası
+  obPickerKapatHepsi();
+  setTimeout(() => {
+    document.getElementById('ob-ilce-list').classList.add('open');
+    document.getElementById('ob-ilce-bar').classList.add('open');
+    document.getElementById('ob-ilce-caret').classList.add('up');
+  }, 180);
+}
+
+function obPickerIlceSec(ilce) {
+  _obIlce = ilce;
+
+  // Bar güncelle
+  const ilceVal = document.getElementById('ob-ilce-val');
+  ilceVal.textContent = ilce;
+  ilceVal.classList.add('has-value');
+  document.getElementById('ob-ilce-bar').classList.add('selected');
+
+  // Aktif işareti
+  document.querySelectorAll('#ob-ilce-list .ob-picker-item').forEach(d => {
+    d.classList.toggle('active', d.textContent === ilce);
+  });
+
+  // Kapat — seçim tamamlandı
+  obPickerKapatHepsi();
 }
 
 // ═══════════════════════════════
@@ -8831,43 +9001,9 @@ function saveKonum() {
   const konum = ilce ? il + ' / ' + ilce : il;
   document.getElementById('p-konum-satir').textContent = konum;
   document.getElementById('p-konum').textContent       = il;
-
-  // Onboarding modunda açıldıysa — ob bar'larını güncelle
-  const sheet = document.getElementById('konum-picker-sheet');
-  if (sheet.__obMode) {
-    sheet.__obMode = false;
-    // İl barı
-    const ilVal = document.getElementById('ob-il-val');
-    if (ilVal) {
-      ilVal.textContent = il;
-      ilVal.dataset.value = il;
-      ilVal.classList.add('has-value');
-      document.getElementById('ob-il-bar').classList.add('selected');
-    }
-    // İlçe barı
-    const ilceBar = document.getElementById('ob-ilce-bar');
-    const ilceVal = document.getElementById('ob-ilce-val');
-    if (ilceVal) {
-      if (ilce) {
-        ilceVal.textContent = ilce;
-        ilceVal.dataset.value = ilce;
-        ilceVal.classList.add('has-value');
-        ilceBar.classList.add('selected');
-      } else {
-        ilceVal.textContent = 'İlçe';
-        delete ilceVal.dataset.value;
-        ilceVal.classList.remove('has-value');
-        ilceBar.classList.remove('selected');
-      }
-      // İlçe barını aktif et
-      ilceBar.classList.add('ready');
-      ilceBar.classList.remove('ob-select-bar--disabled');
-    }
-    // obNext için geçici hidden input değerleri — okuma kolaylığı
-    _obIl   = il;
-    _obIlce = ilce;
-  }
-
+  // localStorage'a kaydet
+  const mevcutIsim = document.getElementById('p-isim')?.textContent || '';
+  lsProfilKaydet(mevcutIsim, konum);
   closeKonumPickerBtn();
 }
 function closeKonumPicker(e) {
