@@ -2181,8 +2181,33 @@ body.app-ready { background: var(--bg); }
 /* ob-progress dots kaldırıldı — header'daki progress bar yeterli */
 
 /* Step — ortalanmış içerik */
-.ob-step { display: none; flex-direction: column; flex: 1; align-items: center; text-align: center; }
-.ob-step.active { display: flex; animation: obFadeUp .4s cubic-bezier(.22,.68,0,1.05) both; }
+.ob-step {
+  display: none; flex-direction: column; flex: 1;
+  align-items: center; text-align: center;
+}
+/* Giren adım — sağdan gelir, sola yerleşir (iOS push enter) */
+.ob-step.active {
+  display: flex;
+  animation: obSlideIn 340ms cubic-bezier(0.32,0.72,0,1) both;
+}
+/* İlk açılış (splash → ob-0): obFadeUp korunur, sadece ob-0 için */
+.ob-step.active.ob-first {
+  animation: obFadeUp .4s cubic-bezier(.22,.68,0,1.05) both;
+}
+/* Çıkan adım — sola kayarak solar (iOS push exit) */
+.ob-step.ob-exit {
+  display: flex; /* görünür kalmalı animasyon boyunca */
+  animation: obSlideOut 260ms cubic-bezier(0.4,0,1,1) both;
+  pointer-events: none;
+}
+@keyframes obSlideIn {
+  from { transform: translateX(48px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes obSlideOut {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-22%);  opacity: 0; }
+}
 
 @keyframes obFadeUp {
   from { opacity: 0; transform: translateY(18px) scale(.98); }
@@ -3174,7 +3199,7 @@ body.app-ready { background: var(--bg); }
 
 
       <!-- adım 1: isim -->
-      <div class="ob-step active" id="ob-0">
+      <div class="ob-step active ob-first" id="ob-0">
 
         <!-- Squircle clip-path tanımı (DOM'da bir kez yeterli) -->
         <svg class="squircle-defs" aria-hidden="true">
@@ -6152,30 +6177,38 @@ function obNext(adim) {
     }
   }
 
-  document.getElementById('ob-' + obAdim).classList.remove('active');
-  obAdim = adim;
-  document.getElementById('ob-' + obAdim).classList.add('active');
+  // ── iOS Push geçişi ─────────────────────────────────────────────
+  // 1. Mevcut adıma exit animasyonu ekle
+  const mevcutEl = document.getElementById('ob-' + obAdim);
+  mevcutEl.classList.add('ob-exit');
 
-  // Adım 2'ye geçince konum ikonunu tetikle
-  // rAF ile bir frame bekle → ob-step display:flex olduktan sonra başlat
-  if (adim === 1) {
-    requestAnimationFrame(() => {
-      const konumIcon = document.getElementById('ob-konum-icon');
-      if (konumIcon) {
-        konumIcon.classList.remove('animate');
-        void konumIcon.offsetWidth;
-        konumIcon.classList.add('animate');
-      }
-    });
-  }
+  // 2. Exit süresi (260ms) kadar bekle, sonra giriş adımını aktif et
+  setTimeout(() => {
+    mevcutEl.classList.remove('active', 'ob-exit');
 
-  // progress dots — elementler kaldırıldıysa sessizce geç
-  for (let i = 0; i < 3; i++) {
-    const dot = document.getElementById('ob-dot-' + i);
-    if (dot) dot.className = 'ob-dot ' + (i < adim ? 'done' : i === adim ? 'active' : 'pending');
-  }
-  // header progress bar
-  obProgressGuncelle(adim);
+    obAdim = adim;
+    const yeniEl = document.getElementById('ob-' + obAdim);
+    yeniEl.classList.add('active');
+
+    // Adım 1'e geçince konum ikonunu tetikle
+    if (adim === 1) {
+      requestAnimationFrame(() => {
+        const konumIcon = document.getElementById('ob-konum-icon');
+        if (konumIcon) {
+          konumIcon.classList.remove('animate');
+          void konumIcon.offsetWidth;
+          konumIcon.classList.add('animate');
+        }
+      });
+    }
+
+    // progress dots
+    for (let i = 0; i < 3; i++) {
+      const dot = document.getElementById('ob-dot-' + i);
+      if (dot) dot.className = 'ob-dot ' + (i < adim ? 'done' : i === adim ? 'active' : 'pending');
+    }
+    obProgressGuncelle(adim);
+  }, 260); // exit animasyonu süresiyle eşleşmeli
 }
 
 // ── Progressive onboarding banner ─────────────────────────────
