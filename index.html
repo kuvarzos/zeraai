@@ -374,6 +374,24 @@ body.app-ready { background: var(--bg); }
   animation: earthRise .55s cubic-bezier(.25,.46,.45,.94) both;
 }
 
+/* Onboarding çıkış — Scale+Fade: butondan ekran açılıyor hissi */
+@keyframes obExitAnim {
+  from { opacity: 1; transform: scale(1);    filter: blur(0px);   }
+  to   { opacity: 0; transform: scale(1.04); filter: blur(2px);   }
+}
+#onboarding.ob-exiting {
+  animation: obExitAnim 300ms cubic-bezier(0.4,0,1,1) both;
+  pointer-events: none;
+}
+/* Home giriş — hafif aşağıdan yükselir, onboardingden bağımsız */
+@keyframes homeEnterAnim {
+  from { opacity: 0; transform: scale(0.97) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+.screen.home-entering {
+  animation: homeEnterAnim 380ms cubic-bezier(0.32,0.72,0,1) both;
+}
+
 /* Ekranı görünür kıl — animasyon yok */
 .screen.active {
   display: flex;
@@ -2275,6 +2293,63 @@ body.app-ready { background: var(--bg); }
   clip-path: url(#squircle-clip-1); /* ob-1'e özel squircle id */
 }
 
+/* ── Amber (bildirim) varyant — ob-2 için ──────────────────────── */
+.ob-icon-squircle--amber {
+  background: #FEF3E8;
+  filter: drop-shadow(0 8px 24px rgba(200,120,32,.15));
+  clip-path: url(#squircle-clip-2);
+  opacity: 0;
+  transform: scale(0.72) translateY(10px);
+}
+.ob-icon-squircle--amber.animate {
+  animation: sq-appear 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+
+/* Zil gövdesi — draw-on başlangıç */
+.ob-bell-body    { stroke-dasharray: 140; stroke-dashoffset: 140; }
+.ob-bell-handle  { stroke-dasharray: 18;  stroke-dashoffset: 18;  }
+.ob-bell-foot    { stroke-dasharray: 25;  stroke-dashoffset: 25;  }
+
+/* Spark çizgileri — başlangıçta gizli */
+.ob-spark-1,
+.ob-spark-2,
+.ob-spark-3 {
+  stroke-dasharray: 9;
+  stroke-dashoffset: 9;
+  opacity: 0;
+}
+
+/* Zil titreme */
+@keyframes bell-rattle {
+  0%,100% { transform: rotate(0);     transform-origin: 21px 6px; }
+  18%     { transform: rotate(11deg); transform-origin: 21px 6px; }
+  36%     { transform: rotate(-9deg); transform-origin: 21px 6px; }
+  54%     { transform: rotate(7deg);  transform-origin: 21px 6px; }
+  72%     { transform: rotate(-5deg); transform-origin: 21px 6px; }
+}
+/* Spark dışa saçılır ve solar */
+@keyframes spark-shoot {
+  0%   { stroke-dashoffset: 9; opacity: 0; }
+  20%  { opacity: 1; }
+  100% { stroke-dashoffset: -2; opacity: 0; }
+}
+
+/* Animasyon sırası — diğer ikonlarla aynı ritim ─────────────────
+   sq-appear:   0.45s @ 0s     (squircle beliriş)
+   draw-on:     0.50s @ 0.30s  (zil gövdesi)    ← filiz-sap ile aynı
+   draw-on:     0.20s @ 0.68s  (kol)
+   draw-on:     0.25s @ 0.76s  (çan ayağı)
+   rattle:      0.44s @ 1.05s  ← gunes-pop ile aynı bölge
+   spark x3:    0.40s @ 1.28/1.38/1.48s         ← pin-ping ile aynı bölge
+*/
+.ob-icon-squircle--amber.animate .ob-bell-body   { animation: filiz-draw 0.50s ease-out 0.30s forwards; }
+.ob-icon-squircle--amber.animate .ob-bell-handle { animation: filiz-draw 0.20s ease-out 0.68s forwards; }
+.ob-icon-squircle--amber.animate .ob-bell-foot   { animation: filiz-draw 0.25s ease-out 0.76s forwards; }
+.ob-icon-squircle--amber.animate .ob-bell-group  { animation: bell-rattle 0.44s cubic-bezier(.36,.07,.19,.97) 1.05s both; }
+.ob-icon-squircle--amber.animate .ob-spark-1     { animation: spark-shoot 0.40s ease-out 1.28s forwards; }
+.ob-icon-squircle--amber.animate .ob-spark-2     { animation: spark-shoot 0.40s ease-out 1.38s forwards; }
+.ob-icon-squircle--amber.animate .ob-spark-3     { animation: spark-shoot 0.40s ease-out 1.48s forwards; }
+
 /* Pin gövdesi — draw-on başlangıç durumu */
 .ob-pin-path {
   stroke-dasharray: 120;
@@ -2513,38 +2588,71 @@ body.app-ready { background: var(--bg); }
   border: none; border-radius: var(--r-pill);
   padding: 17px; width: 100%;
   font-family: 'Inter', sans-serif;
-  font-size: 16px; font-weight: 700;
-  cursor: pointer; letter-spacing: .2px;
+  font-size: 17px; font-weight: 600; /* 16/700 → 17/600: iOS native buton standardı */
+  cursor: pointer; letter-spacing: .1px;
   box-shadow: 0 6px 20px rgba(34,127,131,.32);
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  /* Scale + opacity: iOS premium dokunma geri bildirimi */
+  transition: transform 140ms cubic-bezier(.4,0,.2,1),
+              opacity   100ms ease,
+              box-shadow 140ms cubic-bezier(.4,0,.2,1);
+  -webkit-tap-highlight-color: transparent;
 }
-.ob-next:active { transform: scale(.97); box-shadow: 0 2px 8px rgba(34,127,131,.2); }
+.ob-next:active {
+  transform: scale(.96);
+  opacity: .88;
+  box-shadow: 0 2px 8px rgba(34,127,131,.18);
+}
 /* bildirim toggle */
 .ob-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 14px 16px;
+  /* Subtle şeffaf — beyaz karttan daha hafif, zemine eriyor */
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(200,190,180,0.4);
+  border-radius: var(--r); padding: 13px 14px;
   margin-bottom: 10px; cursor: pointer;
   width: 100%; text-align: left;
   transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.ob-toggle-row:active { background: var(--bg2); }
-.ob-toggle-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-.ob-toggle-sub   { font-size: 12px; color: var(--text2); font-weight: 500; }
+.ob-toggle-row:active { background: rgba(255,255,255,0.75); }
+/* Başlık — alt açıklama kaldırıldı, tek satır yeterli */
+.ob-toggle-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.ob-toggle-sub   { font-size: 12px; color: var(--text2); font-weight: 400; margin-top: 2px; }
+
+/* Toggle — 46×28, iOS native'e yakın ama daha zarif */
 .toggle-sw {
-  width: 44px; height: 26px; border-radius: 13px;
-  background: var(--border); position: relative;
-  transition: background .2s; flex-shrink: 0;
+  width: 46px; height: 28px; border-radius: 14px;
+  background: #D1CBC2; position: relative;
+  /* Arka plan rengi geçişi — iOS gibi yumuşak */
+  transition: background 240ms cubic-bezier(0.32,0.72,0,1);
+  flex-shrink: 0; cursor: pointer;
 }
 .toggle-sw.on { background: var(--green); }
+
+/* Thumb — stretch efekti için ayrı transition'lar */
 .toggle-sw::after {
   content: ''; position: absolute;
-  width: 20px; height: 20px; border-radius: 50%;
+  width: 22px; height: 22px; border-radius: 11px;
   background: white; top: 3px; left: 3px;
-  transition: transform .2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+  /* width ve left ayrı ayrı animate edilir — stretch için */
+  transition:
+    left    240ms cubic-bezier(0.32,0.72,0,1),
+    width   120ms cubic-bezier(0.32,0.72,0,1),
+    border-radius 120ms ease;
+  box-shadow: 0 1px 5px rgba(0,0,0,.18), 0 0.5px 2px rgba(0,0,0,.12);
 }
-.toggle-sw.on::after { transform: translateX(18px); }
+.toggle-sw.on::after {
+  left: 21px;
+  width: 22px;
+}
+/* Basılı anında thumb yatay uzar — iOS'un premium stretch hissi */
+.toggle-sw:active::after {
+  width: 27px;
+}
+.toggle-sw.on:active::after {
+  width: 27px;
+  left: 16px; /* sağa yaslanmış kalır ama uzar */
+}
 
 /* PROFİL */
 #profil { background: var(--bg); }
@@ -3348,44 +3456,93 @@ body.app-ready { background: var(--bg); }
 
       <!-- adım 3: bildirimler -->
       <div class="ob-step" id="ob-2">
+
+        <!-- Squircle clip-path tanımı — ob-2 için ayrı id -->
+        <svg class="squircle-defs" aria-hidden="true">
+          <defs>
+            <clipPath id="squircle-clip-2" clipPathUnits="objectBoundingBox">
+              <path d="M0.5,0 C0.729,0 0.854,0 0.927,0.073 C1,0.146 1,0.271 1,0.5 C1,0.729 1,0.854 0.927,0.927 C0.854,1 0.729,1 0.5,1 C0.271,1 0.146,1 0.073,0.927 C0,0.854 0,0.729 0,0.5 C0,0.271 0,0.146 0.073,0.073 C0.146,0 0.271,0 0.5,0 Z"/>
+            </clipPath>
+          </defs>
+        </svg>
+
         <div class="ob-icon-wrap">
-          <div class="ob-icon" style="background:var(--sky-lt)">
-            <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
-              <path d="M9 29c0-6 4-11 10-13" stroke="var(--sky)" stroke-width="2.2" stroke-linecap="round"/>
-              <path d="M21 37c-2.2 0-4-1.8-4-4h8c0 2.2-1.8 4-4 4z" stroke="var(--sky)" stroke-width="1.8"/>
-              <path d="M21 8v2.5" stroke="var(--sky)" stroke-width="2.2" stroke-linecap="round"/>
-              <path d="M11 11l2 2M31 11l-2 2" stroke="var(--sky)" stroke-width="2" stroke-linecap="round"/>
-              <path d="M14 29c0-4.5 3-8 7-8s7 3.5 7 8v2H14z" stroke="var(--sky)" stroke-width="2"/>
+          <div class="ob-icon-squircle ob-icon-squircle--amber" id="ob-bildirim-icon" role="img" aria-label="Bildirim zili">
+            <svg width="42" height="42" viewBox="0 0 42 42" fill="none" overflow="visible">
+
+              <!-- Zil gövde grubu — titreme bu gruba uygulanır -->
+              <g class="ob-bell-group">
+                <!-- Zil kolu — draw-on -->
+                <path class="ob-bell-handle"
+                  d="M21 5 L21 8"
+                  stroke="#C87820" stroke-width="2.2" stroke-linecap="round"/>
+                <!-- Zil gövdesi — draw-on -->
+                <path class="ob-bell-body"
+                  d="M21 8 C15.5 8 11 12.5 11 18 L11 26 L9 28 L33 28 L31 26 L31 18 C31 12.5 26.5 8 21 8 Z"
+                  stroke="#C87820" stroke-width="2.2"
+                  stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                <!-- Çan ayağı (clapper) — draw-on -->
+                <path class="ob-bell-foot"
+                  d="M17 28 C17 30.8 18.8 33 21 33 C23.2 33 25 30.8 25 28"
+                  stroke="#C87820" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+              </g>
+
+              <!-- Spark 1 — sol üst -->
+              <line class="ob-spark-1"
+                x1="9"  y1="11" x2="5"  y2="7"
+                stroke="#C87820" stroke-width="2.0" stroke-linecap="round"/>
+              <!-- Spark 2 — tam üst -->
+              <line class="ob-spark-2"
+                x1="21" y1="4"  x2="21" y2="-1"
+                stroke="#C87820" stroke-width="2.0" stroke-linecap="round"/>
+              <!-- Spark 3 — sağ üst -->
+              <line class="ob-spark-3"
+                x1="33" y1="11" x2="37" y2="7"
+                stroke="#C87820" stroke-width="2.0" stroke-linecap="round"/>
+
             </svg>
           </div>
         </div>
-        <div class="ob-title">Seni haberdar<br>edelim mi?</div>
-        <div class="ob-desc">Don riski, yağmur uyarısı ve sezon hatırlatıcıları için bildirim açalım.</div>
+        <div class="ob-title">Seni haberdar<br>edelim</div>
+        <div class="ob-desc">Don, yağmur, ekim vakti — önceden bilirsin.</div>
 
         <div class="ob-toggle-row" onclick="toggleOb(this)">
-          <div class="ob-toggle-left">
-            <div class="ob-toggle-title" style="display:flex;align-items:center;gap:8px">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 11.5c0-2 1.5-4.5 4-6" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 15c-1.2 0-2-.7-2-2h4c0 1.3-.8 2-2 2z" stroke="var(--sky)" stroke-width="1.2"/><path d="M8 2v1.2" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round"/><path d="M4.2 3.8l.8.8M11.8 3.8l-.8.8" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round"/><path d="M5 11.5c0-1.8 1.3-3 3-3s3 1.2 3 3v.8H5z" stroke="var(--sky)" stroke-width="1.3"/></svg>
-              Hava uyarıları
+          <div class="ob-toggle-left" style="display:flex;align-items:center;gap:10px;">
+            <!-- Hava uyarıları ikonu: bulut + şimşek + asimetrik nokta damlalar -->
+            <div style="width:34px;height:34px;border-radius:10px;background:#EDF4EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                <path d="M8 19a5.5 5.5 0 1 1 10.5-3H20a4 4 0 0 1 0 8H8a4 4 0 0 1 0-8"
+                  stroke="#4F7942" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+                <path d="M16 15.5l-2 3.5h3L15 23"
+                  stroke="#4F7942" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="9"    cy="26.5" r="1.3" fill="#4F7942"/>
+                <circle cx="13.5" cy="27.5" r="1.1" fill="#4F7942"/>
+                <circle cx="18"   cy="26"   r="1.5" fill="#4F7942"/>
+              </svg>
             </div>
-            <div class="ob-toggle-sub">Yarın yağmur, don riski…</div>
+            <div class="ob-toggle-title">Hava bildirimleri</div>
           </div>
           <div class="toggle-sw on"></div>
         </div>
 
         <div class="ob-toggle-row" onclick="toggleOb(this)">
-          <div class="ob-toggle-left">
-            <div class="ob-toggle-title" style="display:flex;align-items:center;gap:8px">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="var(--green)" stroke-width="1.3"/><path d="M2 7h12" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/><path d="M5 1v3M11 1v3" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/></svg>
-              Sezon hatırlatıcıları
+          <div class="ob-toggle-left" style="display:flex;align-items:center;gap:10px;">
+            <!-- Sezon hatırlatıcıları ikonu: damla + saat, Orman Yeşili (#4F7942) -->
+            <div style="width:34px;height:34px;border-radius:10px;background:#EDF4EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+                <path d="M11 17C11 17 5 13 5 8.5a6 6 0 0 1 6-6 6 6 0 0 1 6 6C17 13 11 17 11 17z"
+                  stroke="#4F7942" stroke-width="1.45" fill="none"/>
+                <path d="M11 5v4l2.5 1.8"
+                  stroke="#4F7942" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </div>
-            <div class="ob-toggle-sub">Ekim, gübre zamanı geldi</div>
+            <div class="ob-toggle-title">Sezon hatırlatıcıları</div>
           </div>
           <div class="toggle-sw on"></div>
         </div>
 
         <div class="ob-spacer"></div>
-        <button class="ob-next" onclick="obBitir()">Uygulamaya Başla</button>
+        <button class="ob-next" onclick="obBitir()">Uygulamaya başla</button>
       </div>
 
     </div>
@@ -6178,8 +6335,10 @@ function obNext(adim) {
   }
 
   // ── iOS Push geçişi ─────────────────────────────────────────────
-  // 1. Mevcut adıma exit animasyonu ekle
+  // ob-first'i temizle: splash açılış class'ı, exit CSS'ini override eder
   const mevcutEl = document.getElementById('ob-' + obAdim);
+  mevcutEl.classList.remove('ob-first');
+  // Mevcut adıma exit animasyonu ekle
   mevcutEl.classList.add('ob-exit');
 
   // 2. Exit süresi (260ms) kadar bekle, sonra giriş adımını aktif et
@@ -6198,6 +6357,17 @@ function obNext(adim) {
           konumIcon.classList.remove('animate');
           void konumIcon.offsetWidth;
           konumIcon.classList.add('animate');
+        }
+      });
+    }
+    // Adım 2'ye geçince bildirim ikonunu tetikle
+    if (adim === 2) {
+      requestAnimationFrame(() => {
+        const bildirimIcon = document.getElementById('ob-bildirim-icon');
+        if (bildirimIcon) {
+          bildirimIcon.classList.remove('animate');
+          void bildirimIcon.offsetWidth;
+          bildirimIcon.classList.add('animate');
         }
       });
     }
@@ -6272,14 +6442,34 @@ function progObKaydet() {
 // ─────────────────────────────────────────────────────────────
 
 function obBitir() {
-  // Son adım: tarla sayısı onboarding'de seçilmişse not olarak ekle (opsiyonel)
-  // Profil verilerinin kesinlikle LS'de olduğunu garantile
+  // Profil verilerini kaydet
   const finalIsim  = document.getElementById('p-isim')?.textContent || '';
   const finalKonum = document.getElementById('p-konum-satir')?.textContent || '';
   if (finalIsim) lsProfilKaydet(finalIsim, finalKonum);
-  obModKapat();
   updateGreeting();
-  navTo('home');
+
+  // ── Scale+Fade çıkış geçişi ──────────────────────────────────
+  // Onboarding scale-up + fade-out (300ms) → home scale-up + fade-in (380ms)
+  const obEl   = document.getElementById('onboarding');
+  const homeEl = document.getElementById('home');
+
+  // 1. Onboarding'e çıkış animasyonu ekle
+  obEl.classList.add('ob-exiting');
+
+  // 2. Home'u hazırla — görünmez, animasyona hazır
+  homeEl.classList.add('active', 'home-entering');
+  syncBnav('home');
+  currentScreen = 'home';
+
+  // 3. Onboarding çıkışı bitince (300ms) temizle
+  setTimeout(() => {
+    obEl.classList.remove('active', 'ob-exiting');
+    obModKapat();
+    // 4. Home giriş animasyonu bitince temizle (380ms)
+    setTimeout(() => {
+      homeEl.classList.remove('home-entering');
+    }, 380);
+  }, 300);
 }
 
 function updateGreeting() {
