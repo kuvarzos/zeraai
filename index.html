@@ -5898,10 +5898,10 @@ function obNext(adim) {
   obAdim = adim;
   document.getElementById('ob-' + obAdim).classList.add('active');
 
-  // progress dots
+  // progress dots — elementler kaldırıldıysa sessizce geç
   for (let i = 0; i < 3; i++) {
     const dot = document.getElementById('ob-dot-' + i);
-    dot.className = 'ob-dot ' + (i < adim ? 'done' : i === adim ? 'active' : 'pending');
+    if (dot) dot.className = 'ob-dot ' + (i < adim ? 'done' : i === adim ? 'active' : 'pending');
   }
   // header progress bar
   obProgressGuncelle(adim);
