@@ -2177,20 +2177,7 @@ body.app-ready { background: var(--bg); }
 }
 
 /* Progress dots — ince, üstte ortalı */
-.ob-progress {
-  display: flex; gap: 5px;
-  justify-content: center;
-  padding-top: 20px;
-  margin-bottom: 0;
-}
-.ob-dot {
-  height: 3px; border-radius: 2px;
-  background: var(--border); transition: all .4s cubic-bezier(.34,1.2,.64,1);
-  width: 28px;
-}
-.ob-dot.done   { background: var(--green); }
-.ob-dot.active { background: var(--green); width: 44px; }
-.ob-dot.pending { background: var(--border); }
+/* ob-progress dots kaldırıldı — header'daki progress bar yeterli */
 
 /* Step — ortalanmış içerik */
 .ob-step { display: none; flex-direction: column; flex: 1; align-items: center; text-align: center; }
@@ -2214,6 +2201,47 @@ body.app-ready { background: var(--bg); }
   box-shadow: 0 8px 28px rgba(0,0,0,.07);
 }
 
+/* ── Squircle Hero İkon — ob-0 adımı ───────────────────────────── */
+/* Squircle clip-path SVG'sini gizle */
+.squircle-defs { position:absolute; width:0; height:0; overflow:hidden; }
+
+/* 80×80 konteyner, squircle form, açık teal arka plan */
+.ob-icon-squircle {
+  width: 80px; height: 80px;
+  background: #EBF5F5;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  clip-path: url(#squircle-clip);
+  filter: drop-shadow(0 8px 24px rgba(34,127,131,.13));
+  opacity: 0;
+  transform: scale(0.72) translateY(10px);
+}
+/* JS .animate sınıfı ekleyince konteyner belirir */
+.ob-icon-squircle.animate {
+  animation: sq-appear 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes sq-appear {
+  to { opacity:1; transform:scale(1) translateY(0); }
+}
+/* Draw-on başlangıç durumları */
+.ob-filiz-sap    { stroke-dasharray:80;  stroke-dashoffset:80;  }
+.ob-filiz-toprak { stroke-dasharray:40;  stroke-dashoffset:40;  }
+.ob-filiz-sol    { stroke-dasharray:60;  stroke-dashoffset:60;  }
+.ob-filiz-sag    { stroke-dasharray:60;  stroke-dashoffset:60;  }
+.ob-filiz-gunes  { opacity:0; transform-origin:28px 11px;       }
+/* Animasyon sırası */
+.ob-icon-squircle.animate .ob-filiz-sap    { animation: filiz-draw 0.50s ease-out 0.30s forwards; }
+.ob-icon-squircle.animate .ob-filiz-toprak { animation: filiz-draw 0.40s ease-out 0.55s forwards; }
+.ob-icon-squircle.animate .ob-filiz-sol    { animation: filiz-draw 0.40s ease-out 0.70s forwards; }
+.ob-icon-squircle.animate .ob-filiz-sag    { animation: filiz-draw 0.40s ease-out 0.82s forwards; }
+.ob-icon-squircle.animate .ob-filiz-gunes  { animation: gunes-pop  0.50s ease-out 1.10s forwards; }
+@keyframes filiz-draw { to { stroke-dashoffset:0; } }
+@keyframes gunes-pop  {
+  from { opacity:0; transform:scale(0.4) rotate(-25deg); }
+  to   { opacity:1; transform:scale(1)   rotate(0deg);   }
+}
+/* ─────────────────────────────────────────────────────────────── */
+
 .ob-title {
   font-family: 'Fraunces', serif;
   font-size: 30px; font-weight: 500;
@@ -2229,11 +2257,18 @@ body.app-ready { background: var(--bg); }
 
 /* Input — tam genişlik, ortalanmış */
 .ob-input {
-  background: var(--card); border: 1.5px solid var(--border);
-  border-radius: var(--r); padding: 15px 18px;
+  /* Beyaz fill — krem (#F9F6EE) zemin üzerinde net kontrast */
+  background: #fff;
+  /* 14px radius — kart ve squircle diliyle uyumlu, ne keskin ne pill */
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  /* 56px efektif yükseklik (17+16+1.5*2 ≈ 56px) */
+  padding: 17px 18px;
   font-family: 'Inter', sans-serif;
-  font-size: 16px; color: var(--text);
-  outline: none; width: 100%;
+  font-size: 16px;
+  color: var(--text);
+  outline: none;
+  width: 100%;
   text-align: center;
   transition: border-color .2s, box-shadow .2s;
   margin-bottom: 12px;
@@ -2241,15 +2276,19 @@ body.app-ready { background: var(--bg); }
   box-sizing: border-box;
 }
 .ob-input:focus {
+  /* Focus anında teal border + hafif glow — marka rengi sadece burada */
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(34,127,131,.1);
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(34,127,131,.10);
 }
-.ob-input::placeholder { color: var(--text3); }
+/* Placeholder boş — cursor yeterli */
+.ob-input::placeholder { color: transparent; }
 
 /* İşletme tipi — compact, yatay */
 .ob-isletme-label {
-  font-size: 11px; font-weight: 700; color: var(--text3);
-  text-transform: uppercase; letter-spacing: .8px;
+  /* Sentence case — uppercase kaldırıldı, daha samimi ve okunabilir */
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  letter-spacing: .4px;
   margin-bottom: 10px; margin-top: 4px;
 }
 .isletme-grid {
@@ -2259,9 +2298,11 @@ body.app-ready { background: var(--bg); }
 .isletme-btn {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; gap: 6px;
-  padding: 12px 8px;
+  /* Padding +2px dikey — daha nefes alan kart */
+  padding: 14px 8px;
   background: var(--card); border: 1.5px solid var(--border);
-  border-radius: var(--r); cursor: pointer;
+  /* 16px radius — uygulamanın squircle/card diliyle uyumlu, premium his */
+  border-radius: 16px; cursor: pointer;
   transition: border-color .18s, background .18s, transform .18s cubic-bezier(.34,1.56,.64,1);
 }
 .isletme-btn.sel {
@@ -2271,7 +2312,8 @@ body.app-ready { background: var(--bg); }
 .isletme-btn:active { transform: scale(.95); }
 .isletme-ic { display: flex; }
 .isletme-lbl {
-  font-size: 10px; font-weight: 700; color: var(--text2);
+  /* 11px medium — title case için daha okunaklı, 10px'den bir adım üste */
+  font-size: 11px; font-weight: 600; color: var(--text2);
   text-align: center; line-height: 1.3; letter-spacing: .2px;
 }
 .isletme-btn.sel .isletme-lbl { color: var(--green-mid); }
@@ -2305,15 +2347,6 @@ body.app-ready { background: var(--bg); }
   transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
 }
 .ob-next:active { transform: scale(.97); box-shadow: 0 2px 8px rgba(34,127,131,.2); }
-.ob-skip {
-  text-align: center; margin-top: 16px;
-  font-size: 13px; color: var(--text3);
-  font-weight: 500; cursor: pointer;
-  padding: 4px;
-  transition: color .15s;
-}
-.ob-skip:active { color: var(--text2); }
-
 /* bildirim toggle */
 .ob-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -2990,21 +3023,51 @@ body.app-ready { background: var(--bg); }
     <div class="ob-wrap">
 
       <!-- progress dots -->
-      <div class="ob-progress">
-        <div class="ob-dot active" id="ob-dot-0"></div>
-        <div class="ob-dot pending" id="ob-dot-1"></div>
-        <div class="ob-dot pending" id="ob-dot-2"></div>
-      </div>
+
+
 
       <!-- adım 1: isim -->
       <div class="ob-step active" id="ob-0">
+
+        <!-- Squircle clip-path tanımı (DOM'da bir kez yeterli) -->
+        <svg class="squircle-defs" aria-hidden="true">
+          <defs>
+            <clipPath id="squircle-clip" clipPathUnits="objectBoundingBox">
+              <path d="M0.5,0 C0.729,0 0.854,0 0.927,0.073 C1,0.146 1,0.271 1,0.5 C1,0.729 1,0.854 0.927,0.927 C0.854,1 0.729,1 0.5,1 C0.271,1 0.146,1 0.073,0.927 C0,0.854 0,0.729 0,0.5 C0,0.271 0,0.146 0.073,0.073 C0.146,0 0.271,0 0.5,0 Z"/>
+            </clipPath>
+          </defs>
+        </svg>
+
         <div class="ob-icon-wrap">
-          <div class="ob-icon" style="background:var(--green-lt)">
-            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-              <path d="M8 38 C8 30 13.5 26 22 26 C30.5 26 36 30 36 38" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round"/>
-              <circle cx="22" cy="17" r="7" stroke="var(--green)" stroke-width="2.2"/>
-              <path d="M12 14.5 Q22 10.5 32 14.5" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
-              <path d="M17 14.5 Q17 8 22 7.5 Q27 8 27 14.5" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <div class="ob-icon-squircle" id="ob-squircle-icon" role="img" aria-label="Topraktan çıkan filiz">
+            <svg width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- GÜNEŞ -->
+              <g class="ob-filiz-gunes">
+                <circle cx="28" cy="11" r="4" fill="#D4A017"/>
+                <line x1="28" y1="4"    x2="28" y2="2"    stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
+                <line x1="33.5" y1="5.5" x2="35" y2="4"  stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
+                <line x1="35.5" y1="11"  x2="37.5" y2="11" stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
+                <line x1="22.5" y1="5.5" x2="21" y2="4"  stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
+                <line x1="20.5" y1="11"  x2="18.5" y2="11" stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
+              </g>
+              <!-- TOPRAK ÇİZGİSİ -->
+              <line class="ob-filiz-toprak"
+                x1="14" y1="46" x2="42" y2="46"
+                stroke="#227F83" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- SAP -->
+              <line class="ob-filiz-sap"
+                x1="28" y1="46" x2="28" y2="24"
+                stroke="#227F83" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- SOL YAPRAK -->
+              <path class="ob-filiz-sol"
+                d="M28 36 C23 32 18 26 20 20 C22 24 26 30 28 36Z"
+                stroke="#227F83" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                fill="#C5E1E2"/>
+              <!-- SAĞ YAPRAK -->
+              <path class="ob-filiz-sag"
+                d="M28 36 C33 32 38 26 36 20 C34 24 30 30 28 36Z"
+                stroke="#227F83" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                fill="#C5E1E2"/>
             </svg>
           </div>
         </div>
@@ -3012,38 +3075,37 @@ body.app-ready { background: var(--bg); }
         <div class="ob-title">Merhaba!<br>Seni tanıyalım</div>
         <div class="ob-desc">Adın ne? Sana nasıl hitap edelim?</div>
 
-        <input class="ob-input" id="ob-isim" placeholder="Adın ve soyadın…" maxlength="30" autocomplete="name">
+        <input class="ob-input" id="ob-isim" placeholder="" maxlength="30" autocomplete="given-name">
 
         <div style="width:100%;margin-top:20px;">
           <div class="ob-isletme-label">İşletme Tipin</div>
           <div class="isletme-grid" id="isletme-grid">
             <div class="isletme-btn sel" onclick="selIsletme(this,'aile')">
               <div class="isletme-ic">
+                <!-- Aile Çiftçisi: tek dolu daire — küçük ölçek -->
                 <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
-                  <path d="M14 4L3 12v13h8v-7h6v7h8V12L14 4z" stroke="var(--green-mid)" stroke-width="1.7" stroke-linejoin="round"/>
-                  <circle cx="14" cy="10" r="2.5" stroke="var(--green-mid)" stroke-width="1.5"/>
+                  <circle cx="14" cy="14" r="5" fill="var(--green-mid)" fill-opacity=".9"/>
                 </svg>
               </div>
               <div class="isletme-lbl">Aile Çiftçisi</div>
             </div>
             <div class="isletme-btn" onclick="selIsletme(this,'orta')">
               <div class="isletme-ic">
+                <!-- Orta Ölçekli: daire içinde daire — orta ölçek -->
                 <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
-                  <path d="M14 22V12" stroke="var(--green-mid)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M14 18C14 18 10 16 9 12c2.2-.4 5 1.5 5 6C19 14 21.5 12.5 20 10c-1 4-6 8-6 8z" fill="var(--green-mid)" fill-opacity=".6"/>
-                  <path d="M8 24h12" stroke="var(--green-mid)" stroke-width="1.6" stroke-linecap="round"/>
-                  <path d="M14 12C14 12 11 9 11 6c1.5-.5 3.5 1 3 6 0-4 2-5.5 3-5.5C16.5 9 14 12 14 12z" fill="var(--green-mid)" fill-opacity=".8"/>
+                  <circle cx="14" cy="14" r="12" fill="var(--green-mid)" fill-opacity=".15"/>
+                  <circle cx="14" cy="14" r="6"  fill="var(--green-mid)" fill-opacity=".8"/>
                 </svg>
               </div>
               <div class="isletme-lbl">Orta Ölçekli</div>
             </div>
             <div class="isletme-btn" onclick="selIsletme(this,'buyuk')">
               <div class="isletme-ic">
+                <!-- Büyük İşletme: üç iç içe daire — büyük ölçek -->
                 <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
-                  <rect x="4" y="14" width="20" height="10" rx="1.5" stroke="var(--green-mid)" stroke-width="1.6"/>
-                  <rect x="8" y="9" width="12" height="5" rx="1" stroke="var(--green-mid)" stroke-width="1.5"/>
-                  <rect x="12" y="5" width="4" height="4" rx="1" stroke="var(--green-mid)" stroke-width="1.4"/>
-                  <path d="M8 24v-4M14 24v-4M20 24v-4" stroke="var(--green-mid)" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+                  <circle cx="14" cy="14" r="13" fill="var(--green-mid)" fill-opacity=".1"/>
+                  <circle cx="14" cy="14" r="8"  fill="var(--green-mid)" fill-opacity=".25"/>
+                  <circle cx="14" cy="14" r="4"  fill="var(--green-mid)" fill-opacity=".9"/>
                 </svg>
               </div>
               <div class="isletme-lbl">Büyük İşletme</div>
@@ -3053,7 +3115,6 @@ body.app-ready { background: var(--bg); }
 
         <div class="ob-spacer"></div>
         <button class="ob-next" onclick="obNext(1)">Devam</button>
-        <div class="ob-skip" onclick="navTo('home')">Şimdi değil, atla</div>
       </div>
 
       <!-- adım 2: konum -->
@@ -3074,7 +3135,6 @@ body.app-ready { background: var(--bg); }
         </div>
         <div class="ob-spacer"></div>
         <button class="ob-next" onclick="obNext(2)">Devam</button>
-        <div class="ob-skip" onclick="navTo('home')">Şimdi değil, atla</div>
       </div>
 
       <!-- adım 3: bildirimler -->
@@ -5348,6 +5408,14 @@ function navTo(id) {
     setTimeout(() => {
       obEl.classList.remove('ob-entering');
     }, 620);
+
+    // Squircle ikon animasyonunu başlat
+    const sqIcon = document.getElementById('ob-squircle-icon');
+    if (sqIcon) {
+      sqIcon.classList.remove('animate');
+      void sqIcon.offsetWidth; // reflow — animasyonu sıfırlar
+      sqIcon.classList.add('animate');
+    }
 
     currentScreen = 'onboarding';
     fromScreen    = 'onboarding';
