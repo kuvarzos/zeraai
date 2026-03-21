@@ -94,12 +94,12 @@
 ║  5. KISA & KARARLI — Nokta. Özür dilemeyen ton.                ║
 ║                                                                 ║
 ║  TAGLINE KARARI:                                                ║
-║  "emeğini kaydet." — tamamen küçük harf, nokta korunur.        ║
+║  "emeğini kaydet." — tamamen küçük harf.              ║
 ║  NEDEN KÜÇÜK HARF: "zeraai" logosu zaten küçük harf.           ║
 ║  İkisi aynı kasıtlı sistemin parçası görünür → tutarlılık      ║
-║  premium hissi güçlendirir. Tagline küçük harf = özgüven.      ║
-║  NEDEN BU SLOGAN: Hem literal (kayıt tut) hem metaforik        ║
-║  (emeğin kaybolmasın). İki kelime, nokta. Vurucu.              ║
+║  premium hissi güçlendirir. (Airbnb "belong anywhere",         ║
+║  Apple "shot on iphone" referansları.) Tagline küçük harf      ║
+║  = özgüven işareti, hata değil.                                 ║
 ║                                                                 ║
 ║  ONBOARDING KOPYALARI (v45):                                    ║
 ║  Adım 1 başlık: "Adın ne?" — Yön A: karşılama yok, direkt      ║
@@ -2231,16 +2231,15 @@ body.app-ready { background: var(--bg); }
 }
 
 .splash-tagline {
-  /* Punto: 14px — premium standart (logo yüksekliğinin ~%25'i).
-     Headspace, Calm, Notion gibi uygulamalarda tagline 13-15px arası.
-     12px "emeğini kaydet." gibi kısa güçlü bir metin için küçük kalıyordu. */
+  /* 52px logonun ~%25'i = 13px; 14px tam oturuyor (Headspace/Calm/Notion standardı) */
   font-size: 14px;
+  /* Warm tint — fotoğrafın amber/altın tonlarıyla uyum */
   color: rgba(255, 240, 200, 0.78);
   font-weight: 400;
-  /* 0.5px tracking: kısa metni optik olarak "zeraai" genişliğiyle dengeler,
-     premium his verir — 0'da metin sıkışık, 1.8px'de fazla açılıyordu. */
+  /* 0.5px tracking: kısa güçlü metin için premium his, "zeraai" ile optik hizalanır */
   letter-spacing: 0.5px;
   text-transform: none;
+  /* margin-top kaldırıldı — gap:14px zaten boşluğu ayarlıyor */
   margin-top: 0;
   text-align: center;
   animation: splashContent 1.4s 1.2s ease-out both;
@@ -2250,34 +2249,54 @@ body.app-ready { background: var(--bg); }
   margin-top: 32px;
   background: white; color: #1a3a1a;
   border: none; border-radius: var(--r-pill);
-  padding: 16px 48px;
+  padding: 16px 56px;
   font-family: 'Inter', sans-serif;
   font-size: 17px; font-weight: 700;
   cursor: pointer; letter-spacing: .2px;
-  display: flex; align-items: center; gap: 10px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35),
-              0 0 0 0 rgba(255,255,255,.3);
-  transition: transform .25s cubic-bezier(.34,1.56,.64,1),
-              box-shadow .25s ease;
-  animation: splashContent 1.3s 1.45s ease-out both;
+  /* Underglow katmanları:
+     1) Zemin gölgesi (her zaman var)
+     2) Ambient underglow — kemik/krem tonu, idle'da nefes alır
+  */
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.35),
+    0 0 18px 2px rgba(245,242,235,0);
+  transition:
+    transform .18s cubic-bezier(.34,1.56,.64,1),
+    box-shadow .22s ease-out;
+  /* Buton biraz daha sonra — son "mühür" gibi */
+  animation:
+    splashContent 1.3s 1.45s ease-out both,
+    btnIdleGlow 3.2s 2.8s ease-in-out infinite;
+  position: relative; /* ::after pseudo için gerekli */
+  overflow: visible;
 }
-.splash-btn:hover {
-  background: rgba(255,255,255,.92);
-  box-shadow: 0 10px 32px rgba(0,0,0,.4);
+
+/* Idle: buton splash'a girdikten ~1.5sn sonra başlar,
+   kemik-krem rengi (rgba 255,248,220) hafifçe nefes alır */
+@keyframes btnIdleGlow {
+  0%, 100% {
+    box-shadow:
+      0 8px 28px rgba(0,0,0,.35),
+      0 0 18px 2px rgba(245,242,235,0.08);
+  }
+  50% {
+    box-shadow:
+      0 8px 28px rgba(0,0,0,.35),
+      0 0 28px 8px rgba(245,242,235,0.22);
+  }
 }
+
+/* Active (touch/tıklama): underglow anında patlar, buton içe çöker */
 .splash-btn:active {
-  transform: scale(.97);
-  box-shadow: 0 4px 14px rgba(0,0,0,.25);
-}
-/* Pulse — ilk göründükten sonra bir kere, fark ettirmeden dikkat çeker */
-@keyframes btnPulse {
-  0%   { box-shadow: 0 8px 28px rgba(0,0,0,.35), 0 0 0 0 rgba(255,255,255,.4); }
-  60%  { box-shadow: 0 8px 28px rgba(0,0,0,.35), 0 0 0 12px rgba(255,255,255,0); }
-  100% { box-shadow: 0 8px 28px rgba(0,0,0,.35), 0 0 0 0 rgba(255,255,255,0); }
-}
-.splash-btn.pulse-once {
-  animation: splashContent 1.3s 1.45s ease-out both,
-             btnPulse .9s 2.6s ease-out 1;
+  transform: scale(.96);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.25),
+    0 0 28px 8px rgba(245,242,235,0.45);
+  /* Tıklama anında idle animasyonu durdur — active state kazanır */
+  animation: none;
+  transition:
+    transform .12s cubic-bezier(.34,1.56,.64,1),
+    box-shadow .12s ease-out;
 }
 
 /* ── Keyframe'ler ─────────────────────────────────── */
@@ -3412,17 +3431,10 @@ body.app-ready { background: var(--bg); }
       <div class="splash-title">zeraai</div>
       <!-- DİL STRATEJİSİ: Tagline küçük harf — "zeraai" logosu da küçük harf,
            ikisi aynı kasıtlı sistemin parçası. Premium tutarlılık.
-           "emeğini kaydet." = hem literal (kayıt tut) hem metaforik
-           (emeğin kaybolmasın). İki kelime, nokta. Daha vurucu. -->
+           "emeğini kaydet." = gerçek çiftçi dilinden türetildi.
+           Orijinal cümle: "Aç uygulamayı kaydet. Unutmak yok." -->
       <div class="splash-tagline">emeğini kaydet.</div>
-      <button class="splash-btn pulse-once" onclick="navTo('onboarding')">
-        Başla
-        <!-- Küçük ok — uygulamaya geçişi ima eder -->
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M3 8h10M9 4l4 4-4 4" stroke="#1a3a1a" stroke-width="1.8"
-            stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
+      <button class="splash-btn" onclick="navTo('onboarding')">Başla</button>
     </div>
     <div class="splash-version">v1.0 · 2026</div>
   </div>
