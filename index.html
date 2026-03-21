@@ -2253,47 +2253,40 @@ body.app-ready { background: var(--bg); }
   font-family: 'Inter', sans-serif;
   font-size: 17px; font-weight: 700;
   cursor: pointer; letter-spacing: .2px;
-  /* Underglow katmanları:
-     1) Zemin gölgesi (her zaman var)
-     2) Ambient underglow — kemik/krem tonu, idle'da nefes alır
-  */
-  box-shadow:
-    0 8px 28px rgba(0,0,0,.35),
-    0 0 18px 2px rgba(245,242,235,0);
+  /* Sadece splashContent giriş animasyonu — box-shadow/transform'a dokunmaz */
+  animation: splashContent 1.3s 1.45s ease-out both;
+  /* Tüm interaktif geçişler transition ile — animation ile çakışma yok */
   transition:
     transform .18s cubic-bezier(.34,1.56,.64,1),
     box-shadow .22s ease-out;
-  /* Buton biraz daha sonra — son "mühür" gibi */
-  animation:
-    splashContent 1.3s 1.45s ease-out both,
-    btnIdleGlow 3.2s 2.8s ease-in-out infinite;
-  position: relative; /* ::after pseudo için gerekli */
+  /* Başlangıç glow değeri — JS idle pulse bu değeri toggle eder */
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.35),
+    0 0 18px 4px rgba(245,242,235,0.08);
+  position: relative;
   overflow: visible;
 }
 
-/* Idle: buton splash'a girdikten ~1.5sn sonra başlar,
-   kemik-krem rengi (rgba 255,248,220) hafifçe nefes alır */
-@keyframes btnIdleGlow {
-  0%, 100% {
-    box-shadow:
-      0 8px 28px rgba(0,0,0,.35),
-      0 0 18px 2px rgba(245,242,235,0.08);
-  }
-  50% {
-    box-shadow:
-      0 8px 28px rgba(0,0,0,.35),
-      0 0 28px 8px rgba(245,242,235,0.22);
-  }
+/* Idle pulse "düşük" state — JS setInterval ile toggle eder */
+.splash-btn--glow-lo {
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.35),
+    0 0 18px 4px rgba(245,242,235,0.08);
 }
 
-/* Active (touch/tıklama): underglow anında patlar, buton içe çöker */
-.splash-btn:active {
-  transform: scale(.96);
+/* Idle pulse "yüksek" state — JS setInterval ile toggle eder */
+.splash-btn--glow-hi {
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.35),
+    0 0 28px 10px rgba(245,242,235,0.22);
+}
+
+/* Pressed state — animation'a hiç dokunmaz, sadece transform+shadow */
+.splash-btn--pressed {
+  transform: scale(.96) !important;
   box-shadow:
     0 4px 12px rgba(0,0,0,.25),
-    0 0 28px 8px rgba(245,242,235,0.45);
-  /* Tıklama anında idle animasyonu durdur — active state kazanır */
-  animation: none;
+    0 0 28px 8px rgba(245,242,235,0.45) !important;
   transition:
     transform .12s cubic-bezier(.34,1.56,.64,1),
     box-shadow .12s ease-out;
@@ -3434,7 +3427,7 @@ body.app-ready { background: var(--bg); }
            "emeğini kaydet." = gerçek çiftçi dilinden türetildi.
            Orijinal cümle: "Aç uygulamayı kaydet. Unutmak yok." -->
       <div class="splash-tagline">emeğini kaydet.</div>
-      <button class="splash-btn" onclick="navTo('onboarding')">Başla</button>
+      <button class="splash-btn" id="splashBtn" onclick="navTo('onboarding')">Başla</button>
     </div>
     <div class="splash-version">v1.0 · 2026</div>
   </div>
@@ -8968,6 +8961,50 @@ function veriIceAktar() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // ── Splash "Başla" butonu — press & idle glow ──────────────────────
+  // Sorun kökü: animation: none !important → animation restore geçişinde
+  // iOS Safari bir frame splashContent'in "from" (opacity:0) keyframe'ini
+  // yeniden uygulayabiliyor. Çözüm: animation'a hiç dokunmama.
+  // Idle pulse → JS setInterval + class toggle (transition ile geçiş)
+  // Pressed state → sadece transform + box-shadow override, animation aynen devam
+  const splashBtn = document.getElementById('splashBtn');
+  if (splashBtn) {
+
+    // --- Idle pulse (nefes alma) ---
+    // splashContent animasyonu bitmeden (1.45s + 1.3s = ~2.75s) başlatma
+    let glowHi = false;
+    let glowTimer = null;
+
+    function startIdlePulse() {
+      glowTimer = setInterval(function() {
+        if (splashBtn.classList.contains('splash-btn--pressed')) return; // pressed'de atla
+        glowHi = !glowHi;
+        splashBtn.classList.toggle('splash-btn--glow-hi', glowHi);
+        splashBtn.classList.toggle('splash-btn--glow-lo', !glowHi);
+      }, 1600); // her 1.6sn'de bir toggle → 3.2sn tam döngü
+    }
+
+    setTimeout(startIdlePulse, 2800); // buton görünür olduktan sonra başlat
+
+    // --- Press state ---
+    function pressIn() {
+      splashBtn.classList.add('splash-btn--pressed');
+    }
+
+    function pressOut() {
+      splashBtn.classList.remove('splash-btn--pressed');
+      // Glow durumunu koru — timer kaldığı yerden devam eder
+    }
+
+    splashBtn.addEventListener('touchstart',  pressIn,  { passive: true });
+    splashBtn.addEventListener('touchend',    pressOut, { passive: true });
+    splashBtn.addEventListener('touchcancel', pressOut, { passive: true });
+    splashBtn.addEventListener('mousedown',   pressIn);
+    splashBtn.addEventListener('mouseup',     pressOut);
+    splashBtn.addEventListener('mouseleave',  pressOut);
+  }
+  // ────────────────────────────────────────────────────────────────────
+
   // 1. localStorage'dan verileri yükle
   lsKayitlarYukle();
   lsSirasiYukle();
