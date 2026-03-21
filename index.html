@@ -67,6 +67,45 @@
 ║  → Onboarding gövde içeriği (ikon, başlık, punto, spacing)     ║
 ║  → Gerçek hava API entegrasyonu (OpenWeatherMap veya MGM)      ║
 ╠══════════════════════════════════════════════════════════════════╣
+║  HİTAP DİLİ KILAVUZU (v45.9+ — tüm metinlerde geçerli)        ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                 ║
+║  TEMEL KARAR: "SEN" TONU — samimi, mesafesiz, saygılı          ║
+║  "Siz" değil, "Sen". Çiftçi komşusuna "İsminiz?" demez.        ║
+║  Uygulama kullanıcısının tarlasına, ekinine dokunan bir araç   ║
+║  — bu kadar yakın bir ilişki "siz" ile başlamaz.               ║
+║                                                                 ║
+║  HİTAP PRENSİPLERİ:                                            ║
+║  • Birebir İngilizce çeviri YAPMA — "Seni nasıl çağıralım?"   ║
+║    gibi ifadeler Türkçe'de tuhaf/soğuk kaçar.                  ║
+║  • "Özel" kelimesinden kaçın — iddialı, aşırı pazarlama dili  ║
+║  • "Deneyim" kelimesinden kaçın — kurumsal/soğuk               ║
+║  • "Bölge" kelimesinden kaçın — bürokratik                     ║
+║  • "Seçelim" yerine ya fayda sun ya sahiplik ver               ║
+║                                                                 ║
+║  ONAYLANMIŞ METİNLER (referans al):                            ║
+║  Tagline    : "emeğini kaydet." (küçük harf, noktalı)           ║
+║  Ob. adım1  : "İsmin?" + "Emeğin hep seninle kalsın."         ║
+║  Ob. adım2  : "Neredeysen, oradayız." +                        ║
+║               "Bulunduğun yerin hava durumu ve tahminleri."    ║
+║                                                                 ║
+║  GÜÇLÜ KELİMELER (Zeraai'nin dili):                            ║
+║  tarla, emek, toprak, hasat, sezon, ürün, kayıt                ║
+║  hep, her zaman, tam, seninle, senin                           ║
+║                                                                 ║
+║  NOKTALAMA KURALI — EM DASH (—):                               ║
+║  SADECE liste → sonuç yapısında kullan:                        ║
+║    ✓ "İlaç, gübre, ekim — doğru an kaçmaz."                   ║
+║    ✗ Açıklama cümlelerinde kullanma, virgül tercih et.         ║
+║    ✗ "Bir isim yeterli — gerisini zamanla eklersin." → YANLIŞ ║
+║    ✓ "Bir isim yeterli, gerisini zamanla eklersin." → DOĞRU   ║
+║                                                                 ║
+║  TON REFERANSLARı:                                              ║
+║  Apple Watch "Sleep Well" — 2 kelime, tam ton                  ║
+║  Airbnb "Where are you going?" — fonksiyon = his               ║
+║  Zeraai "İsmin?" — soru işareti + sadelik = samimilik          ║
+║                                                                 ║
+╠══════════════════════════════════════════════════════════════════╣
 ║  BİLİNEN SORUNLAR / NOTLAR                                      ║
 ║  → sheet-close ve op-sheet-close zaten nötr renk kullanıyor,   ║
 ║    token'a bağlanmaları yeterli (renk değişmeyecek)            ║
@@ -102,19 +141,21 @@
 ║  = özgüven işareti, hata değil.                                 ║
 ║                                                                 ║
 ║  ONBOARDING KOPYALARI (v45):                                    ║
-║  Adım 1 başlık: "Adın ne?" — Yön A: karşılama yok, direkt      ║
+║  Adım 1 başlık: "İsmin?" — samimi, sen tonu, direkt             ║
 ║    soru. En az süslü, en sahici. Çiftçi jargonu zorlaması      ║
 ║    yapay hissettiriyor; sadelik kazanıyor.                      ║
-║  Adım 1 açıklama: "Kayıtların sana ait olsun." — "ait"         ║
+║  Adım 1 açıklama: "Emeğin hep seninle kalsın." — tagline rezonans║
 ║    kelimesi "özel"den güçlü; mülkiyet hissi veriyor.           ║
-║  Adım 2: Mevcut metin korundu (beyin fırtınasında              ║
-║    alternatiflerin hiçbiri mevcut metni geçemedi).              ║
+║  Adım 2 başlık: "Neredeysen, oradayız." — Apple inceliği,      ║
+║    "biz seninleyiz" bağı. Satır kırığı ritim yaratıyor.         ║
+║  Adım 2 açıklama: "Bulunduğun yerin hava durumu ve tahminleri."║
+║    "Özel" iddiası yok, yer bağlantısı doğal ve dürüst.         ║
 ║  Adım 3 başlık: "Seni haberdar edelim" — kullanıcı onayladı,  ║
 ║    korundu. Toggle başlıkları değişti (aşağıya bak).           ║
 ║                                                                 ║
 ║  BİLDİRİM TOGGLE AYRIMI (v45):                                  ║
-║  Eski: "Hava bildirimleri" + "Sezon hatırlatıcıları" — muğlak  ║
-║  Yeni: "Sabah hava özeti" + "Acil hava uyarısı"                ║
+║  Toggle 1: "Tarla havası" + "İlaç, gübre, ekim — doğru an kaçmaz."    ║
+║  Toggle 2: "Sezon takvimi" + "Ekim, gübre, hasat — vaktinde gelir."   ║
 ║  NEDEN: Çiftçi hava tahminini iki ayrı ihtiyaçla kullanır:     ║
 ║    → Sabah rutini: "Bugün tarlamda ne var?" (planlama)         ║
 ║    → Acil durum: Don, dolu, fırtına (aksiyon)                  ║
@@ -650,6 +691,66 @@ body.app-ready { background: var(--bg); }
 .alert-title { font-size:12px; font-weight:700; color:var(--text); margin-bottom:2px; }
 .alert-sub   { font-size:11px; font-weight:500; color:var(--text2); }
 .alert-arr   { font-size:13px; color:var(--text3); flex-shrink:0; }
+
+/* ── Empty State — tarla yokken davet kartı ─────────────────── */
+.hfc-empty {
+  /* hfc ile aynı kart dili ama davet tonu — daha hafif, noktalı border */
+  background: rgba(255,255,255,0.6);
+  border: 1.5px dashed rgba(34,127,131,0.25);
+  border-radius: var(--r);
+  padding: 14px 13px;
+  display: flex; align-items: center; gap:11px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background .18s, border-color .18s, transform .15s;
+  position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.hfc-empty:active {
+  transform: scale(.97);
+  background: rgba(255,255,255,0.85);
+}
+/* Sol yeşil şerit — hfc ile aynı */
+.hfc-empty::before {
+  content: ''; position: absolute;
+  left:0; top:0; bottom:0; width:3px;
+  background: var(--green);
+  border-radius: 3px 0 0 3px;
+  opacity: 0.5;
+}
+/* Squircle ikon — ob-0 ile aynı sistem, küçük boyut */
+.hfc-empty-icon {
+  width: 38px; height: 38px;
+  background: #EBF5F5;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.hfc-empty-body { flex: 1; min-width: 0; }
+.hfc-empty-title {
+  font-family: 'Fraunces', serif;
+  font-size: 14px; font-weight: 500;
+  color: var(--text); margin-bottom: 2px;
+}
+.hfc-empty-sub {
+  font-size: 11px; color: var(--text2);
+  font-weight: 400; line-height: 1.45;
+}
+/* + butonu sağda — teal daire */
+.hfc-empty-add {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(34,127,131,.28);
+  transition: transform .15s, box-shadow .15s;
+}
+.hfc-empty:active .hfc-empty-add {
+  transform: scale(.93);
+  box-shadow: 0 1px 4px rgba(34,127,131,.15);
+}
+/* ─────────────────────────────────────────────────────────────── */
 
 /* ana sayfa tarla kartı */
 .home-fields { margin:0 16px 14px; display:flex; flex-direction:column; gap:8px; }
@@ -2963,6 +3064,32 @@ body.app-ready { background: var(--bg); }
       <div class="sec" style="margin-top:18px;"><div class="sec-title">Tarlalarım</div><div class="sec-link" onclick="navTo('fields')">Tümü →</div></div>
       <div class="home-fields">
 
+        <!-- ── Empty State Kartı — tarla yokken gösterilir ─────── -->
+        <!-- JS tarafından homeFieldsGuncelle() ile show/hide yapılır -->
+        <div class="hfc-empty fu" id="hfc-empty-card" style="display:none;" onclick="navTo('fields')">
+          <!-- Filiz ikonu — ob-0 squircle ikonuyla aynı dil, küçük -->
+          <div class="hfc-empty-icon">
+            <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+              <path d="M16 28V14" stroke="#227F83" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M16 22C16 22 10 18 9 13c3-.5 7 2 7 9C16.8 14 21 12 23 13c-2 5-7 9-7 9z"
+                fill="#227F83" fill-opacity=".55"/>
+              <path d="M10 28h12" stroke="#227F83" stroke-width="1.8"
+                stroke-linecap="round" opacity=".25"/>
+            </svg>
+          </div>
+          <div class="hfc-empty-body">
+            <div class="hfc-empty-title">Tarlana bir isim ver.</div>
+            <div class="hfc-empty-sub">Bir isim yeterli, gerisini zamanla eklersin.</div>
+          </div>
+          <!-- Sağ: + ekleme butonu — teal daire -->
+          <div class="hfc-empty-add">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2v10M2 7h10"
+                stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
         <!-- Buğday -->
         <div class="hfc fu" data-key="kuzey" style="--c:#C8951A" onclick="openDetail('kuzey')">
           <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#C8951A;border-radius:3px 0 0 3px;"></div>
@@ -3138,6 +3265,12 @@ body.app-ready { background: var(--bg); }
               <div class="fl-banner-name">Kuzey Tarla</div>
             </div>
             <div class="fl-banner-badge">Büyüme & Bakım</div>
+            <!-- Sürükleme kolu — sadece buradan drag başlar -->
+            <div class="fl-drag-handle" data-drag="true" onclick="event.stopPropagation()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 5h10M3 8h10M3 11h10" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#8A6914">Buğday · Tosunbey</div><div class="fl-area">45 dönüm</div></div>
@@ -3159,6 +3292,11 @@ body.app-ready { background: var(--bg); }
               <div class="fl-banner-name">Doğu Parsel</div>
             </div>
             <div class="fl-banner-badge">Kardeşlenme</div>
+            <div class="fl-drag-handle" data-drag="true" onclick="event.stopPropagation()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 5h10M3 8h10M3 11h10" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#2B7A78">Çeltik · Osmancık-97</div><div class="fl-area">30 dönüm</div></div>
@@ -3179,6 +3317,11 @@ body.app-ready { background: var(--bg); }
               <div class="fl-banner-name">Batı Tarla</div>
             </div>
             <div class="fl-banner-badge">Çiçeklenme</div>
+            <div class="fl-drag-handle" data-drag="true" onclick="event.stopPropagation()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 5h10M3 8h10M3 11h10" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#6B7A0A">Kanola · ES Imperio</div><div class="fl-area">25 dönüm</div></div>
@@ -3199,6 +3342,11 @@ body.app-ready { background: var(--bg); }
               <div class="fl-banner-name">Güney Tarla</div>
             </div>
             <div class="fl-banner-badge">Hasada hazır</div>
+            <div class="fl-drag-handle" data-drag="true" onclick="event.stopPropagation()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 5h10M3 8h10M3 11h10" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
           </div>
           <div class="fl-body">
             <div class="fl-row1"><div class="fl-crop" style="color:#8B4513">Ayçiçeği · Tunca</div><div class="fl-area">60 dönüm</div></div>
@@ -3433,8 +3581,8 @@ body.app-ready { background: var(--bg); }
              "Merhaba/Selam/Hayırlı işler" yerine sadece soru.
              En az süslü, en sahici. Jargon zorlaması yapay hissettiriyor.
              "ait" kelimesi "özel"den güçlü — mülkiyet/sahiplenme hissi. -->
-        <div class="ob-title">Adın ne?</div>
-        <div class="ob-desc">Kayıtların sana ait olsun.</div>
+        <div class="ob-title">İsmin?</div>
+        <div class="ob-desc">Emeğin hep seninle kalsın.</div>
 
         <input class="ob-input" id="ob-isim" placeholder="" maxlength="30" autocomplete="given-name">
 
@@ -3470,8 +3618,8 @@ body.app-ready { background: var(--bg); }
             </svg>
           </div>
         </div>
-        <div class="ob-title">Tarlalar<br>nerede?</div>
-        <div class="ob-desc">Sana özel hava ve uyarılar için bölgeni seçelim.</div>
+        <div class="ob-title">Neredeysen,<br>oradayız.</div>
+        <div class="ob-desc">Bulunduğun yerin hava durumu ve tahminleri.</div>
         <div class="ob-konum-row">
           <!-- İl inline picker -->
           <div class="ob-picker-wrap">
@@ -3547,8 +3695,8 @@ body.app-ready { background: var(--bg); }
             </svg>
           </div>
         </div>
-        <div class="ob-title">Seni haberdar<br>edelim</div>
-        <div class="ob-desc">Don, yağmur, ekim vakti — önceden bilirsin.</div>
+        <div class="ob-title">Bir adım<br>önde ol.</div>
+        <div class="ob-desc">Yağış, don, aşırı sıcak — sürpriz olmaz.</div>
 
         <div class="ob-toggle-row" onclick="toggleOb(this)">
           <div class="ob-toggle-left" style="display:flex;align-items:center;gap:10px;">
@@ -3564,23 +3712,34 @@ body.app-ready { background: var(--bg); }
                 <circle cx="18"   cy="26"   r="1.5" fill="#4F7942"/>
               </svg>
             </div>
-            <div class="ob-toggle-title">Hava bildirimleri</div>
+            <!-- Başlık + alt metin dikey wrapper -->
+            <div style="display:flex;flex-direction:column;">
+              <div class="ob-toggle-title">Tarla havası</div>
+              <div class="ob-toggle-sub">İlaç, gübre, ekim — doğru an kaçmaz.</div>
+            </div>
           </div>
           <div class="toggle-sw on"></div>
         </div>
 
         <div class="ob-toggle-row" onclick="toggleOb(this)">
           <div class="ob-toggle-left" style="display:flex;align-items:center;gap:10px;">
-            <!-- Sezon hatırlatıcıları ikonu: damla + saat, Orman Yeşili (#4F7942) -->
+            <!-- Sezon takvimi ikonu: takvim yapraklı, Orman Yeşili (#4F7942) -->
             <div style="width:34px;height:34px;border-radius:10px;background:#EDF4EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-                <path d="M11 17C11 17 5 13 5 8.5a6 6 0 0 1 6-6 6 6 0 0 1 6 6C17 13 11 17 11 17z"
+                <rect x="3" y="5" width="16" height="14" rx="2.5"
                   stroke="#4F7942" stroke-width="1.45" fill="none"/>
-                <path d="M11 5v4l2.5 1.8"
-                  stroke="#4F7942" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 3v4M15 3v4M3 10h16"
+                  stroke="#4F7942" stroke-width="1.35" stroke-linecap="round"/>
+                <circle cx="7.5"  cy="14.5" r="1.1" fill="#4F7942"/>
+                <circle cx="11"   cy="14.5" r="1.1" fill="#4F7942"/>
+                <circle cx="14.5" cy="14.5" r="1.1" fill="#4F7942"/>
               </svg>
             </div>
-            <div class="ob-toggle-title">Sezon hatırlatıcıları</div>
+            <!-- Başlık + alt metin dikey wrapper -->
+            <div style="display:flex;flex-direction:column;">
+              <div class="ob-toggle-title">Sezon takvimi</div>
+              <div class="ob-toggle-sub">Ekim, gübre, hasat — vaktinde gelir.</div>
+            </div>
           </div>
           <div class="toggle-sw on"></div>
         </div>
@@ -3591,6 +3750,16 @@ body.app-ready { background: var(--bg); }
 
     </div>
   </div>
+
+  <!-- ── Tarla Silme Onay Sheet ──────────────────────────────── -->
+  <div class="tarla-sil-sheet-overlay" id="tarla-sil-overlay" style="display:none;" onclick="tarlaSilKapat()"></div>
+  <div class="tarla-sil-sheet" id="tarla-sil-sheet" style="display:none;">
+    <div class="tarla-sil-baslik" id="tarla-sil-baslik">"Kuzey Tarla" siliniyor.</div>
+    <div class="tarla-sil-aciklama">İçindeki tüm kayıtlar da gider. Bu geri alınamaz.</div>
+    <button class="tarla-sil-btn-sil" onclick="tarlaSilOnayla()">Sil</button>
+    <button class="tarla-sil-btn-vazgec" onclick="tarlaSilKapat()">Vazgeç</button>
+  </div>
+  <!-- ─────────────────────────────────────────────────────────── -->
 
   <!-- ═══════ PROFİL ═══════ -->
   <div class="screen" id="profil">
@@ -5559,6 +5728,172 @@ function closeHavaSheetBtn() {
   const el = document.getElementById('hava-sheet');
   el.style.animation='overlayOut .2s ease both'; setTimeout(()=>el.style.display='none',200);
 }
+
+// ── TARLA CONTEXT MENU & SİLME ──────────────────────────────────
+let _ctxTarlaKey  = null; // aktif context menu'nun tarla key'i
+let _ctxOverlayEl = null;
+let _ctxMenuEl    = null;
+
+// Long press → context menu aç
+function tarlaCtxMenuAc(cardEl, clientX, clientY) {
+  const key = cardEl.dataset.key;
+  if (!key) return;
+  _ctxTarlaKey = key;
+
+  // Overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'fl-ctx-overlay';
+  overlay.onclick = tarlaCtxKapat;
+  document.body.appendChild(overlay);
+  _ctxOverlayEl = overlay;
+
+  // Menü
+  const menu = document.createElement('div');
+  menu.className = 'fl-ctx-menu';
+  menu.innerHTML = `
+    <div class="fl-ctx-item" onclick="tarlaCtxDuzenle('${key}')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M3 15h2.5l7.5-7.5-2.5-2.5L3 12.5V15z"
+          stroke="currentColor" stroke-width="1.4"
+          stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M11.5 3.5l3 3" stroke="currentColor"
+          stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      Düzenle
+    </div>
+    <div class="fl-ctx-divider"></div>
+    <div class="fl-ctx-item danger" onclick="tarlaSilOnay('${key}')">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M3 5h12M7 5V3h4v2" stroke="currentColor"
+          stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 5l1 10h6l1-10"
+          stroke="currentColor" stroke-width="1.4"
+          stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 8v4M10 8v4" stroke="currentColor"
+          stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      Sil
+    </div>`;
+
+  // Konumlandır — ekran sınırına göre
+  document.body.appendChild(menu);
+  _ctxMenuEl = menu;
+
+  const mw = 190, mh = 100;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let left = Math.min(clientX - 10, vw - mw - 16);
+  let top  = Math.min(clientY + 10, vh - mh - 16);
+  menu.style.left = left + 'px';
+  menu.style.top  = top  + 'px';
+}
+
+function tarlaCtxKapat() {
+  if (_ctxOverlayEl) { _ctxOverlayEl.remove(); _ctxOverlayEl = null; }
+  if (_ctxMenuEl)    { _ctxMenuEl.remove();    _ctxMenuEl    = null; }
+  _ctxTarlaKey = null;
+}
+
+// Düzenle — ileride detay sheet'e yönlendirilebilir
+function tarlaCtxDuzenle(key) {
+  tarlaCtxKapat();
+  openDetail(key); // şimdilik detay ekranı açıyor
+}
+
+// Silme onay sheet'i aç
+function tarlaSilOnay(key) {
+  tarlaCtxKapat();
+  _ctxTarlaKey = key;
+  const t = tarlalar[key];
+  const ad = t ? (t.isim || t.ad || key) : key;
+
+  // Başlığı dinamik güncelle
+  const baslik = document.getElementById('tarla-sil-baslik');
+  if (baslik) baslik.textContent = '"' + ad + '" siliniyor.';
+
+  const overlay = document.getElementById('tarla-sil-overlay');
+  const sheet   = document.getElementById('tarla-sil-sheet');
+  if (!overlay || !sheet) return;
+
+  overlay.style.display = 'block';
+  sheet.style.display   = 'block';
+  // Animasyonu yeniden tetikle
+  sheet.style.animation   = 'none';
+  overlay.style.animation = 'none';
+  requestAnimationFrame(() => {
+    sheet.style.animation   = 'sheetUp .28s cubic-bezier(0.32,0.72,0,1) both';
+    overlay.style.animation = 'overlayIn .2s ease both';
+  });
+}
+
+function tarlaSilKapat() {
+  const overlay = document.getElementById('tarla-sil-overlay');
+  const sheet   = document.getElementById('tarla-sil-sheet');
+  if (overlay) overlay.style.display = 'none';
+  if (sheet)   sheet.style.display   = 'none';
+  _ctxTarlaKey = null;
+}
+
+// Silme onayla — kartı DOM'dan kaldır, tarlalar'dan sil
+function tarlaSilOnayla() {
+  const key = _ctxTarlaKey;
+  tarlaSilKapat();
+  if (!key) return;
+
+  // Kart animasyonlu kaldır — height collapse + opacity
+  const silCard = (selector) => {
+    const el = document.querySelector(selector + '[data-key="' + key + '"]');
+    if (!el) return;
+    el.style.transition = 'opacity .22s ease, transform .22s ease, max-height .3s ease, margin .3s ease, padding .3s ease';
+    el.style.opacity    = '0';
+    el.style.transform  = 'scale(.96)';
+    el.style.maxHeight  = el.offsetHeight + 'px';
+    requestAnimationFrame(() => {
+      el.style.maxHeight = '0';
+      el.style.margin    = '0';
+      el.style.padding   = '0';
+    });
+    setTimeout(() => el.remove(), 320);
+  };
+
+  silCard('.fl-card');  // Tarlalarım ekranı
+  silCard('.hfc');      // Ana sayfa kartı
+
+  // tarlalar objesinden sil
+  delete tarlalar[key];
+
+  // Empty state güncelle
+  setTimeout(() => homeEmptyStateGuncelle(), 350);
+}
+// ─────────────────────────────────────────────────────────────────
+
+// ── HOME EMPTY STATE — tarla yokken davet kartı ──────────────────
+// Demo tarlalar (kuzey, dogu, guney) dışında gerçek tarla var mı?
+const DEMO_KEYS = ['kuzey', 'dogu', 'guney'];
+
+function homeEmptyStateGuncelle() {
+  const kart = document.getElementById('hfc-empty-card');
+  if (!kart) return;
+
+  // tarlalar objesinde demo olmayan key var mı?
+  const gercekTarlaVar = Object.keys(tarlalar).some(k => !DEMO_KEYS.includes(k));
+
+  if (gercekTarlaVar) {
+    // Gerçek tarla eklendi — kart solarak kaybolur
+    if (kart.style.display !== 'none') {
+      kart.style.transition = 'opacity .3s, transform .3s';
+      kart.style.opacity = '0';
+      kart.style.transform = 'translateY(-8px)';
+      setTimeout(() => { kart.style.display = 'none'; }, 320);
+    }
+  } else {
+    // Tarla yok — kartı göster (fu animasyonuyla)
+    kart.style.display = 'flex';
+    kart.style.opacity = '';
+    kart.style.transform = '';
+    kart.style.transition = '';
+  }
+}
+// ─────────────────────────────────────────────────────────────────
 
 // ── BUGÜN NE YAPMALI ──
 function renderBugünNeYapmali() {
@@ -8590,20 +8925,37 @@ function renderTarlaSirasi() {
   let pressStartX = 0;
 
   function onPointerDown(e) {
-    const card = e.target.closest('.fl-card[data-key]');
-    if (!card) return;
-    if (!card.closest('.field-list')) return;
+    const handle = e.target.closest('.fl-drag-handle[data-drag]');
+    const card   = e.target.closest('.fl-card[data-key]');
 
-    pressEl     = card;
-    pressStartY = (e.touches ? e.touches[0].clientY : e.clientY) || 0;
-    pressStartX = (e.touches ? e.touches[0].clientX : e.clientX) || 0;
+    // ── Sürükleme kolu — sadece buradan drag başlar ────────────
+    if (handle && card && card.closest('.field-list')) {
+      pressEl     = card;
+      pressStartY = (e.touches ? e.touches[0].clientY : e.clientY) || 0;
+      pressStartX = (e.touches ? e.touches[0].clientX : e.clientX) || 0;
+      // Kol'a basınca hemen drag başlar — timer yok
+      pressTimer = setTimeout(() => {
+        const target = pressEl;
+        pressEl = null;
+        if (!target || !target.isConnected) return;
+        startDrag(target, pressStartY, pressStartX);
+      }, 80); // kolda çok kısa timer — neredeyse anlık
+      return;
+    }
 
-    pressTimer = setTimeout(() => {
-      const target = pressEl; // local kopyası — timer bitince pressEl null olmuş olabilir
-      pressEl = null;
-      if (!target || !target.isConnected) return;
-      startDrag(target, pressStartY, pressStartX);
-    }, LONG_PRESS_MS);
+    // ── Kart gövdesi — long press → context menu ───────────────
+    if (card && card.closest('.field-list') && !handle) {
+      pressEl     = card;
+      pressStartY = (e.touches ? e.touches[0].clientY : e.clientY) || 0;
+      pressStartX = (e.touches ? e.touches[0].clientX : e.clientX) || 0;
+      pressTimer = setTimeout(() => {
+        const target = pressEl;
+        pressEl = null;
+        if (!target || !target.isConnected) return;
+        // Long press → context menu aç, drag değil
+        tarlaCtxMenuAc(target, pressStartX, pressStartY);
+      }, LONG_PRESS_MS);
+    }
   }
 
   function onPointerMove(e) {
@@ -8927,6 +9279,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   renderBarChart();
   renderBugünNeYapmali();
+  homeEmptyStateGuncelle(); // tarla yoksa davet kartını göster
   renderFieldsProgress();
   // Tarlaları sistematik sırala: son işlem → alan büyüklüğü
   renderTarlaSirasi();
@@ -9682,6 +10035,7 @@ function saveTarla() {
     // Listeyi güncelle
     appendTarlaKarti(yeniKey, tarlalar[yeniKey]);
     renderBugünNeYapmali();
+    homeEmptyStateGuncelle(); // gerçek tarla eklendi — davet kartını kaldır
   }, 1300);
 }
 
