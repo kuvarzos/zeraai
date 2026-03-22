@@ -577,6 +577,11 @@ body.app-ready { background: var(--bg); }
   border-radius: 12px;
   overflow: hidden;
 }
+/* Swipe-back gesture aktifken transition'ı kapat — parmak 1:1 takip için */
+.screen.swipe-dragging {
+  transition: none !important;
+  animation: none !important;
+}
 /* Header da ekranla birlikte küçülür — gap kapanır */
 /* sb-bar sabit kalır — iOS davranışı (header scale edilmez) */
 
@@ -7509,6 +7514,7 @@ Object.defineProperty(window, 'prevScreen', {
     // Ön ekran — en üste al
     if (cur) {
       clearStyles(cur);
+      cur.classList.add('swipe-dragging'); // transition: none !important
       cur.style.zIndex    = '2';
       cur.style.transform = 'translateX(0)';
     }
@@ -7516,6 +7522,7 @@ Object.defineProperty(window, 'prevScreen', {
     // Arka ekran — parallax başlangıç konumu, görünür yap
     if (bk) {
       clearStyles(bk);
+      bk.classList.add('swipe-dragging'); // transition: none !important
       // .active class'ı yoksa ekle (display:flex için gerekli)
       if (!bk.classList.contains('active')) {
         bk.classList.add('active');
@@ -7620,10 +7627,12 @@ Object.defineProperty(window, 'prevScreen', {
     g = null;
 
     if (cur) {
+      cur.classList.remove('swipe-dragging');
       cur.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
       cur.style.transform  = 'translateX(' + W + 'px)';
     }
     if (bk) {
+      bk.classList.remove('swipe-dragging');
       bk.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
       bk.style.transform  = 'translateX(0)';
     }
@@ -7664,10 +7673,12 @@ Object.defineProperty(window, 'prevScreen', {
     g = null;
 
     if (cur) {
+      cur.classList.remove('swipe-dragging');
       cur.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
       cur.style.transform  = 'translateX(0)';
     }
     if (bk) {
+      bk.classList.remove('swipe-dragging');
       bk.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
       bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
     }
@@ -7687,10 +7698,13 @@ Object.defineProperty(window, 'prevScreen', {
     var bk = g.bk, cur = g.cur;
     g = null;
     if (bk) {
+      bk.classList.remove('swipe-dragging', 'active');
       bk.style.cssText = '';
-      bk.classList.remove('active');
     }
-    if (cur) cur.style.cssText = '';
+    if (cur) {
+      cur.classList.remove('swipe-dragging');
+      cur.style.cssText = '';
+    }
   }
 
   document.addEventListener('touchstart',  onStart, { passive: true });
