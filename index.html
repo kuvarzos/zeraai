@@ -7370,7 +7370,10 @@ function navTo(id) {
     fromScreen = id;                      // home'da swipe yok
   }
 
-  screens.forEach(s => s.classList.remove('active','back','slide-in','slide-left','tab-enter'));
+  screens.forEach(s => {
+    s.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
+    s.style.visibility = ''; // sb-behind'ın visibility:hidden'ını sıfırla
+  });
   currentScreen = id;
   const s = document.getElementById(id);
   s.classList.add(animClass);
@@ -7406,7 +7409,10 @@ function openDetail(key) {
   fromScreen = currentScreen; // gelinen ekranı kaydet
 
   const prevScreen = currentScreen;
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-in','slide-left'));
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active','back','slide-in','slide-left','sb-behind');
+    s.style.visibility = ''; // önceki sb-behind kalıntısını temizle
+  });
 
   // Gelinen ekranı (fields vb.) display:none yerine sb-behind ile arkada tut
   // → swipe-back başladığında layout hazır bekler, flash olmaz
