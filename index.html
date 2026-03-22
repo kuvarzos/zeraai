@@ -3416,7 +3416,7 @@ body.app-ready { background: var(--bg); }
       </div>
       <!-- Selamlama metni: "günaydın," + isim (JS ile güncellenir) -->
       <div class="sb-greeting" id="sb-greeting">
-        <span class="sb-greeting-sub" id="sb-greeting-sub">günaydın,</span>
+        <span class="sb-greeting-sub" id="sb-greeting-sub">Günaydın,</span>
         <span class="sb-greeting-name" id="sb-greeting-name">Ahmet</span>
       </div>
     </div>
@@ -3472,7 +3472,7 @@ body.app-ready { background: var(--bg); }
            Bu div scroll container'ın içinde — header'ın altında başlar.
            id="lt-greeting": JS scroll listener bu element'i izler.          -->
       <div class="lt-greeting" id="lt-greeting">
-        <span class="lt-greeting-sub" id="lt-greeting-sub">günaydın,</span>
+        <span class="lt-greeting-sub" id="lt-greeting-sub">Günaydın,</span>
         <span class="lt-greeting-name" id="lt-greeting-name">Ahmet</span>
       </div>
 
@@ -7081,7 +7081,7 @@ function setSbLeft(screenId) {
           <div class="app-avatar" id="sb-avatar">${harf}</div>
         </div>
         <div class="sb-greeting" id="sb-greeting">
-          <span class="sb-greeting-sub" id="sb-greeting-sub">günaydın,</span>
+          <span class="sb-greeting-sub" id="sb-greeting-sub">Günaydın,</span>
           <span class="sb-greeting-name" id="sb-greeting-name">${isim}</span>
         </div>`;
       updateGreeting(); // saat bazlı selam + lt senkron
@@ -8004,11 +8004,13 @@ function obBitir() {
 
 function updateGreeting() {
   const hour = new Date().getHours();
-  let selam = 'İyi günler,';
-  if (hour >= 5 && hour < 12)  selam = 'günaydın,';
-  else if (hour >= 12 && hour < 18) selam = 'iyi öğlenler,';
-  else if (hour >= 18 && hour < 22) selam = 'iyi akşamlar,';
-  else selam = 'iyi geceler,';
+  // 5 dilim — gerçek Türkçe, doğal, bağlama uygun
+  let selam;
+  if      (hour >= 4  && hour < 6)  selam = 'Erkenden kalkmışsınız,';
+  else if (hour >= 6  && hour < 12) selam = 'Günaydın,';
+  else if (hour >= 12 && hour < 18) selam = 'İyi günler,';
+  else if (hour >= 18 && hour < 22) selam = 'İyi akşamlar,';
+  else                               selam = 'İyi geceler,';
 
   // Güncel ismi tek kaynaktan oku — localStorage > sb-greeting-name > varsayılan
   const LS_profil = (() => { try { return JSON.parse(localStorage.getItem('hasat_profil') || '{}'); } catch(e) { return {}; } })();
@@ -11471,9 +11473,10 @@ function avatarSheetAc() {
 
   // Selam metni (saat bazlı — tutarlılık için updateGreeting ile aynı mantık)
   const saat = new Date().getHours();
-  const selam = saat >= 5 && saat < 12 ? 'Günaydın,' :
-                saat >= 12 && saat < 18 ? 'İyi öğlenler,' :
-                saat >= 18 && saat < 22 ? 'İyi akşamlar,' : 'İyi geceler,';
+  const selam = (saat >= 4  && saat < 6)  ? 'Erkenden kalkmışsınız,' :
+               (saat >= 6  && saat < 12) ? 'Günaydın,'               :
+               (saat >= 12 && saat < 18) ? 'İyi günler,'              :
+               (saat >= 18 && saat < 22) ? 'İyi akşamlar,'            : 'İyi geceler,';
 
   const sheetIsim  = document.getElementById('ava-sheet-isim');
   const sheetKonum = document.getElementById('ava-sheet-konum');
