@@ -351,13 +351,13 @@ body.app-ready { background: var(--bg); }
 .sb-greeting-sub {
   font-family: 'Inter', sans-serif;
   font-size: 11px; font-weight: 400;
-  color: var(--text3); line-height: 1.2;
+  color: #6B6B6B; line-height: 1.2; /* rapor: #6B6B6B — hiyerarşi için */
   white-space: nowrap;
 }
 .sb-greeting-name {
   font-family: 'Inter', sans-serif;
   font-size: 17px; font-weight: 600;
-  color: var(--text); line-height: 1.25;
+  color: #1A1A1A; line-height: 1.25; /* rapor: #1A1A1A — güneş altında okunabilirlik */
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -387,13 +387,35 @@ body.app-ready { background: var(--bg); }
 /* Okunmamış bildirim noktası — 7px kırmızı nokta */
 .sb-notif-dot {
   position: absolute; top: 8px; right: 9px;
-  width: 7px; height: 7px; border-radius: 50%;
+  width: 6px; height: 6px; border-radius: 50%; /* rapor: 6px */
   background: var(--red);
   border: 1.5px solid var(--bg); /* bg rengiyle çerçeve: ikon üstünde yüzer */
   display: none; /* JS ile .visible class'ı eklenir */
   transition: transform .2s cubic-bezier(.34,1.56,.64,1);
 }
 .sb-notif-dot.visible { display: block; }
+
+/* ── Orta: tab ekranı başlığı (Tarlalarım / Kasa / Kayıtlarım) ──────────────
+   position:absolute ile tam ortalanır — sol/sağ elementlerden bağımsız.
+   pointer-events:none → tıklama sol/sağ butonlara geçer                     */
+.sb-center {
+  position: absolute;
+  /* Sadece nav bar satırında ortalansın: padding-top(59px) sonrası 44px alan */
+  left: 0; right: 0;
+  top: 59px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.sb-center-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px; font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  /* Solda geri butonu, sağda potansiyel buton ile çakışmasın */
+  max-width: calc(100% - 120px);
+  overflow: hidden; text-overflow: ellipsis;
+}
 
 /* ── Progressive onboarding banneri ──────────────────────────
    Kayıt formunun üstünde — ad girilmemişse görünür,
@@ -3207,15 +3229,15 @@ body.app-ready { background: var(--bg); }
   <!-- ─── HEADER ────────────────────────────────────────────────
        103px toplam: 59px status area + 44px nav bar
        Sol: avatar (32px) + selamlama (günaydın + isim)
-       Orta: kasıtlı boş (premium pattern — Apple Health/Things 3)
-       Sağ: bildirim zili (20px ikon, 44px dokunma alanı)
+       Orta: home'da boş (premium pattern), tab ekranlarında sayfa başlığı
+       Sağ: bildirim zili (24px ikon, 44px dokunma alanı)
   ────────────────────────────────────────────────────────────── -->
   <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;">
 
     <!-- Sol: avatar + selamlama (home'da) veya geri butonu (iç ekranlarda) -->
     <div class="sb-left" id="sb-left">
       <!-- Avatar wrap: 44×44px dokunma alanı -->
-      <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="navTo('profil')">
+      <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="avatarSheetAc()">
         <div class="app-avatar" id="sb-avatar">A</div>
       </div>
       <!-- Selamlama metni: "günaydın," + isim (JS ile güncellenir) -->
@@ -3225,10 +3247,15 @@ body.app-ready { background: var(--bg); }
       </div>
     </div>
 
+    <!-- Orta: sayfa başlığı — sadece tab ekranlarında görünür (JS ile) -->
+    <div class="sb-center" id="sb-center" style="display:none;">
+      <span class="sb-center-title" id="sb-center-title"></span>
+    </div>
+
     <!-- Sağ: bildirim zili — 44×44px dokunma alanı -->
     <div class="sb-notif-btn" id="sb-notif-btn" onclick="notifAc()">
-      <!-- Zil ikonu: E — ultra minimal, Revolut tarzı, 1.4px stroke -->
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      <!-- Zil ikonu: E — ultra minimal, Revolut tarzı, 1.4px stroke — rapor: 24px görsel -->
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
            stroke="var(--green)" stroke-width="1.4"
            stroke-linecap="round" stroke-linejoin="round">
         <!-- anten -->
@@ -5069,7 +5096,115 @@ body.app-ready { background: var(--bg); }
     </div>
   </div>
 
-</div>
+  <!-- AVATAR ACTION SHEET — phone container'ın direkt çocuğu, z-index:210 ────
+       Rapor: "Avatar dokunulduğunda alt sheet: profil, ayarlar, destek, çıkış"
+       Avatar'a basınca açılır, dışarı tıklayınca kapanır                    -->
+  <div id="avatar-sheet" onclick="avatarSheetKapat(event)"
+       style="position:absolute;inset:0;background:rgba(0,0,0,0.36);
+              z-index:210;display:none;align-items:flex-end;
+              backdrop-filter:blur(4px);">
+    <div class="op-sheet-inner" style="max-height:50%">
+      <div class="op-sheet-handle"></div>
+      <!-- Profil özet başlığı -->
+      <div style="padding:16px 20px 12px;display:flex;align-items:center;gap:12px;
+                  border-bottom:1px solid var(--border);">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--green);
+                    display:flex;align-items:center;justify-content:center;
+                    font-family:'Inter',sans-serif;font-size:15px;font-weight:600;
+                    color:white;flex-shrink:0;" id="ava-sheet-harf">A</div>
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--text);"
+               id="ava-sheet-isim">Ahmet Bey</div>
+          <div style="font-size:12px;color:var(--text3);" id="ava-sheet-konum">Manisa</div>
+        </div>
+      </div>
+      <!-- Menü satırları -->
+      <div style="padding:8px 0 36px;">
+        <!-- Profilim -->
+        <div onclick="avatarSheetGit('profil')"
+             style="display:flex;align-items:center;gap:14px;
+                    padding:14px 20px;cursor:pointer;transition:background .12s;"
+             onmouseenter="this.style.background='var(--bg)'"
+             onmouseleave="this.style.background=''"
+             ontouchstart="this.style.background='var(--bg)'"
+             ontouchend="this.style.background=''">
+          <div style="width:32px;height:32px;border-radius:8px;background:var(--green-lt);
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="5.5" r="2.5" stroke="var(--green)" stroke-width="1.3"/>
+              <path d="M2.5 13.5c0-2.8 2.5-4.5 5.5-4.5s5.5 1.7 5.5 4.5"
+                    stroke="var(--green)" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span style="font-size:15px;font-weight:500;color:var(--text);flex:1;">Profilim</span>
+          <span style="font-size:18px;color:var(--text3);line-height:1;">›</span>
+        </div>
+        <!-- Ayarlar -->
+        <div onclick="avatarSheetGit('ayarlar')"
+             style="display:flex;align-items:center;gap:14px;
+                    padding:14px 20px;cursor:pointer;transition:background .12s;"
+             onmouseenter="this.style.background='var(--bg)'"
+             onmouseleave="this.style.background=''"
+             ontouchstart="this.style.background='var(--bg)'"
+             ontouchend="this.style.background=''">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(120,117,112,.1);
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="2" stroke="var(--text2)" stroke-width="1.3"/>
+              <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8
+                       M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3
+                       M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3"
+                    stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span style="font-size:15px;font-weight:500;color:var(--text);flex:1;">Ayarlar</span>
+          <span style="font-size:18px;color:var(--text3);line-height:1;">›</span>
+        </div>
+        <!-- Destek -->
+        <div onclick="avatarSheetGit('destek')"
+             style="display:flex;align-items:center;gap:14px;
+                    padding:14px 20px;cursor:pointer;transition:background .12s;"
+             onmouseenter="this.style.background='var(--bg)'"
+             onmouseleave="this.style.background=''"
+             ontouchstart="this.style.background='var(--bg)'"
+             ontouchend="this.style.background=''">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(59,130,246,.1);
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="#3B82F6" stroke-width="1.3"/>
+              <path d="M8 7v4" stroke="#3B82F6" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="8" cy="5" r="0.8" fill="#3B82F6"/>
+            </svg>
+          </div>
+          <span style="font-size:15px;font-weight:500;color:var(--text);flex:1;">Destek</span>
+          <span style="font-size:18px;color:var(--text3);line-height:1;">›</span>
+        </div>
+        <!-- Çıkış — kırmızı ton -->
+        <div onclick="avatarSheetGit('cikis')"
+             style="display:flex;align-items:center;gap:14px;
+                    padding:14px 20px;cursor:pointer;transition:background .12s;"
+             onmouseenter="this.style.background='rgba(229,67,61,.05)'"
+             onmouseleave="this.style.background=''"
+             ontouchstart="this.style.background='rgba(229,67,61,.05)'"
+             ontouchend="this.style.background=''">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(229,67,61,.1);
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 2.5H12.5a1 1 0 011 1v9a1 1 0 01-1 1H10"
+                    stroke="var(--red)" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M7 10.5L10 8l-3-2.5"
+                    stroke="var(--red)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="10" y1="8" x2="2.5" y2="8"
+                    stroke="var(--red)" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span style="font-size:15px;font-weight:500;color:var(--red);flex:1;">Çıkış Yap</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
 
 <script>
 // ── NAVIGATION ──
@@ -6445,24 +6580,42 @@ const DETAIL_SCREENS = ['detail','profil'];
 // Ana sekmeler — home hariç hepsinde geri tuşu göster
 const TAB_SCREENS = ['fields','kayitlarim','kasa'];
 
+// Tab ekranı başlık haritası — rapor: sb center'da sayfa başlığı
+const TAB_TITLES = {
+  fields:      'Tarlalarım',
+  kayitlarim:  'Kayıtlarım',
+  kasa:        'Kasa',
+};
+
 function setSbLeft(screenId) {
   const el = document.getElementById('sb-left');
   if (!el) return;
 
+  const centerEl    = document.getElementById('sb-center');
+  const centerTitle = document.getElementById('sb-center-title');
+
   if (DETAIL_SCREENS.includes(screenId)) {
-    // Detay ekranı: standart koyu geri tuşu
+    // Detay ekranı: standart koyu geri tuşu, center gizli
     el.innerHTML = `<button class="sb-back-btn" onclick="navBack()">${BACK_ICON}</button>`;
+    if (centerEl) centerEl.style.display = 'none';
+
   } else if (TAB_SCREENS.includes(screenId)) {
-    // Sekme ekranı (tarlalar, kayıtlarım vb.): yeşil tonlu geri, home'a döner
+    // Sekme ekranı: geri tuşu + center'da sayfa başlığı
     el.innerHTML = `<button class="sb-back-btn sb-back-tab" onclick="navTo('home')">${BACK_ICON}</button>`;
+    if (centerEl && centerTitle) {
+      centerTitle.textContent = TAB_TITLES[screenId] || '';
+      centerEl.style.display = 'flex';
+    }
+
   } else {
-    // Home ekranı: avatar + selamlama göster
+    // Home ekranı: avatar + selamlama, center gizli
+    if (centerEl) centerEl.style.display = 'none';
     // Eğer avatar-wrap yoksa yeniden oluştur
     if (!document.getElementById('sb-avatar-wrap')) {
       const isim = document.getElementById('sb-greeting-name')?.textContent || 'Ahmet';
       const harf = isim.charAt(0).toUpperCase();
       el.innerHTML = `
-        <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="navTo('profil')">
+        <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="avatarSheetAc()">
           <div class="app-avatar" id="sb-avatar">${harf}</div>
         </div>
         <div class="sb-greeting" id="sb-greeting">
@@ -6473,7 +6626,7 @@ function setSbLeft(screenId) {
     }
   }
 
-  // Bildirim zilinini home'da göster, iç ekranlarda gizle
+  // Bildirim zilinini yalnızca home'da göster
   const notifBtn = document.getElementById('sb-notif-btn');
   if (notifBtn) {
     notifBtn.style.display = (DETAIL_SCREENS.includes(screenId) || TAB_SCREENS.includes(screenId)) ? 'none' : '';
@@ -6630,6 +6783,7 @@ function navTo(id) {
 
   setSbLeft(id);
   syncBnav(id);
+  setupHeaderScroll(); // scroll→.scrolled class bağlantısını güncelle
 }
 
 let currentDetailKey = null;
@@ -6659,6 +6813,7 @@ function navBack() {
   fromScreen = navOrder.includes(target) ? target : 'home';
   setSbLeft(target);
   syncBnav(target);
+  setupHeaderScroll(); // home'a dönüşte scroll listener yeniden kur
 }
 
 
@@ -6666,6 +6821,50 @@ Object.defineProperty(window, 'prevScreen', {
   get() { return fromScreen; },
   set(v) { fromScreen = v; }
 });
+
+// ── HEADER SCROLL DAVRANIŞI ──────────────────────────────────────────
+// Rapor: "Scroll başladığında hafif border-bottom veya box-shadow belirir"
+// Home ekranının .scroll container'ına bağlanır; her navTo('home') çağrısında
+// yeniden kurulur (ekran değiştiğinde eski listener otomatik geçersiz kalır).
+
+let _scrollListenerEl = null; // aktif scroll container referansı
+
+function setupHeaderScroll() {
+  const sb = document.getElementById('sb-bar');
+  if (!sb) return;
+
+  // Önceki listener'ı temizle (memory leak önleme)
+  if (_scrollListenerEl) {
+    _scrollListenerEl.removeEventListener('scroll', _onHomeScroll);
+    _scrollListenerEl = null;
+  }
+
+  // Home ekranı aktif değilse kurma
+  if (currentScreen !== 'home') {
+    sb.classList.remove('scrolled');
+    return;
+  }
+
+  // Home'un .scroll container'ını bul
+  const homeEl = document.getElementById('home');
+  if (!homeEl) return;
+  const scroller = homeEl.querySelector('.scroll');
+  if (!scroller) return;
+
+  // İlk render: mevcut scroll pozisyonuna göre hemen uygula
+  sb.classList.toggle('scrolled', scroller.scrollTop > 0);
+
+  // Listener ekle
+  scroller.addEventListener('scroll', _onHomeScroll, { passive: true });
+  _scrollListenerEl = scroller;
+}
+
+function _onHomeScroll() {
+  // passive: true → preventDefault çağrılmaz, performans korunur
+  const sb = document.getElementById('sb-bar');
+  if (!sb) return;
+  sb.classList.toggle('scrolled', this.scrollTop > 0);
+}
 
 // ── HAVA 5 GÜNLÜK ──
 let fcOpen = true;
@@ -7293,6 +7492,8 @@ function updateGreeting() {
   if (nameEl && !nameEl.textContent) nameEl.textContent = 'Ahmet';
 }
 updateGreeting();
+// Sayfa ilk açıldığında home aktif — scroll listener'ı hemen kur
+setupHeaderScroll();
 
 function toggleOb(row) {
   const sw = row.querySelector('.toggle-sw');
@@ -10567,6 +10768,65 @@ function notifAc() {
   const dot = document.getElementById('sb-notif-dot');
   if (dot) dot.classList.remove('visible');
   // TODO: bildirim merkezi sheet'i aç
+}
+
+// ── AVATAR ACTION SHEET ──────────────────────────────────────────────────────
+// Rapor: "Avatar dokunulduğunda alt sheet: profil, ayarlar, destek, çıkış"
+
+function avatarSheetAc() {
+  const sheet = document.getElementById('avatar-sheet');
+  if (!sheet) return;
+
+  // Sheet içindeki profil bilgilerini güncelle
+  const isimEl  = document.getElementById('p-isim');
+  const konumEl = document.getElementById('p-konum');
+  const isim    = isimEl  ? isimEl.textContent  : 'Ahmet Bey';
+  const konum   = konumEl ? konumEl.textContent : 'Manisa';
+
+  const sheetIsim  = document.getElementById('ava-sheet-isim');
+  const sheetKonum = document.getElementById('ava-sheet-konum');
+  const sheetHarf  = document.getElementById('ava-sheet-harf');
+  if (sheetIsim)  sheetIsim.textContent  = isim;
+  if (sheetKonum) sheetKonum.textContent = konum;
+  if (sheetHarf)  sheetHarf.textContent  = isim.charAt(0).toUpperCase();
+
+  // Göster — flex ile align-items:flex-end çalışır
+  sheet.style.display = 'flex';
+  // Mikro gecikme: display:flex settle olduktan sonra opacity/transform animasyonu
+  requestAnimationFrame(() => {
+    const inner = sheet.querySelector('.op-sheet-inner');
+    if (inner) {
+      inner.style.transition = 'transform .28s cubic-bezier(.22,.68,0,1.05)';
+      inner.style.transform  = 'translateY(0)';
+    }
+  });
+}
+
+function avatarSheetKapat(e) {
+  // Sadece backdrop'a (dış alan) tıklayınca kapat — inner'a tıklayınca kapanmasın
+  const sheet = document.getElementById('avatar-sheet');
+  if (!sheet) return;
+  if (e && e.target !== sheet) return;
+  sheet.style.display = 'none';
+}
+
+function avatarSheetGit(hedef) {
+  // Sheet'i kapat, sonra hedefe git
+  const sheet = document.getElementById('avatar-sheet');
+  if (sheet) sheet.style.display = 'none';
+
+  if (hedef === 'profil') {
+    navTo('profil');
+  } else if (hedef === 'ayarlar') {
+    // TODO: ayarlar ekranı eklenince navTo('ayarlar')
+    navTo('profil'); // şimdilik profil'e yönlendir
+  } else if (hedef === 'destek') {
+    // TODO: destek sheet'i veya ekranı
+    navTo('profil');
+  } else if (hedef === 'cikis') {
+    // TODO: oturum kapatma mantığı — şimdilik onboarding'e dön
+    navTo('onboarding');
+  }
 }
 
 function openModal() {
