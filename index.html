@@ -7355,12 +7355,13 @@ function navTo(id) {
     animClass = (fromIdx === -1 || toIdx >= fromIdx) ? 'slide-in' : 'slide-left';
   }
 
-  // Geri butonu gösterilecek ekranlara geçerken gelinen ekranı kaydet
+  // Swipe-back için fromScreen yönetimi
   if (DETAIL_SCREENS.includes(id)) {
-    fromScreen = currentScreen;
+    fromScreen = currentScreen;           // detail → gelinen ekrana döner
+  } else if (['fields','kayitlarim','kasa'].includes(id)) {
+    fromScreen = 'home';                  // bu tablardan swipe → home
   } else {
-    // Tab/normal ekranlarda fromScreen'i sıfırla — navBack karışmasin
-    fromScreen = id;
+    fromScreen = id;                      // home'da swipe yok
   }
 
   screens.forEach(s => s.classList.remove('active','back','slide-in','slide-left','tab-enter'));
@@ -7419,15 +7420,295 @@ function navBack() {
   setSbLeft(target);
   syncBnav(target);
   setupHeaderScroll(); // home'a dönüşte scroll listener yeniden kur
-}
+}// ── Swipe-Back Gesture (v60) ─────────────────────────────────────────────────
+//
+//  iOS standartları:
+//  • Sol kenar 0-44px pan gesture
+//  • Parmak 1:1 senkronizasyon (zaman çizelgesi)
+//  • Parallax: bk -W*0.3 → 0
+//  • Dimming overlay: üst ekranda opacity azalır
+//  • Shadow: üst ekranın sol kenarı
+//  • Commit: dx>W*0.5 VEYA velocity>500px/s → ease-out tamamla
+//  • CSS transition override: swipe sırasında kapalı
+//  • Flash yok: bk hiç display:none olmadan gösterilir
+// ─────────────────────────────────────────────────────────────────────────────
+(function () {
+  'use strict';
 
+  // ── Sabitler ────────────────────────────────────────────────────────────────
+  var EDGE      = 44;    // px  sol kenar bölgesi
+  var LOCK_X    = 10;    // px  yatay lock eşiği
+  var COMMIT_R  = 0.50;  // %50 geçince commit
+  var VEL_FLICK = 500;   // px/s hız bazlı commit
+  var PAR       = 0.30;  // parallax oranı
 
-Object.defineProperty(window, 'prevScreen', {
-  get() { return fromScreen; },
-  set(v) { fromScreen = v; }
-});
+  var SHEETS = ['kayit-sheet','hava-sheet','op-sheet','kasa-sheet-overlay',
+    'kasa-sezon-sheet','kasa-yil-sheet','konum-picker-sheet','profil-edit-sheet',
+    'profil-gb-sheet','sezon-sheet','home-kayit-sheet','tarla-sil-sheet-overlay'];
 
-// swipe-back kaldırıldı
+  var g = null; // gesture state
+
+  // ── Overlay ve shadow elementleri — DOM'a bir kere eklenir ─────────────────
+  var overlay = document.createElement('div');
+  overlay.id  = 'sb-dim-overlay';
+  overlay.style.cssText = [
+    'position:absolute','inset:0','z-index:3',
+    'background:rgba(0,0,0,0.2)','pointer-events:none',
+    'display:none','will-change:opacity'
+  ].join(';');
+  document.querySelector('.phone, body').appendChild(overlay);
+
+  var shadow = document.createElement('div');
+  shadow.id  = 'sb-shadow';
+  shadow.style.cssText = [
+    'position:fixed','top:0','bottom:0','left:0','width:16px',
+    'z-index:4','pointer-events:none','display:none',
+    'background:linear-gradient(to right,rgba(0,0,0,0.18),transparent)',
+    'will-change:transform'
+  ].join(';');
+  document.querySelector('.phone, body').appendChild(shadow);
+
+  // ── Yardımcılar ─────────────────────────────────────────────────────────────
+  function getTarget() {
+    if (!fromScreen || fromScreen === currentScreen) return null;
+    return document.getElementById(fromScreen) ? fromScreen : null;
+  }
+
+  function isBlocked() {
+    if (currentScreen === 'home') return true;
+    for (var i = 0; i < SHEETS.length; i++) {
+      var el = document.getElementById(SHEETS[i]);
+      if (el && el.style.display !== 'none' && el.style.display !== '') return true;
+    }
+    return !!(document.querySelector('.fl-ctx-overlay') ||
+              document.querySelector('.fl-card.is-dragging'));
+  }
+
+  // CSS transition'ı kapat — inline style ile eziyoruz
+  function freezeEl(el) {
+    el.style.transition = 'none';
+    el.style.animation  = 'none';
+    el.offsetHeight; // reflow — browser flush
+  }
+
+  // CSS transition'ı geri aç — 1 rAF bekle ki mevcut frame tamamlansın
+  function thawEl(el) {
+    requestAnimationFrame(function() {
+      el.style.transition = '';
+      el.style.animation  = '';
+    });
+  }
+
+  // ── touchstart ──────────────────────────────────────────────────────────────
+  function onStart(e) {
+    if (g) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    var t = e.touches[0];
+    if (t.clientX > EDGE) return;
+    if (isBlocked()) return;
+    var target = getTarget();
+    if (!target) return;
+
+    var W   = window.innerWidth;
+    var cur = document.getElementById(currentScreen);
+    var bk  = document.getElementById(target);
+    if (!cur || !bk) return;
+
+    // bk'yi göster — CSS transition AÇIKKEN transform set et, sonra kapat
+    // Böylece browser bk'yi ilk olarak doğru konumda render eder
+    bk.style.display   = 'flex';   // görünür — ama transition henüz açık
+    bk.style.zIndex    = '1';
+    bk.offsetHeight;               // reflow — display:flex işlendi
+    freezeEl(bk);                  // şimdi transition kapat
+    bk.style.transform = 'translateX(' + (-W * PAR) + 'px)';
+
+    // cur: transition kapat, üste al
+    freezeEl(cur);
+    cur.style.zIndex    = '2';
+    cur.style.transform = 'translateX(0)';
+
+    // overlay: göster, başlangıç opacity'si tam (0.2)
+    overlay.style.display = 'block';
+    overlay.style.opacity = '0.2';
+
+    // shadow: göster
+    shadow.style.display = 'block';
+
+    g = {
+      target : target, W : W,
+      cur : cur, bk : bk,
+      x0 : t.clientX, y0 : t.clientY,
+      xPrev : t.clientX, tPrev : Date.now(),
+      dx : 0, vel : 0, locked : false, done : false
+    };
+  }
+
+  // ── touchmove ───────────────────────────────────────────────────────────────
+  function onMove(e) {
+    if (!g || g.done) return;
+    if (!e.touches || !e.touches[0]) return;
+    var t   = e.touches[0];
+    var dx  = t.clientX - g.x0;
+    var adx = Math.abs(dx);
+    var ady = Math.abs(t.clientY - g.y0);
+    var now = Date.now();
+    var dt  = now - g.tPrev || 1;
+
+    if (!g.locked && ady > adx && ady > 8) { doAbort(); return; }
+    if (dx < 0) { g.locked ? doCancel() : doAbort(); return; }
+    if (!g.locked && adx > LOCK_X) g.locked = true;
+    if (!g.locked) return;
+
+    e.preventDefault();
+
+    // Hız EMA
+    g.vel   = g.vel * 0.6 + ((t.clientX - g.xPrev) / dt * 1000) * 0.4;
+    g.xPrev = t.clientX;
+    g.tPrev = now;
+    g.dx    = dx;
+
+    var pct = dx / g.W; // 0 → 1
+
+    // Üst ekran: parmakla 1:1
+    g.cur.style.transform = 'translateX(' + dx + 'px)';
+
+    // Alt ekran: parallax
+    g.bk.style.transform = 'translateX(' + (-g.W * PAR * (1 - pct)) + 'px)';
+
+    // Overlay: ilerledikçe azal (0.2 → 0)
+    overlay.style.opacity = String((1 - pct) * 0.2);
+
+    // Shadow: cur ile birlikte kayar
+    shadow.style.transform = 'translateX(' + dx + 'px)';
+  }
+
+  // ── touchend ────────────────────────────────────────────────────────────────
+  function onEnd() {
+    if (!g || g.done) { g = null; return; }
+    if (!g.locked)    { doAbort(); return; }
+    g.done = true;
+    (g.dx >= g.W * COMMIT_R || g.vel >= VEL_FLICK) ? doCommit() : doCancel();
+  }
+
+  // ── Commit ──────────────────────────────────────────────────────────────────
+  function doCommit() {
+    var remaining = g.W - g.dx;
+    var speed     = Math.max(Math.abs(g.vel), 800);
+    var dur       = Math.max(150, Math.min(400, Math.round(remaining / speed * 1000)));
+    var ease      = 'cubic-bezier(0.25,0.46,0.45,0.94)'; // ease-out
+
+    var cur = g.cur, bk = g.bk, target = g.target, W = g.W;
+    g = null;
+
+    // Transition'ı manuel set et (freeze kaldırıldı, kendi transition'ımız)
+    cur.style.transition = 'transform ' + dur + 'ms ' + ease;
+    cur.style.transform  = 'translateX(' + W + 'px)';
+    bk.style.transition  = 'transform ' + dur + 'ms ' + ease;
+    bk.style.transform   = 'translateX(0)';
+    overlay.style.transition = 'opacity ' + dur + 'ms ' + ease;
+    overlay.style.opacity    = '0';
+    shadow.style.transition  = 'transform ' + dur + 'ms ' + ease;
+    shadow.style.transform   = 'translateX(' + W + 'px)';
+
+    setTimeout(function () {
+      // Temizle
+      overlay.style.cssText = overlay.style.cssText; // keep
+      overlay.style.display    = 'none';
+      overlay.style.transition = '';
+      overlay.style.opacity    = '0.2';
+      shadow.style.display     = 'none';
+      shadow.style.transition  = '';
+      shadow.style.transform   = '';
+
+      // bk: zaten translateX(0)'da ve display:flex — inline style temizle
+      // ÖNCE active ekle → display:flex garantili → SONRA inline'ları temizle
+      bk.classList.add('active');
+      bk.style.transition = '';
+      bk.style.transform  = '';
+      bk.style.zIndex     = '';
+      bk.style.display    = ''; // .active'den geliyor artık
+      thawEl(bk);
+
+      // cur: ekran dışında — class'larını kaldır (display:none olur)
+      cur.style.transition = '';
+      cur.style.transform  = '';
+      cur.style.zIndex     = '';
+      cur.classList.remove('active','back','slide-in','slide-left','tab-enter');
+      thawEl(cur);
+
+      // State
+      currentScreen = target;
+      fromScreen    = ['fields','kayitlarim','kasa'].includes(target) ? 'home' : target;
+      setSbLeft(target);
+      syncBnav(target);
+      setupHeaderScroll();
+    }, dur + 16); // +16ms ekstra buffer
+  }
+
+  // ── Cancel ──────────────────────────────────────────────────────────────────
+  function doCancel() {
+    if (!g) return;
+    var dur  = 380;
+    var ease = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+    var cur = g.cur, bk = g.bk, W = g.W;
+    g = null;
+
+    cur.style.transition = 'transform ' + dur + 'ms ' + ease;
+    cur.style.transform  = 'translateX(0)';
+    bk.style.transition  = 'transform ' + dur + 'ms ' + ease;
+    bk.style.transform   = 'translateX(' + (-W * PAR) + 'px)';
+    overlay.style.transition = 'opacity ' + dur + 'ms ' + ease;
+    overlay.style.opacity    = '0.2';
+    shadow.style.transition  = 'transform ' + dur + 'ms ' + ease;
+    shadow.style.transform   = 'translateX(0)';
+
+    setTimeout(function () {
+      overlay.style.display    = 'none';
+      overlay.style.transition = '';
+      shadow.style.display     = 'none';
+      shadow.style.transition  = '';
+      shadow.style.transform   = '';
+
+      bk.style.display    = 'none'; // gizle — .active yok
+      bk.style.transition = '';
+      bk.style.transform  = '';
+      bk.style.zIndex     = '';
+      thawEl(bk);
+
+      cur.style.transition = '';
+      cur.style.transform  = '';
+      cur.style.zIndex     = '';
+      thawEl(cur);
+    }, dur + 16);
+  }
+
+  // ── Abort (lock öncesi iptal) ────────────────────────────────────────────────
+  function doAbort() {
+    if (!g) return;
+    var cur = g.cur, bk = g.bk;
+    g = null;
+
+    overlay.style.display = 'none';
+    shadow.style.display  = 'none';
+
+    bk.style.display    = 'none';
+    bk.style.transform  = '';
+    bk.style.zIndex     = '';
+    thawEl(bk);
+
+    cur.style.transform = '';
+    cur.style.zIndex    = '';
+    thawEl(cur);
+  }
+
+  document.addEventListener('touchstart',  onStart, { passive: true  });
+  document.addEventListener('touchmove',   onMove,  { passive: false });
+  document.addEventListener('touchend',    onEnd,   { passive: true  });
+  document.addEventListener('touchcancel', function () {
+    if (g && g.locked) doCancel(); else doAbort();
+  }, { passive: true });
+
+}());
 
 // ── HEADER SCROLL DAVRANIŞI ──────────────────────────────────────────
 // ── LARGE TITLE → INLINE HEADER GEÇİŞİ ─────────────────────────────────────
