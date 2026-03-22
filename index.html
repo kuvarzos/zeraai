@@ -7607,20 +7607,20 @@ Object.defineProperty(window, 'prevScreen', {
     bk.style.transform   = 'translateX(0)';
 
     setTimeout(function () {
-      // Önce arka ekranı (hedef) doğru konuma getir — display:flex zaten var
-      var bkEl = document.getElementById(target);
+      // cur: animasyon bitti, artık ekran dışında — gizle
+      cur.style.transition = '';
+      cur.style.transform  = '';
+      cur.style.zIndex     = '';
+      cur.classList.remove('active','back','slide-in','slide-left','tab-enter','swipe-active');
+      // display:none → .active yok, CSS default
 
-      // Tüm ekranları class ve inline style'dan temizle
-      document.querySelectorAll('.screen').forEach(function (s) {
-        s.classList.remove('active','back','slide-in','slide-left','tab-enter','swipe-active');
-        s.style.transition = '';
-        s.style.transform  = '';
-        s.style.zIndex     = '';
-        // display'e DOKUNMA — .active class'ı yönetir
-      });
-
-      // Hedef ekranı aktif yap — CSS animasyon YOK, zaten yerine geldi
-      if (bkEl) bkEl.classList.add('active');
+      // bk: yerine oturdu — inline style temizle, .active ekle
+      bk.style.transition = '';
+      bk.style.transform  = '';
+      bk.style.zIndex     = '';
+      bk.style.display    = '';
+      bk.classList.remove('back','slide-in','slide-left','tab-enter','swipe-active');
+      bk.classList.add('active'); // display:flex — kesintisiz görünür
 
       // State güncelle
       currentScreen = target;
