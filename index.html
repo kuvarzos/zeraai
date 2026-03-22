@@ -368,6 +368,18 @@ body.app-ready { background: var(--bg); }
   letter-spacing: -0.5px;             /* Apple'ın büyük başlık letter-spacing'i */
 }
 
+/* ── Sekme Large Title — Tarlalarım / Kayıtlarım / Kasa scroll başı ───────
+   Home lt-greeting ile aynı fade mekanizması, sb-center-title ile eşleşir.  */
+.lt-tab-title {
+  padding: 10px 16px 16px;   /* sb-bar altına yakın, nefes bırak */
+  font-family: 'Inter', sans-serif;
+  font-size: 34px; font-weight: 700;
+  color: #1A1A1A;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  transition: opacity 0.15s ease;
+}
+
 /* ── Inline greeting (header'da) — Large Title'dan geçiş durumları ─────────
    Başlangıçta gizli (opacity:0), scroll ilerleyince görünür (opacity:1).
    transform ile hafif yukarı kayarak belirir — SF Pro animasyonu.            */
@@ -408,6 +420,18 @@ body.app-ready { background: var(--bg); }
 
 /* ── Sağ: bildirim zili ─────────────────────────────────────
    44×44px dokunma alanı, 20px görsel ikon (SVG)             */
+/* ── Header sağ ikon butonu (+ ekle) — v54b ────────────────
+   Rapor: navigation bar'da ikon, pill buton değil           */
+.sb-icon-btn {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  border-radius: 50%; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.sb-icon-btn:active { background: rgba(122,117,112,.12); }
+
 .sb-notif-btn {
   width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
@@ -683,6 +707,10 @@ body.app-ready { background: var(--bg); }
 }
 
 .scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:90px; }
+/* Kasa Large Title — teal hero üstünde beyaz metin */
+#lt-kasa { color: white; padding: 12px 20px 0; }
+/* Kasa ekranı dış wrapper — iç .kasa-scroll kendi scroll'unu yapıyor */
+.scroll-outer { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 .scroll::-webkit-scrollbar { display:none; }
 
 /* BOTTOM NAV */
@@ -734,8 +762,8 @@ body.app-ready { background: var(--bg); }
 .fab-lbl { font-size:10px; font-weight:700; color:var(--text3); letter-spacing:.15px; line-height:1; }
 
 /* SHARED */
-.page-hdr { padding:14px 20px 12px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-.page-title { font-family:'Fraunces',serif; font-size:24px; font-weight:600; color:var(--text); }
+.page-hdr { display:none; } /* v54: sb-bar tüm sekmelerde header görevi gördüğü için kaldırıldı */
+.page-title { display:none; } /* v54: kaldırıldı */
 .hdr-btn { background:var(--card); color:var(--green-mid); border:1.5px solid var(--border); border-radius:var(--r-pill); padding:7px 14px; font-family:'Inter', sans-serif; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .18s; box-shadow:var(--shadow); }
 .hdr-btn:hover { background:var(--green-lt); border-color:rgba(34,127,131,.3); }
 .hdr-btn:active { background:var(--bg2); transform:scale(.97); }
@@ -944,7 +972,7 @@ body.app-ready { background: var(--bg); }
 /* ═══════════════════════════════
    TARLALARIM LİSTESİ
 ═══════════════════════════════ */
-.field-list { padding:0 16px; display:flex; flex-direction:column; gap:10px; }
+.field-list { padding:10px 16px 0; display:flex; flex-direction:column; gap:10px; } /* v54: sb-bar altı boşluk */
 .fl-card {
   background:var(--card); border:1px solid var(--border);
   border-radius:var(--r-lg); overflow:hidden; cursor:pointer;
@@ -1754,7 +1782,7 @@ body.app-ready { background: var(--bg); }
 
 /* filtre bar */
 .filtre-bar {
-  padding: 0 16px 12px;
+  padding: 10px 16px 12px; /* v54: sb-bar altına boşluk */
   display: flex; gap: 7px;
   overflow-x: auto; flex-shrink: 0;
 }
@@ -3393,8 +3421,10 @@ body.app-ready { background: var(--bg); }
       <span class="sb-center-title" id="sb-center-title"></span>
     </div>
 
-    <!-- Sağ: bildirim zili — 44×44px dokunma alanı -->
-    <div class="sb-notif-btn" id="sb-notif-btn" onclick="notifAc()">
+    <!-- Sağ: opsiyonel aksiyon butonu (Tarla Ekle / Kayıt Gir) + bildirim zili -->
+    <div style="display:flex;align-items:center;gap:4px;">
+      <div id="sb-right-action" style="display:none;"></div>
+      <div class="sb-notif-btn" id="sb-notif-btn" onclick="notifAc()">
       <!-- Zil ikonu: C — Organik, 2px stroke, Apple HIG outline standardı
            viewBox 24×24 | görsel 24px | dokunma alanı 44px (wrapper)
            Anatomisi:
@@ -3420,6 +3450,7 @@ body.app-ready { background: var(--bg); }
       <!-- Okunmamış bildirim noktası — JS ile .visible eklenir -->
       <div class="sb-notif-dot" id="sb-notif-dot"></div>
     </div>
+    </div><!-- /sb-right wrapper -->
 
   </div>
   <!-- Onboarding progress bar — sadece ob-mode'da görünür -->
@@ -3675,11 +3706,9 @@ body.app-ready { background: var(--bg); }
 
   <!-- ═══════ TARLALARIM LİSTESİ ═══════ -->
   <div class="screen" id="fields">
-    <div class="page-hdr">
-      <div class="page-title">Tarlalarım</div>
-      <button class="hdr-btn" onclick="openSheet()"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="var(--green-mid)" stroke-width="2" stroke-linecap="round"/></svg>Tarla Ekle</button>
-    </div>
     <div class="scroll">
+      <!-- Large Title — scroll'da solar, sb-center "Tarlalarım" belirir -->
+      <div class="lt-tab-title" id="lt-fields">Tarlalarım</div>
       <div class="field-list">
 
         <!-- Buğday -->
@@ -4409,7 +4438,7 @@ body.app-ready { background: var(--bg); }
   <!-- ═══════ KASA ═══════ -->
   <div class="screen" id="kasa">
 
-    <!-- HERO -->
+    <!-- HERO — sabit, scroll edilmez -->
     <div class="kasa-hero">
       <div class="kasa-hero-ust">
         <div style="position:relative;z-index:1;">
@@ -4440,8 +4469,11 @@ body.app-ready { background: var(--bg); }
       </div>
     </div>
 
-    <div class="kasa-scroll">
-
+    <div class="kasa-scroll" id="kasa-inner-scroll">
+      <!-- Large Title — scroll'da solar -->
+      <div class="lt-tab-title" id="lt-kasa" style="padding:8px 20px 0;">Kasa</div>
+      <!-- Large Title — scroll'da solar -->
+      
       <!-- AYLIK GELİR/GİDER GRAFİĞİ -->
       <div class="sec" style="margin-top:16px;">
         <div class="sec-title">Aylık Özet</div>
@@ -4729,15 +4761,9 @@ body.app-ready { background: var(--bg); }
 
   <!-- ═══════ KAYITLARIM ═══════ -->
   <div class="screen" id="kayitlarim">
-    <div class="page-hdr" style="padding-bottom:8px;">
-      <div class="page-title">Kayıtlarım</div>
-      <button class="hdr-btn" onclick="openKayit()">
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="var(--green-mid)" stroke-width="2" stroke-linecap="round"/></svg>
-        Kayıt Gir
-      </button>
-    </div>
-
-    <!-- FİLTRE -->
+      <!-- Large Title — scroll edince solar -->
+      <div class="lt-tab-title" id="lt-kayitlarim">Kayıtlarım</div>
+    <!-- FİLTRE — sabit kalır -->
     <div class="filtre-bar">
       <div data-tip="tumu" class="filtre-chip active" onclick="filtreKayit(this,'tumu')">Tümü</div>
       <div data-tip="ilac" class="filtre-chip" onclick="filtreKayit(this,'ilac')"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M3.5 9.5c0-1.7 1.3-3 3-3s3 1.3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 6.5V4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4.5 5.5l2-2 2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> İlaçlama</div>
@@ -4776,6 +4802,7 @@ body.app-ready { background: var(--bg); }
       </div>
     </div>
 
+    <!-- /kasa-inner-scroll -->
   </div>
 
   <!-- ═══════ BİLDİRİMLER ═══════ -->
@@ -6961,6 +6988,15 @@ const TAB_TITLES = {
   kasa:        'Kasa',
 };
 
+// v54: Her sekme için sb-bar sağ taraf aksiyon butonu
+// null = buton yok (sadece zil)
+// v54b: pill buton yerine ikon butonu — rapor: navigation bar'da maksimum 2-3 ikon
+const TAB_RIGHT_ACTIONS = {
+  fields:     { onclick: 'openSheet()' },
+  kayitlarim: { onclick: 'openKayit()' },
+  kasa:       null,
+};
+
 // Ekran başlık haritası — DETAIL ekranları için de center başlık
 const SCREEN_TITLES = {
   fields:       'Tarlalarım',
@@ -6977,7 +7013,9 @@ function setSbLeft(screenId) {
   const centerTitle = document.getElementById('sb-center-title');
 
   if (DETAIL_SCREENS.includes(screenId)) {
-    // Detay / bildirimler ekranı: geri tuşu + varsa center başlık
+    // Detay ekranı: geri tuşu, sağ aksiyon gizli
+    const rightActionDetail = document.getElementById('sb-right-action');
+    if (rightActionDetail) { rightActionDetail.style.display = 'none'; rightActionDetail.innerHTML = ''; }
     el.innerHTML = `<button class="sb-back-btn" onclick="navBack()">${BACK_ICON}</button>`;
     if (centerEl && centerTitle && SCREEN_TITLES[screenId]) {
       centerTitle.textContent = SCREEN_TITLES[screenId];
@@ -6987,26 +7025,38 @@ function setSbLeft(screenId) {
     }
 
   } else if (TAB_SCREENS.includes(screenId)) {
-    // v54: Sekme ekranı — avatar + selamlama kalsın, center'da başlık GÖSTERİLMESİN
-    // (rapor: sekme adı zaten alt nav'da görünüyor, center'da tekrar etmeye gerek yok)
-    if (!document.getElementById('sb-avatar-wrap')) {
-      const isim = document.getElementById('sb-greeting-name')?.textContent || 'Ahmet';
-      const harf = isim.charAt(0).toUpperCase();
-      el.innerHTML = `
-        <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="avatarSheetAc()">
-          <div class="app-avatar" id="sb-avatar">${harf}</div>
-        </div>
-        <div class="sb-greeting" id="sb-greeting">
-          <span class="sb-greeting-sub" id="sb-greeting-sub">günaydın,</span>
-          <span class="sb-greeting-name" id="sb-greeting-name">${isim}</span>
-        </div>`;
-      updateGreeting();
+    // v54b: Rapor standardı — sol: geri butonu, orta: sayfa başlığı, sağ: aksiyon + zil
+    el.innerHTML = `<button class="sb-back-btn sb-back-tab" onclick="navTo('home')">${BACK_ICON}</button>`;
+
+    // Center'da sayfa başlığı göster
+    if (centerEl && centerTitle) {
+      centerTitle.textContent = SCREEN_TITLES[screenId] || '';
+      centerEl.style.display = 'flex';
     }
-    if (centerEl) centerEl.style.display = 'none';
+
+    // Sağ aksiyon butonunu güncelle (Tarla Ekle / Kayıt Gir / boş)
+    const rightAction = document.getElementById('sb-right-action');
+    if (rightAction) {
+      const actionDef = TAB_RIGHT_ACTIONS[screenId];
+      if (actionDef) {
+        // v54b: Rapor standardı — header'da metin+pill değil, ikon butonu
+        rightAction.innerHTML = `<button class="sb-icon-btn" onclick="${actionDef.onclick}" title="Ekle">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 3v12M3 9h12" stroke="var(--green-mid)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>`;
+        rightAction.style.display = '';
+      } else {
+        rightAction.style.display = 'none';
+        rightAction.innerHTML = '';
+      }
+    }
 
   } else {
-    // Home ekranı: avatar + selamlama, center gizli
+    // Home ekranı: avatar + selamlama, center gizli, sağ aksiyon gizli
     if (centerEl) centerEl.style.display = 'none';
+    const rightActionHome = document.getElementById('sb-right-action');
+    if (rightActionHome) { rightActionHome.style.display = 'none'; rightActionHome.innerHTML = ''; }
     // Eğer avatar-wrap yoksa yeniden oluştur
     if (!document.getElementById('sb-avatar-wrap')) {
       const isim = document.getElementById('sb-greeting-name')?.textContent || 'Ahmet';
@@ -7245,34 +7295,47 @@ function setupHeaderScroll() {
   sb.style.transform = '';
   sb.classList.remove('scrolled');
 
-  // v54: sb-greeting artık her zaman görünür — sadece lt-greeting solar
-  // Large Title'ı göster
-  const ltEl = document.getElementById('lt-greeting');
-  if (ltEl) ltEl.style.opacity = '1';
+  // Tüm lt-tab-title'ları sıfırla — önceki ekrandan kalıntı olmasın
+  ['lt-greeting','lt-fields','lt-kayitlarim','lt-kasa'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '1';
+  });
 
-  // Sadece home ekranında aktif
-  if (currentScreen !== 'home') return;
+  // Home + sekme ekranlarında Large Title scroll aktif
+  const ltIdMap = { home: 'lt-greeting', fields: 'lt-fields', kayitlarim: 'lt-kayitlarim', kasa: 'lt-kasa' };
+  const scrollIdMap = { home: null, fields: null, kayitlarim: 'kayit-liste-scroll', kasa: 'kasa-inner-scroll' };
 
-  const homeEl = document.getElementById('home');
-  if (!homeEl) return;
-  const scroller = homeEl.querySelector('.scroll');
+  if (!ltIdMap[currentScreen]) return; // diğer ekranlar için scroll efekti yok
+
+  const screenEl = document.getElementById(currentScreen);
+  if (!screenEl) return;
+
+  // scrollIdMap'te özel ID varsa onu kullan, yoksa .scroll ile bul
+  let scroller;
+  if (scrollIdMap[currentScreen]) {
+    scroller = document.getElementById(scrollIdMap[currentScreen]);
+  } else {
+    scroller = screenEl.querySelector('.scroll');
+  }
   if (!scroller) return;
 
-  // İlk render: mevcut scroll pozisyonuna göre hemen uygula
-  _applyLargeTitleState(scroller, sb);
+  // İlk render
+  _applyLargeTitleState(scroller, sb, ltIdMap[currentScreen]);
 
   scroller.addEventListener('scroll', _onLargeTitleScroll, { passive: true });
   _scrollListenerEl = scroller;
+  _scrollListenerEl._ltId = ltIdMap[currentScreen]; // hangi lt elementi kullanılacak
 }
 
 function _onLargeTitleScroll() {
   const sb = document.getElementById('sb-bar');
   if (!sb) return;
-  _applyLargeTitleState(this, sb);
+  _applyLargeTitleState(this, sb, this._ltId || 'lt-greeting');
 }
 
-function _applyLargeTitleState(scroller, sb) {
-  const ltEl = document.getElementById('lt-greeting');
+function _applyLargeTitleState(scroller, sb, ltId) {
+  ltId = ltId || 'lt-greeting';
+  const ltEl = document.getElementById(ltId);
   if (!ltEl) return;
 
   const st       = scroller.scrollTop;
