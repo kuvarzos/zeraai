@@ -397,55 +397,6 @@ body.app-ready { background: var(--bg); }
 }
 .sb-notif-dot.visible { display: block; }
 
-/* ── iOS Status Bar simülasyonu ─────────────────────────────────────────────
-   59px yüksekliğin içinde: saat (sol) + sinyal/wifi/batarya (sağ)
-   Gerçek iOS'ta sistem tarafından çizilir; demo'da manuel simüle ediyoruz    */
-.sb-status-bar {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 44px; /* dinamik ada üstü boşluk dahil */
-  padding: 14px 20px 0;
-  display: flex; align-items: center; justify-content: space-between;
-  pointer-events: none; /* dokunma olaylarını geçirme */
-  color: #1A1A1A;
-  box-sizing: border-box;
-}
-.sb-status-time {
-  font-family: 'Inter', sans-serif;
-  font-size: 15px; font-weight: 600;
-  letter-spacing: -0.3px;
-  color: #1A1A1A;
-}
-.sb-status-right {
-  display: flex; align-items: center; gap: 6px;
-  color: #1A1A1A;
-}
-/* Batarya ikonu */
-.sb-battery {
-  position: relative;
-  width: 25px; height: 12px;
-  border: 1.5px solid #1A1A1A;
-  border-radius: 3px;
-  display: flex; align-items: center;
-  padding: 1.5px;
-}
-.sb-battery::after {
-  /* batarya ucu */
-  content: '';
-  position: absolute; right: -5px; top: 50%;
-  transform: translateY(-50%);
-  width: 3px; height: 6px;
-  background: #1A1A1A;
-  border-radius: 0 1.5px 1.5px 0;
-  opacity: 0.4;
-}
-.sb-battery-fill {
-  width: 75%; height: 100%;
-  background: #1A1A1A;
-  border-radius: 1px;
-}
-.sb-battery-tip { display: none; } /* ::after ile çiziyoruz */
-
  (Tarlalarım / Kasa / Kayıtlarım) ──────────────
    position:absolute ile tam ortalanır — sol/sağ elementlerden bağımsız.
    pointer-events:none → tıklama sol/sağ butonlara geçer                     */
@@ -3350,32 +3301,6 @@ body.app-ready { background: var(--bg); }
        Sağ: bildirim zili (24px ikon, 44px dokunma alanı)
   ────────────────────────────────────────────────────────────── -->
   <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;">
-
-    <!-- iOS Status Bar simülasyonu: 59px alan, saat + sağ ikonlar -->
-    <div class="sb-status-bar" id="sb-status-bar">
-      <span class="sb-status-time" id="sb-status-time">9:41</span>
-      <div class="sb-status-right">
-        <!-- Sinyal -->
-        <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
-          <rect x="0"  y="7" width="3" height="5" rx="0.5" fill="currentColor" opacity=".35"/>
-          <rect x="4.5" y="5" width="3" height="7" rx="0.5" fill="currentColor" opacity=".55"/>
-          <rect x="9"  y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity=".75"/>
-          <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor"/>
-        </svg>
-        <!-- WiFi -->
-        <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-          <path d="M8 9.5 L8 9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M5.2 6.8 C6.2 5.8 9.8 5.8 10.8 6.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-          <path d="M2.5 4.2 C4.5 2.2 11.5 2.2 13.5 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-          <path d="M0 1.5 C2.8 -0.5 13.2 -0.5 16 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".5"/>
-        </svg>
-        <!-- Batarya -->
-        <div class="sb-battery">
-          <div class="sb-battery-fill"></div>
-          <div class="sb-battery-tip"></div>
-        </div>
-      </div>
-    </div>
 
     <!-- Sol: avatar + selamlama (home'da) veya geri butonu (iç ekranlarda) -->
     <div class="sb-left" id="sb-left">
@@ -7687,28 +7612,6 @@ function updateGreeting() {
   const nameEl = document.getElementById('sb-greeting-name');
   if (nameEl && !nameEl.textContent) nameEl.textContent = 'Ahmet';
 }
-
-// ── STATUS BAR SAAT ──────────────────────────────────────────────────────────
-// Gerçek saati HH:MM formatında status bar'a yazar, her dakika günceller
-function updateStatusTime() {
-  const el = document.getElementById('sb-status-time');
-  if (!el) return;
-  const now  = new Date();
-  const h    = now.getHours();
-  const m    = now.getMinutes().toString().padStart(2, '0');
-  el.textContent = h + ':' + m;
-}
-updateStatusTime();
-// Her dakikanın başında tam olarak çalış (drift önleme)
-(function scheduleStatusTime() {
-  const now  = new Date();
-  const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-  setTimeout(() => {
-    updateStatusTime();
-    setInterval(updateStatusTime, 60000);
-  }, msToNextMinute);
-})();
-
 
 // Sayfa ilk açıldığında home aktif — scroll listener'ı hemen kur
 setupHeaderScroll();
