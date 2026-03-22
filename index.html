@@ -7607,19 +7607,23 @@ Object.defineProperty(window, 'prevScreen', {
     bk.style.transform   = 'translateX(0)';
 
     setTimeout(function () {
-      // Tüm ekranları sıfırla
+      // Önce arka ekranı (hedef) doğru konuma getir — display:flex zaten var
+      var bkEl = document.getElementById(target);
+
+      // Tüm ekranları class ve inline style'dan temizle
       document.querySelectorAll('.screen').forEach(function (s) {
         s.classList.remove('active','back','slide-in','slide-left','tab-enter','swipe-active');
-        s.removeAttribute('style');
+        s.style.transition = '';
+        s.style.transform  = '';
+        s.style.zIndex     = '';
+        // display'e DOKUNMA — .active class'ı yönetir
       });
 
-      // Hedef ekranı aktif yap — CSS animasyon YOK
-      var bkEl = document.getElementById(target);
+      // Hedef ekranı aktif yap — CSS animasyon YOK, zaten yerine geldi
       if (bkEl) bkEl.classList.add('active');
 
       // State güncelle
       currentScreen = target;
-      // fromScreen: hedef bir tab ise, bir sonraki swipe için home'u göster
       fromScreen = (target === 'home' || target === 'fields') ? 'home' : target;
 
       setSbLeft(target);
@@ -7644,9 +7648,15 @@ Object.defineProperty(window, 'prevScreen', {
     bk.style.transform   = 'translateX(' + (-W * PAR) + 'px)';
 
     setTimeout(function () {
-      bk.removeAttribute('style');
-      bk.style.display = ''; // gizle
-      cur.removeAttribute('style');
+      // Arka ekranı gizle — inline style temizle, display:none CSS'e bırak
+      bk.style.transition = '';
+      bk.style.transform  = '';
+      bk.style.zIndex     = '';
+      bk.style.display    = 'none'; // açıkça gizle — .active yok, CSS display:none
+      // Ön ekranın inline style'ını temizle
+      cur.style.transition = '';
+      cur.style.transform  = '';
+      cur.style.zIndex     = '';
     }, dur);
   }
 
@@ -7656,10 +7666,14 @@ Object.defineProperty(window, 'prevScreen', {
     var cur = g.cur, bk = g.bk;
     g = null;
     cur.classList.remove('swipe-active');
-    cur.removeAttribute('style');
+    cur.style.transition = '';
+    cur.style.transform  = '';
+    cur.style.zIndex     = '';
     bk.classList.remove('swipe-active');
-    bk.removeAttribute('style');
-    bk.style.display = '';
+    bk.style.transition  = '';
+    bk.style.transform   = '';
+    bk.style.zIndex      = '';
+    bk.style.display     = 'none'; // gizle
   }
 
   document.addEventListener('touchstart',  onStart, { passive: true  });
