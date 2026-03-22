@@ -198,12 +198,16 @@
   --text:      #2C2A25;   /* Sıcak siyah */
   --text2:     #6B6560;
   --text3:     #9A9088;
-  --red:       #C0574A;
+  --red:       #A84035;   /* Kırmızı — 6.1:1 white, 5.3:1 red-lt WCAG AA ✓ (v51) */
   --red-lt:    #FCECEA;
-  --gold:      #D4A017;
+  --gold:      #D4A017;   /* Dekoratif — border/ikon dolgusu. METIN İÇİN KULLANMA */
   --gold-lt:   #FDF6E3;
+  --gold-text: #9A4E07;   /* Uyarı metin rengi — 5.0:1 krem, 5.6:1 gold-lt WCAG AA ✓ */
   --sky:       #4F7942;
   --sky-lt:    #EDF4EB;
+  --sky-drop:  #93C5FD;   /* Yağmur damlası ikonu — mavi damla çizgileri */
+  --frost:     #3D6A8A;   /* Don riski — WCAG AA 5.2:1 frost-lt üzerinde (v51) */
+  --frost-lt:  #EBF3FA;   /* Don arka plan — açık buz tonu */
   --shadow:    0 2px 10px rgba(40,36,28,0.07);
   --shadow-md: 0 4px 18px rgba(40,36,28,0.10);
   --r:         14px;
@@ -296,9 +300,9 @@ body.app-ready { background: var(--bg); }
   padding: 0 16px;
   display: flex; justify-content: space-between; align-items: center;
   flex-shrink: 0;
-  /* 59px status area + 44px nav bar = 103px toplam */
-  height: 103px;
-  padding-top: 59px; /* status bar alanı */
+  /* v54: prototip içinde gerçek status bar yok — kompakt header */
+  height: 58px;
+  padding-top: 0;
   background: var(--bg);
   border-bottom: 1px solid transparent;
   position: relative; z-index: 30;
@@ -346,7 +350,7 @@ body.app-ready { background: var(--bg); }
    Apple HIG: Large Title 34pt Bold, status bar + nav bar'ın hemen altında.
    Scroll ilerledikçe bu alan header altına geçer → inline greeting görünür. */
 .lt-greeting {
-  padding: 8px 16px 18px;      /* üst: nav bar altına hizala, alt: içerikten nefes */
+  padding: 10px 16px 16px;     /* v54: header 58px kompakt, lt daha yakın */
   display: flex; flex-direction: column;
   gap: 2px;
 }
@@ -370,17 +374,13 @@ body.app-ready { background: var(--bg); }
 .sb-greeting {
   display: flex; flex-direction: column;
   justify-content: center; min-width: 0;
-  /* Geçiş: Large Title kaybolunca belirir */
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  pointer-events: none; /* gizliyken tıklamayı engelleme */
-}
-.sb-greeting.visible {
+  /* v54: Large Title'dan bağımsız — her zaman görünür */
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
 }
+/* v54: sb-greeting her zaman görünür — .visible sınıfı kaldırıldı */
+.sb-greeting.visible { opacity: 1; }
 
 .sb-greeting-sub {
   font-family: 'Inter', sans-serif;
@@ -434,9 +434,9 @@ body.app-ready { background: var(--bg); }
    pointer-events:none → tıklama sol/sağ butonlara geçer                     */
 .sb-center {
   position: absolute;
-  /* Sadece nav bar satırında ortalansın: padding-top(59px) sonrası 44px alan */
+  /* v54: header 58px, center tam ortalansın */
   left: 0; right: 0;
-  top: 59px; height: 44px;
+  top: 0; height: 58px;
   display: flex; align-items: center; justify-content: center;
   pointer-events: none;
 }
@@ -536,9 +536,9 @@ body.app-ready { background: var(--bg); }
   display: none; flex-direction: column;
   position: absolute; inset: 0;
   background: var(--bg);
-  padding-top: 103px; /* yeni header: 59px status + 44px nav = 103px */
+  padding-top: 58px; /* v54: kompakt header 58px */
   will-change: transform, opacity;
-  transform-origin: 50% 34px;
+  transform-origin: 50% 29px; /* v54: header 58px, orta = 29px */
   transition: transform .32s cubic-bezier(.22,.68,0,1.05),
               border-radius .32s cubic-bezier(.22,.68,0,1.05);
 }
@@ -702,7 +702,7 @@ body.app-ready { background: var(--bg); }
   min-width:0;
 }
 .bnav-item:active { transform:scale(.84); }
-.bnav-item.active { color:var(--green); }
+.bnav-item.active { color:var(--green-mid); } /* v51: green→green-mid 5.7:1 */
 .bnav-item svg { flex-shrink:0; }
 .bnav-lbl { font-size:10px; font-weight:700; letter-spacing:.15px; line-height:1; white-space:nowrap; }
 
@@ -741,9 +741,9 @@ body.app-ready { background: var(--bg); }
 .hdr-btn:active { background:var(--bg2); transform:scale(.97); }
 .back-btn { background:none; border:none; cursor:pointer; display:flex; align-items:center; padding:2px; transition:opacity .15s; }
 .back-btn:active { opacity:.6; }
-.sec { padding:0 18px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
-.sec-title { font-family:'Fraunces',serif; font-size:15px; font-weight:500; color:var(--text); }
-.sec-link  { font-size:12px; font-weight:600; color:var(--green); cursor:pointer; }
+.sec { padding:0 18px; margin-bottom:8px; /* v53: section başlık-içerik boşluğu */ display:flex; justify-content:space-between; align-items:center; }
+.sec-title { font-family:'Fraunces',serif; font-size:15px; font-weight:600; color:var(--text); } /* v53: 500→600 */
+.sec-link  { font-size:12px; font-weight:600; color:var(--green-mid); /* v51 */ cursor:pointer; }
 .divider   { height:1px; background:var(--border); margin:2px 18px 14px; opacity:.45; }
 .pulse { width:5px; height:5px; border-radius:50%; flex-shrink:0; animation:pa 2s cubic-bezier(.4,0,.6,1) infinite; }
 @keyframes pa { 0%,100%{opacity:1;transform:scale(1)} 45%{opacity:.25;transform:scale(.8)} 50%{opacity:.25;transform:scale(.8)} }
@@ -757,7 +757,7 @@ body.app-ready { background: var(--bg); }
 .avatar { width:36px; height:36px; background:var(--green-lt); border:1.5px solid var(--green); border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:14px; font-weight:500; color:var(--green-mid); margin-left:10px; flex-shrink:0; }
 
 /* hava bandı */
-.wb { margin:10px 16px 0; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:10px 13px; cursor:pointer; box-shadow:var(--shadow); transition:background .15s; }
+.wb { margin:6px 16px 0; /* v53: greeting ile wb arası */ background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:10px 13px; cursor:pointer; box-shadow:var(--shadow); transition:background .15s; }
 .wb:active { background:var(--bg2); }
 .wb-main { display:flex; align-items:center; justify-content:space-between; gap:6px; }
 .wb-left { display:flex; align-items:center; gap:8px; }
@@ -765,12 +765,12 @@ body.app-ready { background: var(--bg); }
 .wb-desc { font-size:10px; color:var(--text2); font-weight:500; margin-top:1px; }
 .wb-stats { display:flex; align-items:center; gap:8px; flex:1; justify-content:center; }
 .wb-stat { display:flex; align-items:center; gap:3px; font-size:11px; font-weight:600; color:var(--text2); }
-.wb-stat.wok  { color:var(--green); }
-.wb-stat.wwarn{ color:var(--gold); }
+.wb-stat.wok  { color:var(--green-mid); } /* v51 */
+.wb-stat.wwarn{ color:var(--gold-text); } /* v51: 5.0:1 */
 .wb-stat.wbad { color:var(--red); }
 .wb-badge { display:flex; align-items:center; gap:4px; border-radius:var(--r-pill); padding:4px 9px; font-size:10px; font-weight:700; flex-shrink:0; }
 .wb-badge.ok   { background:var(--green-lt); color:var(--green-mid); }
-.wb-badge.warn { background:var(--gold-lt); color:var(--gold); }
+.wb-badge.warn { background:var(--gold-lt); color:var(--gold-text); } /* v51: 5.6:1 */
 .wb-badge.bad  { background:var(--red-lt);   color:var(--red); }
 .wb-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
 .wb-dot.ok  { background:var(--green); }
@@ -783,26 +783,67 @@ body.app-ready { background: var(--bg); }
 .fc-row { display:flex; justify-content:space-between; }
 .fc-day { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
 .fc-lbl { font-size:9px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; }
-.fc-lbl.today { color:var(--green); }
+.fc-lbl.today { color:var(--green-mid); } /* v51 */
 .fc-ico { width:20px; height:20px; }
 .fc-t { font-size:13px; font-weight:500; color:var(--text); font-family:var(--num); }
 .fc-t span { font-size:10px; color:var(--text3); font-family:'Inter', sans-serif; font-weight:500; }
 .fc-pill { font-size:9px; font-weight:700; padding:2px 5px; border-radius:4px; }
 .fc-pill.ok   { background:var(--green-lt); color:var(--green-mid); }
 .fc-pill.rain { background:var(--sky-lt);   color:var(--sky); }
-.fc-pill.warn { background:var(--gold-lt); color:var(--gold); }
+.fc-pill.warn { background:var(--gold-lt); color:var(--gold-text); } /* v51: 5.6:1 */
 
 /* kritik bant */
-.alert { margin:8px 16px 0; border-radius:var(--r); padding:10px 13px; display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:var(--shadow); border:1px solid transparent; transition:opacity .15s, transform .18s cubic-bezier(.34,1.56,.64,1); }
+.alert { margin:8px 16px 0; border-radius:var(--r); padding:10px 13px; display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:var(--shadow); border:1px solid transparent; transition:opacity .15s, transform .18s cubic-bezier(.34,1.56,.64,1); flex-wrap:wrap; }
 .alert:active { opacity:.85; transform:scale(.985); }
 .alert.rain   { background:var(--sky-lt);   border-color:rgba(34,127,131,.15); }
 .alert.warn   { background:var(--gold-lt); border-color:rgba(200,133,26,.15); }
 .alert.good   { background:var(--green-lt); border-color:rgba(34,127,131,.15); }
 .alert.danger { background:var(--red-lt);   border-color:rgba(192,87,74,.15); }
+.alert.frost  { background:var(--frost-lt); border-color:rgba(91,127,166,.15); } /* Don riski bandı */
 .alert-ic { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.alert-title { font-size:12px; font-weight:700; color:var(--text); margin-bottom:2px; }
-.alert-sub   { font-size:11px; font-weight:500; color:var(--text2); }
-.alert-arr   { font-size:13px; color:var(--text3); flex-shrink:0; }
+.alert-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px; } /* v53 */
+.alert-sub   { font-size:11px; font-weight:500; color:var(--text2); line-height:1.45; } /* v53 */
+/* Ok ikonu — expand durumuna göre döner */
+.alert-arr {
+  font-size:13px; color:var(--text3); flex-shrink:0;
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+}
+.alert.expanded .alert-arr { transform: rotate(90deg); }
+
+/* ── Kritik bant genişleme paneli ───────────────────────────────
+   Tıklayınca açılır, 3 satır detay bilgisi gösterir.
+   max-height animasyonu ile smooth açılır/kapanır.            */
+.alert-expand {
+  width: 100%;                          /* flex-wrap sayesinde alt satıra geçer */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .32s cubic-bezier(.4,0,.2,1),
+              opacity .25s ease,
+              padding .25s ease;
+  opacity: 0;
+  padding-top: 0;
+}
+.alert.expanded .alert-expand {
+  max-height: 120px;
+  opacity: 1;
+  padding-top: 8px;
+}
+/* Panel içi bölücü çizgi */
+.alert-expand-divider {
+  height: 1px;
+  background: currentColor;
+  opacity: .1;
+  margin-bottom: 8px;
+}
+/* Her detay satırı: ikon + metin */
+.alert-expand-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+.alert-expand-row:last-child { margin-bottom: 0; }
 
 /* ── Empty State — tarla yokken davet kartı ─────────────────── */
 .hfc-empty {
@@ -865,13 +906,13 @@ body.app-ready { background: var(--bg); }
 /* ─────────────────────────────────────────────────────────────── */
 
 /* ana sayfa tarla kartı */
-.home-fields { margin:0 16px 14px; display:flex; flex-direction:column; gap:8px; }
+.home-fields { margin:0 16px 12px; /* v53: */ display:flex; flex-direction:column; gap:8px; }
 .hfc { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:12px 13px; display:flex; align-items:center; gap:11px; cursor:pointer; box-shadow:var(--shadow); transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s; position:relative; overflow:hidden; }
 .hfc:active { transform:scale(.97); box-shadow:none; }
 .hfc::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:3px 0 0 3px; }
 .hfc-thumb { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .hfc-body { flex:1; min-width:0; }
-.hfc-name { font-family:'Fraunces',serif; font-size:14px; font-weight:500; color:var(--text); margin-bottom:2px; }
+.hfc-name { font-family:'Fraunces',serif; font-size:14px; font-weight:600; color:var(--text); margin-bottom:2px; } /* v53 */
 .hfc-meta { font-size:11px; color:var(--text2); font-weight:500; margin-bottom:5px; }
 .prog-row { display:flex; align-items:center; gap:6px; }
 .prog { flex:1; height:3px; background:var(--border); border-radius:3px; overflow:hidden; }
@@ -881,20 +922,20 @@ body.app-ready { background: var(--bg); }
 .fc-badge.drug  { background:var(--gold-lt); border-color:rgba(200,133,26,.15); }
 .fc-badge.ready { background:#FEF9EC; border-color:rgba(180,83,9,.15); }
 .fc-badge-txt { font-size:10px; font-weight:700; }
-.fc-badge.drug  .fc-badge-txt { color:var(--gold); }
+.fc-badge.drug  .fc-badge-txt { color:var(--gold-text); } /* v51: 5.0:1 */
 .fc-badge.ready .fc-badge-txt { color:#B45309; }
 .hfc-right { text-align:right; flex-shrink:0; }
 .hfc-cost-lbl { font-size:10px; color:var(--text3); font-weight:600; margin-bottom:2px; text-transform:uppercase; letter-spacing:.3px; }
 .hfc-cost-val { font-family:var(--num); font-size:13px; font-weight:400; color:var(--text); }
 
 /* son işlemler */
-.recents { margin:0 16px 16px; display:flex; flex-direction:column; gap:7px; }
+.recents { margin:0 16px 20px; /* v53: alt biraz daha nefes */ display:flex; flex-direction:column; gap:7px; }
 .ri { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:10px 12px; display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:var(--shadow); transition:transform .18s cubic-bezier(.34,1.56,.64,1); }
 .ri:active { transform:scale(.982); }
 .ri-ic { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .ri-body { flex:1; min-width:0; }
-.ri-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ri-sub   { font-size:11px; color:var(--text2); font-weight:500; }
+.ri-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3; } /* v53 */
+.ri-sub   { font-size:11px; color:var(--text2); font-weight:500; line-height:1.4; } /* v53 */
 .ri-right { text-align:right; flex-shrink:0; }
 .ri-cost  { font-size:13px; font-weight:500; color:var(--text); font-family:var(--num); }
 .ri-cost.pos { color:var(--green-mid); }
@@ -1160,14 +1201,14 @@ body.app-ready { background: var(--bg); }
 .stage-line { flex:1; height:2px; background:var(--border); border-radius:2px; margin:0 4px; margin-bottom:20px; }
 .stage-line.done { background:var(--green); }
 .stage-lbl { font-size:8px; font-weight:700; color:var(--text3); text-align:center; line-height:1.3; white-space:nowrap; }
-.stage-lbl.act { color:var(--green); }
+.stage-lbl.act { color:var(--green-mid); } /* v51 */
 
 /* STAT ROW */
 .detail-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border-bottom:1px solid var(--border); flex-shrink:0; }
 .detail-stat { background:var(--card); padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
 .ds-lbl { font-size:9px; color:var(--text3); font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
 .ds-val { font-family:var(--num); font-size:13px; font-weight:400; color:var(--text); }
-.ds-val.gold { color:var(--gold); }
+.ds-val.gold { color:var(--gold-text); } /* v51: white:4.2:1 */
 
 .detail-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 0 90px; }
 .detail-scroll::-webkit-scrollbar { display:none; }
@@ -1539,7 +1580,7 @@ body.app-ready { background: var(--bg); }
 }
 .satin-btn.sel { border-color: var(--gold); background: var(--gold-lt); }
 .satin-lbl { font-size: 10px; font-weight: 700; color: var(--text2); }
-.satin-btn.sel .satin-lbl { color: var(--gold); }
+.satin-btn.sel .satin-lbl { color: var(--gold-text); } /* v51: 5.6:1 gold-lt */
 
 /* divider */
 .form-divider {
@@ -2303,8 +2344,8 @@ body.app-ready { background: var(--bg); }
   border-bottom: 1px solid var(--border);
 }
 .bny-baslik {
-  font-size: 12px; font-weight: 700; color: var(--text2);
-  text-transform: uppercase; letter-spacing: .5px;
+  font-size: 12px; font-weight: 700; color: var(--text2); /* v53: uppercase kaldırıldı — daha doğal */
+  letter-spacing: .1px;
 }
 .bny-arr { font-size: 14px; color: var(--text3); }
 .bny-grid {
@@ -2440,7 +2481,7 @@ body.app-ready { background: var(--bg); }
 .cift-sel-vals { display: flex; gap: 12px; }
 .cift-sel-val { font-size: 12px; font-weight: 600; }
 .cift-sel-val.g { color: var(--green-mid); }
-.cift-sel-val.e { color: var(--gold); }
+.cift-sel-val.e { color: var(--gold-text); } /* v51: 5.0:1 krem */
 
 
 /* ═══════════════════════════════
@@ -3420,36 +3461,45 @@ body.app-ready { background: var(--bg); }
           <div class="fc-row">
             <div class="fc-day"><div class="fc-lbl today">Bugün</div><svg class="fc-ico" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" fill="#FCD34D"/><g stroke="#FDE68A" stroke-width="1.3" stroke-linecap="round" opacity=".6"><line x1="10" y1="2" x2="10" y2="4"/><line x1="10" y1="16" x2="10" y2="18"/><line x1="2" y1="10" x2="4" y2="10"/><line x1="16" y1="10" x2="18" y2="10"/></g></svg><div class="fc-t">23°</div><div class="fc-pill ok">Müsait</div></div>
             <div class="fc-day"><div class="fc-lbl">Sal</div><svg class="fc-ico" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="7" r="3.5" fill="#FCD34D" opacity=".7"/><path d="M3 14.5c-1.5 0-2.8-1.2-2.8-2.8S1.5 9 3 9c.16 0 .32.01.47.04A3.8 3.8 0 017 5.5a3.8 3.8 0 013.8 3.8v.38A2.3 2.3 0 0113 11.9a2.3 2.3 0 01-2.3 2.3l-7.7.3z" fill="var(--text3)" opacity=".28" transform="translate(3.5,2)"/></svg><div class="fc-t">21° <span>14°</span></div><div class="fc-pill ok">Müsait</div></div>
-            <div class="fc-day"><div class="fc-lbl">Çar</div><svg class="fc-ico" viewBox="0 0 20 20" fill="none"><path d="M2.5 12c-1.5 0-2.5-1.1-2.5-2.5S1 7 2.5 7l.4.03A3.5 3.5 0 016 3.5 3.5 3.5 0 019.5 7v.35A2.2 2.2 0 0111.5 9.5a2.2 2.2 0 01-2.2 2.2L2.5 12z" fill="var(--text3)" opacity=".32" transform="translate(4,2)"/><g stroke="#93C5FD" stroke-width="1.3" stroke-linecap="round"><line x1="7.5" y1="15" x2="6.8" y2="18"/><line x1="10.5" y1="15" x2="9.8" y2="18"/><line x1="13.5" y1="15" x2="12.8" y2="18"/></g></svg><div class="fc-t">19° <span>12°</span></div><div class="fc-pill rain">%78·12mm</div></div>
+            <div class="fc-day"><div class="fc-lbl">Çar</div><svg class="fc-ico" viewBox="0 0 20 20" fill="none"><path d="M2.5 12c-1.5 0-2.5-1.1-2.5-2.5S1 7 2.5 7l.4.03A3.5 3.5 0 016 3.5 3.5 3.5 0 019.5 7v.35A2.2 2.2 0 0111.5 9.5a2.2 2.2 0 01-2.2 2.2L2.5 12z" fill="var(--text3)" opacity=".32" transform="translate(4,2)"/><g stroke="var(--sky-drop)" stroke-width="1.3" stroke-linecap="round"><line x1="7.5" y1="15" x2="6.8" y2="18"/><line x1="10.5" y1="15" x2="9.8" y2="18"/><line x1="13.5" y1="15" x2="12.8" y2="18"/></g></svg><div class="fc-t">19° <span>12°</span></div><div class="fc-pill rain">%78·12mm</div></div>
             <div class="fc-day"><div class="fc-lbl">Per</div><svg class="fc-ico" viewBox="0 0 20 20" fill="none"><path d="M2.5 13c-1.5 0-2.5-1.1-2.5-2.5S1 8 2.5 8l.4.03A3.5 3.5 0 016 4.5 3.5 3.5 0 019.5 8v.35A2.2 2.2 0 0111.5 10.5a2.2 2.2 0 01-2.2 2.2L2.5 13z" fill="var(--text3)" opacity=".25" transform="translate(4,1.5)"/></svg><div class="fc-t">22° <span>13°</span></div><div class="fc-pill warn">%32·4mm</div></div>
             <div class="fc-day"><div class="fc-lbl">Cum</div><svg class="fc-ico" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" fill="#FCD34D" opacity=".9"/><g stroke="#FDE68A" stroke-width="1.3" stroke-linecap="round" opacity=".55"><line x1="10" y1="2" x2="10" y2="4"/><line x1="10" y1="16" x2="10" y2="18"/><line x1="2" y1="10" x2="4" y2="10"/><line x1="16" y1="10" x2="18" y2="10"/></g></svg><div class="fc-t">25° <span>15°</span></div><div class="fc-pill ok">Müsait</div></div>
           </div>
         </div>
       </div>
 
-      <!-- KRİTİK BANT -->
-      <div class="alert rain fu" onclick="openHavaSheet()" style="cursor:pointer">
+      <!-- KRİTİK BANT — v50.1: expand/collapse (Seçenek B)
+           openHavaSheet() kaldırıldı — tıklayınca detay açılır/kapanır -->
+      <div class="alert rain fu" id="kritik-bant" onclick="alertToggle(this)" style="cursor:pointer;display:none">
         <div class="alert-ic" style="background:rgba(34,127,131,.1)">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 11c-1.5 0-2.5-1.2-2.5-2.5S.5 6 2 6c.15 0 .3.01.44.03A3.6 3.6 0 016 3a3.6 3.6 0 013.6 3.6v.32A2.4 2.4 0 0112 9.3a2.4 2.4 0 01-2.4 2.4L2 11z" fill="var(--sky)" opacity=".18" transform="translate(3,1.5)"/><path d="M2 11c-1.5 0-2.5-1.2-2.5-2.5S.5 6 2 6c.15 0 .3.01.44.03A3.6 3.6 0 016 3a3.6 3.6 0 013.6 3.6v.32A2.4 2.4 0 0112 9.3a2.4 2.4 0 01-2.4 2.4" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round" transform="translate(3,1.5)"/><g stroke="#93C5FD" stroke-width="1.3" stroke-linecap="round"><line x1="6.5" y1="13.5" x2="5.8" y2="16"/><line x1="9.5" y1="13.5" x2="8.8" y2="16"/><line x1="12.5" y1="13.5" x2="11.8" y2="16"/></g></svg>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 11c-1.5 0-2.5-1.2-2.5-2.5S.5 6 2 6c.15 0 .3.01.44.03A3.6 3.6 0 016 3a3.6 3.6 0 013.6 3.6v.32A2.4 2.4 0 0112 9.3a2.4 2.4 0 01-2.4 2.4L2 11z" fill="var(--sky)" opacity=".18" transform="translate(3,1.5)"/><path d="M2 11c-1.5 0-2.5-1.2-2.5-2.5S.5 6 2 6c.15 0 .3.01.44.03A3.6 3.6 0 016 3a3.6 3.6 0 013.6 3.6v.32A2.4 2.4 0 0112 9.3a2.4 2.4 0 01-2.4 2.4" stroke="var(--sky)" stroke-width="1.3" stroke-linecap="round" transform="translate(3,1.5)"/><g stroke="var(--sky-drop)" stroke-width="1.3" stroke-linecap="round"><line x1="6.5" y1="13.5" x2="5.8" y2="16"/><line x1="9.5" y1="13.5" x2="8.8" y2="16"/><line x1="12.5" y1="13.5" x2="11.8" y2="16"/></g></svg>
         </div>
-        <div style="flex:1"><div class="alert-title">Yarın yağmur bekleniyor</div><div class="alert-sub">%78 ihtimal · 12mm · Bekleyen tarla işlerini bugün yap</div></div>
+        <div style="flex:1">
+          <div class="alert-title">Yarın yağmur bekleniyor</div>
+          <div class="alert-sub">%78 ihtimal · 12mm · Bekleyen işleri bugün yap</div>
+        </div>
         <div class="pulse" style="background:var(--sky)"></div>
         <div class="alert-arr">›</div>
+        <!-- Genişleme paneli — tıklayınca açılır -->
+        <div class="alert-expand">
+          <div class="alert-expand-divider"></div>
+          <div class="alert-expand-row">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="var(--sky)" stroke-width="1.2"/><path d="M6 3.5V6l1.5 1.5" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Yağış Çarşamba 14:00–20:00 arası bekleniyor
+          </div>
+          <div class="alert-expand-row">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 10V7L4 5.5h4L9 7v3" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 10h6" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            İlaçlama için bugün sabah saatlerini kullan
+          </div>
+          <div class="alert-expand-row">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 9.5 Q3 7 6 8 Q9 9 10.5 6.5" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><path d="M1.5 7 Q3 5 6 6 Q9 7 10.5 4.5" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round" opacity=".45"/></svg>
+            Yağış sonrası toprak ağır — ağır araç girişini ertele
+          </div>
+        </div>
       </div>
 
-      <!-- BUGÜN NE YAPMALI -->
-      <div class="bny-kart fu" onclick="openHavaSheet()" id="bny-kart">
-        <div class="bny-header">
-          <div class="bny-baslik">Bugün ne yapmalıyım?</div>
-          <div class="bny-arr">›</div>
-        </div>
-        <div class="bny-grid" id="bny-grid">
-          <!-- JS ile doldurulur -->
-        </div>
-      </div>
-
-      <!-- TARLALARIM -->
-      <div class="sec" style="margin-top:18px;"><div class="sec-title">Tarlalarım</div><div class="sec-link" onclick="navTo('fields')">Tümü →</div></div>
+      <!-- TARLALARIM — v50: öne alındı ("Senin tarlan önce" rapor kararı) -->
+      <div class="sec" style="margin-top:20px;"><div class="sec-title">Tarlalarım</div> <!-- v53 --><div class="sec-link" onclick="navTo('fields')">Tümü →</div></div>
       <div class="home-fields">
 
         <!-- ── Empty State Kartı — tarla yokken gösterilir ─────── -->
@@ -3524,33 +3574,20 @@ body.app-ready { background: var(--bg); }
 
       </div>
 
-      <div class="divider"></div>
-
-      <!-- BU HAFTA ÖZETİ -->
-      <div class="hafta-ozet" onclick="navTo('kayitlarim')" style="cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='var(--bg2)'" onmouseleave="this.style.background=''">
-        <div class="hafta-ozet-lbl">Bu Hafta</div>
-        <div class="hafta-ozet-items">
-          <div class="hafta-ozet-item">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 5h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M4 1v2M8 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            3 işlem
-          </div>
-          <div class="hafta-sep"></div>
-          <div class="hafta-ozet-item red">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 4L4 7l2-2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M2 9h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-            −₺8.430
-          </div>
-          <div class="hafta-sep"></div>
-          <div class="hafta-ozet-item green">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 8L4 5l2 2 4-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            1 satış
-          </div>
-          <div class="hafta-sep"></div>
-          <div style="font-size:13px;color:var(--text3);padding-left:2px;">›</div>
+      <!-- BUGÜN NE YAPMALI — v50: arkaya alındı; v52: conditional, v53: section başlığı eklendi -->
+      <div class="sec bny-sec" id="bny-sec-header" style="margin-top:20px;display:none"><div class="sec-title">Bugün Ne Yapmalıyım?</div></div>
+      <div class="bny-kart fu" onclick="openHavaSheet()" id="bny-kart" style="margin-top:0;display:none">
+        <div class="bny-header">
+          <div class="bny-baslik">Bugün ne yapmalıyım?</div>
+          <div class="bny-arr">›</div>
+        </div>
+        <div class="bny-grid" id="bny-grid">
+          <!-- JS ile doldurulur -->
         </div>
       </div>
 
-      <!-- SON İŞLEMLER -->
-      <div class="sec"><div class="sec-title">Son İşlemler</div><div class="sec-link" onclick="navTo('kayitlarim')">Tümü →</div></div>
+      <!-- SON İŞLEMLER — v50: hafta özeti + divider kaldırıldı -->
+      <div class="sec" id="son-islemler-sec" style="margin-top:16px;"><div class="sec-title">Son İşlemler</div> <!-- v53 --><div class="sec-link" onclick="navTo('kayitlarim')">Tümü →</div></div>
       <div class="recents">
         <div class="ri fu" onclick="openKayitSheet(1)"><div class="ri-ic" style="background:var(--sky-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="5.5" width="5" height="7" rx="1.3" stroke="var(--sky)" stroke-width="1.3"/><path d="M5.8 5.5V4.2h2.4v1.3" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 7.5H10" stroke="var(--sky)" stroke-width="1.2" stroke-linecap="round"/><circle cx="11.2" cy="6.5" r=".7" fill="var(--sky)" opacity=".7"/><circle cx="12" cy="8" r=".7" fill="var(--sky)" opacity=".55"/><circle cx="11.5" cy="9.5" r=".7" fill="var(--sky)" opacity=".4"/></svg></div><div class="ri-body"><div class="ri-title">İlaçlama — Kuzey Tarla</div><div class="ri-sub">Teldor 50 WG · 0.8 g/lt · 200 lt</div></div><div class="ri-right"><div class="ri-cost">−₺2.400</div><div class="ri-date">Bugün</div></div></div>
         <div class="ri fu" onclick="openKayitSheet(2)"><div class="ri-ic" style="background:var(--gold-lt)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4.5 13V8L6 5.5h4L11.5 8V13" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 13h8" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 5.5h3" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round" opacity=".5"/><circle cx="6.5" cy="9.5" r=".85" fill="var(--gold)" opacity=".45"/><circle cx="9.5" cy="9" r=".85" fill="var(--gold)" opacity=".35"/><circle cx="8" cy="11" r=".85" fill="var(--gold)" opacity=".4"/></svg></div><div class="ri-body"><div class="ri-title">Gübreleme — Doğu Parsel</div><div class="ri-sub">Üre 46 · 25 kg/dönüm · 750 kg</div></div><div class="ri-right"><div class="ri-cost">−₺3.750</div><div class="ri-date">Dün</div></div></div>
@@ -3588,7 +3625,7 @@ body.app-ready { background: var(--bg); }
         <div class="op-sheet-handle"></div>
         <div class="op-sheet-head">
           <div class="op-sheet-ic" style="width:42px;height:42px;border-radius:50%;background:#EAF6F6;display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 13c-1.7 0-3-1.4-3-3S1.4 7 3 7l.5.03A4.2 4.2 0 017 4a4.2 4.2 0 014.2 4.2v.4A2.8 2.8 0 0114 11a2.8 2.8 0 01-2.8 2.8L3 13z" fill="var(--sky)" opacity=".2" transform="translate(3,1)"/><path d="M3 13c-1.7 0-3-1.4-3-3S1.4 7 3 7l.5.03A4.2 4.2 0 017 4a4.2 4.2 0 014.2 4.2v.4A2.8 2.8 0 0114 11a2.8 2.8 0 01-2.8 2.8" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" transform="translate(3,1)"/><g stroke="#93C5FD" stroke-width="1.4" stroke-linecap="round"><line x1="7" y1="16" x2="6.2" y2="19"/><line x1="10.5" y1="16" x2="9.7" y2="19"/><line x1="14" y1="16" x2="13.2" y2="19"/></g></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 13c-1.7 0-3-1.4-3-3S1.4 7 3 7l.5.03A4.2 4.2 0 017 4a4.2 4.2 0 014.2 4.2v.4A2.8 2.8 0 0114 11a2.8 2.8 0 01-2.8 2.8L3 13z" fill="var(--sky)" opacity=".2" transform="translate(3,1)"/><path d="M3 13c-1.7 0-3-1.4-3-3S1.4 7 3 7l.5.03A4.2 4.2 0 017 4a4.2 4.2 0 014.2 4.2v.4A2.8 2.8 0 0114 11a2.8 2.8 0 01-2.8 2.8" stroke="var(--sky)" stroke-width="1.4" stroke-linecap="round" transform="translate(3,1)"/><g stroke="var(--sky-drop)" stroke-width="1.4" stroke-linecap="round"><line x1="7" y1="16" x2="6.2" y2="19"/><line x1="10.5" y1="16" x2="9.7" y2="19"/><line x1="14" y1="16" x2="13.2" y2="19"/></g></svg>
           </div>
           <div style="flex:1">
             <div class="op-sheet-title">Hava Durumu Uyarısı</div>
@@ -3598,7 +3635,7 @@ body.app-ready { background: var(--bg); }
         <div class="op-sheet-scroll">
           <!-- Uyarı banner -->
           <div style="background:var(--sky-lt);border:1px solid rgba(34,127,131,.15);border-radius:var(--r);padding:13px 16px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2 11c-1.5 0-2.5-1.2-2.5-2.5S.5 6 2 6c.15 0 .3.01.44.03A3.6 3.6 0 016 3a3.6 3.6 0 013.6 3.6v.32A2.4 2.4 0 0112 9.3a2.4 2.4 0 01-2.4 2.4L2 11z" fill="var(--sky)" opacity=".3" transform="translate(3,1)"/><g stroke="#93C5FD" stroke-width="1.3" stroke-linecap="round"><line x1="6.5" y1="13" x2="5.8" y2="15.5"/><line x1="9.5" y1="13" x2="8.8" y2="15.5"/><line x1="12.5" y1="13" x2="11.8" y2="15.5"/></g></svg>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2 11c-1.5 0-2.5-1.2-2.5-2.5S.5 6 2 6c.15 0 .3.01.44.03A3.6 3.6 0 016 3a3.6 3.6 0 013.6 3.6v.32A2.4 2.4 0 0112 9.3a2.4 2.4 0 01-2.4 2.4L2 11z" fill="var(--sky)" opacity=".3" transform="translate(3,1)"/><g stroke="var(--sky-drop)" stroke-width="1.3" stroke-linecap="round"><line x1="6.5" y1="13" x2="5.8" y2="15.5"/><line x1="9.5" y1="13" x2="8.8" y2="15.5"/><line x1="12.5" y1="13" x2="11.8" y2="15.5"/></g></svg>
             <div>
               <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">Yarın yağmur bekleniyor</div>
               <div style="font-size:12px;color:var(--text2);line-height:1.55;">%78 ihtimal · Tahmini 12mm yağış · Bekleyen tarla işlerini bugün tamamla.</div>
@@ -5950,8 +5987,8 @@ function urunTavsiyesiGetir(kosul) {
 const havaIkonSVG = {
   gunes: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.5" fill="#F59E0B" opacity=".85"/><g stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round"><line x1="6.5" y1="1" x2="6.5" y2="2.2"/><line x1="6.5" y1="10.8" x2="6.5" y2="12"/><line x1="1" y1="6.5" x2="2.2" y2="6.5"/><line x1="10.8" y1="6.5" x2="12" y2="6.5"/><line x1="2.7" y1="2.7" x2="3.5" y2="3.5"/><line x1="9.5" y1="9.5" x2="10.3" y2="10.3"/><line x1="10.3" y1="2.7" x2="9.5" y2="3.5"/><line x1="3.5" y1="9.5" x2="2.7" y2="10.3"/></g></svg>`,
   parcali: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="4.5" cy="5.5" r="2" fill="#F59E0B" opacity=".65"/><path d="M2 9c-.8 0-1.5-.7-1.5-1.5S1.2 6 2 6l.2.01A2 2 0 014 4a2 2 0 012 2v.15A1.3 1.3 0 017.3 7.5a1.3 1.3 0 01-1.3 1.3L2 9z" fill="#9CA3AF" opacity=".5" transform="translate(3.5,1)"/></svg>`,
-  yagmur: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 7c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8l.3.02A2.6 2.6 0 014 1a2.6 2.6 0 012.6 2.6v.2A1.7 1.7 0 018 5.4a1.7 1.7 0 01-1.7 1.7L1.5 7z" fill="#93C5FD" opacity=".5" transform="translate(2,1)"/><g stroke="#93C5FD" stroke-width="1.2" stroke-linecap="round"><line x1="4.5" y1="10" x2="4" y2="12"/><line x1="7" y1="10" x2="6.5" y2="12"/><line x1="9.5" y1="10" x2="9" y2="12"/></g></svg>`,
-  parcali_yagmur: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="4" cy="4.5" r="1.6" fill="#F59E0B" opacity=".5"/><path d="M1.5 7c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8l.3.02A2.6 2.6 0 014 1a2.6 2.6 0 012.6 2.6v.2A1.7 1.7 0 018 5.4a1.7 1.7 0 01-1.7 1.7L1.5 7z" fill="#93C5FD" opacity=".3" transform="translate(2,1)"/><g stroke="#93C5FD" stroke-width="1.1" stroke-linecap="round" opacity=".6"><line x1="5" y1="10" x2="4.5" y2="11.5"/><line x1="7.5" y1="10" x2="7" y2="11.5"/></g></svg>`,
+  yagmur: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 7c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8l.3.02A2.6 2.6 0 014 1a2.6 2.6 0 012.6 2.6v.2A1.7 1.7 0 018 5.4a1.7 1.7 0 01-1.7 1.7L1.5 7z" fill="var(--sky-drop)" opacity=".5" transform="translate(2,1)"/><g stroke="var(--sky-drop)" stroke-width="1.2" stroke-linecap="round"><line x1="4.5" y1="10" x2="4" y2="12"/><line x1="7" y1="10" x2="6.5" y2="12"/><line x1="9.5" y1="10" x2="9" y2="12"/></g></svg>`,
+  parcali_yagmur: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="4" cy="4.5" r="1.6" fill="#F59E0B" opacity=".5"/><path d="M1.5 7c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8l.3.02A2.6 2.6 0 014 1a2.6 2.6 0 012.6 2.6v.2A1.7 1.7 0 018 5.4a1.7 1.7 0 01-1.7 1.7L1.5 7z" fill="var(--sky-drop)" opacity=".3" transform="translate(2,1)"/><g stroke="var(--sky-drop)" stroke-width="1.1" stroke-linecap="round" opacity=".6"><line x1="5" y1="10" x2="4.5" y2="11.5"/><line x1="7.5" y1="10" x2="7" y2="11.5"/></g></svg>`,
   kar: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 7c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8l.3.02A2.6 2.6 0 014 1a2.6 2.6 0 012.6 2.6v.2A1.7 1.7 0 018 5.4a1.7 1.7 0 01-1.7 1.7L1.5 7z" fill="#BFDBFE" opacity=".5" transform="translate(2,1)"/><g stroke="#BFDBFE" stroke-width="1.2" stroke-linecap="round"><line x1="6.5" y1="9.5" x2="6.5" y2="12"/><line x1="5" y1="10.5" x2="8" y2="10.5"/></g></svg>`,
 };
 
@@ -6008,7 +6045,7 @@ function renderHavaTavsiye() {
   document.getElementById('hava-secili-gun').textContent = g.gun;
   const renkler = {
     yagmur_once:'#B45309', yagmurlu:'var(--red)', yagmur_sonrasi:'var(--green-mid)',
-    ruzgar_fazla:'var(--red)', ruzgar_uygun:'var(--green-mid)', don_riski:'var(--red)',
+    ruzgar_fazla:'var(--red)', ruzgar_uygun:'var(--green-mid)', don_riski:'var(--frost)',
     serin:'#6366F1', optimal:'var(--green-mid)', sicak:'#B45309',
     cok_sicak:'var(--red)', yuksek_nem:'#7C3AED', dusuk_nem:'#B45309', firtina:'var(--red)',
   };
@@ -6032,7 +6069,7 @@ function renderHavaTavsiye() {
   // Uyarı seviyesi renk sistemi
   const uyariSeviye = {
     firtina:     { renk:'var(--red)',      bg:'var(--red-lt)',   dot:'var(--red)'      },
-    don_riski:   { renk:'#7C3AED',         bg:'#F5F3FF',         dot:'#7C3AED'         },
+    don_riski:   { renk:'var(--frost)',    bg:'var(--frost-lt)',  dot:'var(--frost)'    },
     cok_sicak:   { renk:'var(--red)',      bg:'var(--red-lt)',   dot:'var(--red)'      },
     yagmurlu:    { renk:'var(--sky)',      bg:'var(--sky-lt)',   dot:'var(--sky)'      },
     yagmur_once: { renk:'#B45309',         bg:'var(--gold-lt)',  dot:'var(--gold)'     },
@@ -6084,6 +6121,7 @@ function selHavaSenaryo(s) {
   aktifSenaryo = s; seciliHavaGunIdx = 0;
   renderHavaTahmin(); renderHavaTavsiye();
   renderBugünNeYapmali();
+  renderKritikBant(); // Senaryo değişince kritik bandı da güncelle
   document.querySelectorAll('.hava-sen-btn').forEach(b => {
     b.style.background = b.dataset.s === s ? 'var(--green)' : 'var(--bg2)';
     b.style.color      = b.dataset.s === s ? 'white'        : 'var(--text2)';
@@ -6234,6 +6272,191 @@ window.saveKonum = function() {
     }
   }, 100);
 };
+
+// ── Kritik Bant — Expand/Collapse + Dinamik İçerik (v50.1) ──────────────────
+//
+// alertToggle(el)   : Tıklayınca .expanded toggle eder (CSS animasyonu ile açılır)
+// renderKritikBant(): Hava koşuluna göre kart başlık, renk ve 3 detay satırını doldurur
+//                     BNY kartıyla aynı havaDurumundanKosul() mantığını kullanır
+//
+// Kart yapısı:
+//   .alert              → renk sınıfı (rain / warn / danger / good)
+//   .alert-title        → ana başlık ("Yarın yağmur bekleniyor" vb.)
+//   .alert-sub          → alt başlık (%ihtimal · mm · kısa öneri)
+//   .alert-expand-row   → 3 adet dinamik detay satırı (ikon + metin)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function alertToggle(el) {
+  el.classList.toggle('expanded');
+}
+
+// Hava koşuluna göre kritik bant verisi
+// Her kosul: { goster, renk, baslik, alt, satirlar: [{ikon, metin}] }
+function _kritikBantVerisi(kosul, bugun) {
+  const ruzgar = bugun.ruzgar || 0;
+  const nem    = bugun.nem    || 0;
+  const sicak  = bugun.sicak  || 0;
+  const yagisOl = bugun.yagisOlasiligi || 0;
+  const yagisM  = bugun.yagisOlasiligi ? Math.round(yagisOl * 0.18) : 0; // tahmini mm
+
+  // Saat ikonu SVG
+  const icoSaat  = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3.5V6l1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+  // Uyarı üçgeni SVG
+  const icoUyari = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2L11 10H1L6 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5v2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="9" r=".7" fill="currentColor"/></svg>`;
+  // Onay ikonu SVG
+  const icoOnay  = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  // Tarla ikonu SVG
+  const icoTarla = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 9Q3 6.5 6 8Q9 6 10.5 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M1.5 6.5Q3 4 6 5.5Q9 3.5 10.5 5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".45"/></svg>`;
+  // Damla ikonu SVG
+  const icoDamla = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.5C6 1.5 2.5 5.5 2.5 7.5a3.5 3.5 0 007 0C9.5 5.5 6 1.5 6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+
+  const veriler = {
+    yagmur_once: {
+      goster: true, renk: 'rain',
+      baslik: `Yağmur bekleniyor — işlemleri öne al`,
+      alt:    `%${yagisOl} ihtimal · Bugün tarla işlerini tamamla`,
+      satirlar: [
+        { ico: icoSaat,  metin: 'İlaçlama varsa yağıştan en az 4–6 saat önce uygula' },
+        { ico: icoUyari, metin: 'Yoğun yağmur öncesi granül gübre atma — besin taşınır' },
+        { ico: icoTarla, metin: 'Yağmur sonrası toprak ağır — ağır araç girişini ertele' },
+      ]
+    },
+    yagmurlu: {
+      goster: true, renk: 'rain',
+      baslik: 'Yağmurlu hava — tarla işlemleri uygun değil',
+      alt:    'İlaçlama ve gübre uygulaması yapmayın',
+      satirlar: [
+        { ico: icoUyari, metin: 'İlaçlama kesinlikle yapma — yağmur ilacı yıkar, etkisiz kalır' },
+        { ico: icoUyari, metin: 'Ağır makine kullanma — ıslak toprak sıkışır, havalanma bozulur' },
+        { ico: icoSaat,  metin: 'Hasat beklet — yağışta nem içeriği yükselir, küf riski artar' },
+      ]
+    },
+    yagmur_sonrasi: {
+      goster: true, renk: 'good',
+      baslik: 'Yağmur sonrası — ekim için hazır',
+      alt:    'Toprak nemi uygun, ilaçlama için 24 saat bekle',
+      satirlar: [
+        { ico: icoOnay,  metin: 'Ekim için ideal: üst toprak "serbest tava" gelince ekim yap' },
+        { ico: icoUyari, metin: 'İlaçlamayı 24 saat bekle — ıslak yaprakta ilaç tutunmaz' },
+        { ico: icoTarla, metin: 'Mantar/küf riski yüksek — bitkileri yakından izle' },
+      ]
+    },
+    don_riski: {
+      goster: true, renk: 'frost',
+      baslik: `Don riski — gece ${bugun.gece || 0}° bekleniyor`,
+      alt:    'Hassas ürünler için önlem al',
+      satirlar: [
+        { ico: icoUyari, metin: 'Fideler ve çiçeklenme dönemindeki bitkiler dondan en çok etkilenir' },
+        { ico: icoUyari, metin: 'Sulama yapma — ıslak toprak donma riskini artırır' },
+        { ico: icoSaat,  metin: 'Don en çok şafak öncesi (04:00–07:00) etkili olur — sabah kontrol et' },
+      ]
+    },
+    firtina: {
+      goster: true, renk: 'danger',
+      baslik: `Fırtına uyarısı — rüzgar ${ruzgar} km/s`,
+      alt:    'Tarlaya çıkma, tüm işlemleri ertele',
+      satirlar: [
+        { ico: icoUyari, metin: 'Tüm tarla işlemlerini ertele — güvenli değil' },
+        { ico: icoUyari, metin: 'Sera ve koruyucu yapıları kontrol et, hasar riskine karşı önlem al' },
+        { ico: icoSaat,  metin: 'Fırtına geçince toprak ve bitkileri hasar açısından değerlendir' },
+      ]
+    },
+    ruzgar_fazla: {
+      goster: true, renk: 'warn',
+      baslik: `Kuvvetli rüzgar — ${ruzgar} km/s`,
+      alt:    'İlaçlama yapma, sabah/akşam saatlerini bekle',
+      satirlar: [
+        { ico: icoUyari, metin: `Rüzgar ${ruzgar} km/s — ilaç sürüklenir, komşu tarlaya geçer` },
+        { ico: icoSaat,  metin: 'Sabah 07–10 veya akşam 17–19 arası rüzgar genellikle sakinler' },
+        { ico: icoDamla, metin: 'Yağmurlama yerine damlatmalı sulama tercih et' },
+      ]
+    },
+    cok_sicak: {
+      goster: true, renk: 'warn',
+      baslik: `Aşırı sıcak — ${sicak}° bekleniyor`,
+      alt:    'Sabah ve akşam saatlerini kullan',
+      satirlar: [
+        { ico: icoSaat,  metin: 'İlaçlama için en uygun pencere: 06:00–09:00 (sıcaklık düşük, rüzgar sakin)' },
+        { ico: icoDamla, metin: 'Sulamayı sabah erken veya akşam geç yap — gün ortasında buharlaşma %40 artar' },
+        { ico: icoUyari, metin: 'Delta T yüksek — ilaç yaprakta hızla buharlaşır, etki düşer' },
+      ]
+    },
+    yuksek_nem: {
+      goster: true, renk: 'warn',
+      baslik: `Nem yüksek — %${nem}`,
+      alt:    'Mantar hastalıkları riski — bitkileri izle',
+      satirlar: [
+        { ico: icoUyari, metin: 'Külleme ve mildiyö için uygun ortam — yaprakları kontrol et' },
+        { ico: icoSaat,  metin: 'İlaçlamayı nem %85 altına inince yap — sabah saatlerini bekle' },
+        { ico: icoTarla, metin: 'Havalanmayı artır: sık ekim yapılan parselleri öncelikle kontrol et' },
+      ]
+    },
+    // Uygun koşullarda kart gösterilmez
+    ruzgar_uygun: { goster: false },
+    optimal:      { goster: false },
+    ideal:        { goster: false },
+    sicak:        { goster: false },
+    serin:        { goster: false },
+    dusuk_nem:    { goster: false },
+    kuraklık: {
+      goster: true, renk: 'warn',
+      baslik: 'Kuraklık — sulama kontrolü gerekli',
+      alt:    'Toprak nem seviyesini kontrol et',
+      satirlar: [
+        { ico: icoDamla, metin: 'Sulama ihtiyacını değerlendir — toprak 5 cm derinlikte kuru ise sula' },
+        { ico: icoUyari, metin: 'Stresli bitkiler hastalık ve zararlılara karşı daha savunmasız' },
+        { ico: icoSaat,  metin: 'Sulamayı sabah erken veya akşam geç yap — buharlaşma kaybını azalt' },
+      ]
+    },
+  };
+
+  return veriler[kosul] || { goster: false };
+}
+
+// Kritik bandı hava koşuluna göre render et
+// DOMContentLoaded ve senaryo değişiminde çağrılır
+function renderKritikBant() {
+  const bant = document.getElementById('kritik-bant');
+  if (!bant) return;
+
+  const bugun = gunlukVeri()[0];
+  const kosul = havaDurumundanKosul(bugun);
+  const veri  = _kritikBantVerisi(kosul, bugun);
+
+  // Uygun hava — bandı gizle
+  if (!veri.goster) {
+    bant.style.display = 'none';
+    return;
+  }
+
+  // Bandı göster
+  bant.style.display = '';
+
+  // Renk sınıfını güncelle (rain / warn / danger / good)
+  bant.classList.remove('rain', 'warn', 'danger', 'good');
+  bant.classList.add(veri.renk);
+
+  // Başlık ve alt metin
+  const titleEl = bant.querySelector('.alert-title');
+  const subEl   = bant.querySelector('.alert-sub');
+  if (titleEl) titleEl.textContent = veri.baslik;
+  if (subEl)   subEl.textContent   = veri.alt;
+
+  // 3 detay satırını render et
+  const expandEl = bant.querySelector('.alert-expand');
+  if (!expandEl) return;
+
+  // İkon rengi koşula göre
+  const renkMap = { rain: 'var(--sky)', warn: 'var(--gold-text)', danger: 'var(--red)', good: 'var(--green-mid)', frost: 'var(--frost)' }; /* v51: kontrast */
+  const renk = renkMap[veri.renk] || 'var(--text2)';
+
+  expandEl.innerHTML = `<div class="alert-expand-divider"></div>` +
+    veri.satirlar.map(s => `
+      <div class="alert-expand-row" style="color:var(--text2)">
+        <span style="color:${renk};flex-shrink:0">${s.ico}</span>
+        ${s.metin}
+      </div>`).join('');
+}
 
 function openHavaSheet() {
   seciliHavaGunIdx = 0;
@@ -6576,12 +6799,12 @@ function renderBugünNeYapmali() {
   // Başlık + kart border rengini hava koşuluna göre güncelle
   const kosulRenk = {
     firtina:        { bg:'#FEF2F2', border:'#FCA5A5', dot:'var(--red)',       baslik:'Fırtına — Tarlaya çıkma!' },
-    don_riski:      { bg:'#EFF6FF', border:'#BFDBFE', dot:'#6366F1',          baslik:'Don riski var' },
+    don_riski:      { bg:'var(--frost-lt)', border:'var(--frost)', dot:'var(--frost)', baslik:'Don riski var' },
     cok_sicak:      { bg:'#FFF7ED', border:'#FED7AA', dot:'#EA580C',          baslik:'Aşırı sıcak — Sabah saatlerini kullan' },
-    sicak:          { bg:'#FFFBEB', border:'#FDE68A', dot:'#D97706',          baslik:'Sıcak — Sabah/akşam saatlerini tercih et' },
-    serin:          { bg:'#EFF6FF', border:'#BFDBFE', dot:'#3B82F6',          baslik:'Serin — Öğlen saatlerinde çalış' },
+    sicak:          { bg:'#FFFBEB', border:'#FDE68A', dot:'#B45309',          baslik:'Sıcak — Sabah/akşam saatlerini tercih et' }, /* v52 */
+    serin:          { bg:'#EFF6FF', border:'#BFDBFE', dot:'#1E40AF',          baslik:'Serin — Öğlen saatlerinde çalış' }, /* v52: 8.0:1 */
     yagmurlu:       { bg:'#EFF6FF', border:'#BFDBFE', dot:'var(--sky)',       baslik:'Yağmurlu — Tarla işlemleri sınırlı' },
-    yagmur_once:    { bg:'#FFFBEB', border:'#FDE68A', dot:'#D97706',          baslik:'Yağmur geliyor — Bugün bitir' },
+    yagmur_once:    { bg:'#FFFBEB', border:'#FDE68A', dot:'#B45309',          baslik:'Yağmur geliyor — Bugün bitir' }, /* v52: 4.8:1 */
     yagmur_sonrasi: { bg:'#F0FDF4', border:'#A7F3D0', dot:'#059669',          baslik:'Yağmur sonrası — Toprak ağır' },
     ruzgar_fazla:   { bg:'#F5F3FF', border:'#DDD6FE', dot:'#7C3AED',          baslik:'Rüzgar fazla — İlaçlama yapma' },
     ruzgar_uygun:   { bg:'#F0FDF4', border:'#A7F3D0', dot:'var(--green-mid)', baslik:'Hava güzel — İşlemler için uygun' },
@@ -6694,6 +6917,18 @@ function renderBugünNeYapmali() {
   const renkler = { ok: 'var(--green-mid)', warn: '#B45309', no: 'var(--red)' };
   const bgRenkler = { ok: 'var(--green-lt)', warn: '#FEF9EC', no: 'var(--red-lt)' };
 
+  // BNY kartını sadece anlamlı içerik varsa göster:
+  // - Hava koşulu uyarı gerektiriyorsa (optimal/ideal değilse)
+  // - VEYA herhangi bir karar "no" veya "warn" ise
+  const iyiKosul = ['optimal', 'ideal', 'ruzgar_uygun'].includes(havaKosul);
+  const kartGoster = !iyiKosul || kararlar.some(k => k.karar.s !== 'ok');
+  const bnyKartEl = document.getElementById('bny-kart');
+  const bnySekHeader = document.getElementById('bny-sec-header');
+  if (bnyKartEl) bnyKartEl.style.display = kartGoster ? '' : 'none';
+  if (bnySekHeader) bnySekHeader.style.display = kartGoster ? '' : 'none'; // v53: section başlığı da birlikte göster/gizle
+
+  if (!kartGoster) return; // İyi hava + tüm "ok" → grid doldurmaya gerek yok
+
   grid.innerHTML = kararlar.map(k => `
     <div class="bny-item">
       <div class="bny-ic" style="background:${bgRenkler[k.karar.s]};">
@@ -6752,12 +6987,22 @@ function setSbLeft(screenId) {
     }
 
   } else if (TAB_SCREENS.includes(screenId)) {
-    // Sekme ekranı: geri tuşu + center'da sayfa başlığı
-    el.innerHTML = `<button class="sb-back-btn sb-back-tab" onclick="navTo('home')">${BACK_ICON}</button>`;
-    if (centerEl && centerTitle) {
-      centerTitle.textContent = SCREEN_TITLES[screenId] || '';
-      centerEl.style.display = 'flex';
+    // v54: Sekme ekranı — avatar + selamlama kalsın, center'da başlık GÖSTERİLMESİN
+    // (rapor: sekme adı zaten alt nav'da görünüyor, center'da tekrar etmeye gerek yok)
+    if (!document.getElementById('sb-avatar-wrap')) {
+      const isim = document.getElementById('sb-greeting-name')?.textContent || 'Ahmet';
+      const harf = isim.charAt(0).toUpperCase();
+      el.innerHTML = `
+        <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="avatarSheetAc()">
+          <div class="app-avatar" id="sb-avatar">${harf}</div>
+        </div>
+        <div class="sb-greeting" id="sb-greeting">
+          <span class="sb-greeting-sub" id="sb-greeting-sub">günaydın,</span>
+          <span class="sb-greeting-name" id="sb-greeting-name">${isim}</span>
+        </div>`;
+      updateGreeting();
     }
+    if (centerEl) centerEl.style.display = 'none';
 
   } else {
     // Home ekranı: avatar + selamlama, center gizli
@@ -6778,10 +7023,10 @@ function setSbLeft(screenId) {
     }
   }
 
-  // Bildirim zilinini yalnızca home'da göster
+  // v54: Bildirim zili home + tab ekranlarında görünür, sadece detail/onboarding'de gizle
   const notifBtn = document.getElementById('sb-notif-btn');
   if (notifBtn) {
-    notifBtn.style.display = (DETAIL_SCREENS.includes(screenId) || TAB_SCREENS.includes(screenId)) ? 'none' : '';
+    notifBtn.style.display = DETAIL_SCREENS.includes(screenId) ? 'none' : '';
   }
 
   // Onboarding modu: header değişir
@@ -7000,10 +7245,7 @@ function setupHeaderScroll() {
   sb.style.transform = '';
   sb.classList.remove('scrolled');
 
-  // Inline greeting'i sıfırla — gizli başlar
-  const inlineGreeting = document.getElementById('sb-greeting');
-  if (inlineGreeting) inlineGreeting.classList.remove('visible');
-
+  // v54: sb-greeting artık her zaman görünür — sadece lt-greeting solar
   // Large Title'ı göster
   const ltEl = document.getElementById('lt-greeting');
   if (ltEl) ltEl.style.opacity = '1';
@@ -7030,9 +7272,8 @@ function _onLargeTitleScroll() {
 }
 
 function _applyLargeTitleState(scroller, sb) {
-  const ltEl          = document.getElementById('lt-greeting');
-  const inlineGreeting = document.getElementById('sb-greeting');
-  if (!ltEl || !inlineGreeting) return;
+  const ltEl = document.getElementById('lt-greeting');
+  if (!ltEl) return;
 
   const st       = scroller.scrollTop;
   const ltBottom = ltEl.offsetTop + ltEl.offsetHeight; // Large Title alt kenarı
@@ -7042,11 +7283,10 @@ function _applyLargeTitleState(scroller, sb) {
   const fadeStart  = ltBottom * 0.6;
   const progress   = Math.min(1, Math.max(0, (st - fadeStart) / (ltBottom - fadeStart)));
 
-  // Large Title: geçiş ilerledikçe solar
+  // Large Title: scroll ilerledikçe solar
   ltEl.style.opacity = String(1 - progress);
 
-  // Inline greeting: Large Title tamamen geçince belirir (CSS transition ile)
-  inlineGreeting.classList.toggle('visible', progress >= 1);
+  // v54: inline greeting her zaman görünür — toggle kaldırıldı
 
   // Scrolled: border + shadow — Large Title tamamen geçince
   sb.classList.toggle('scrolled', st >= ltBottom);
@@ -10097,6 +10337,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   renderBarChart();
   renderBugünNeYapmali();
+  renderKritikBant(); // Kritik bandı hava koşuluna göre doldur
   homeEmptyStateGuncelle(); // tarla yoksa davet kartını göster
   renderFieldsProgress();
   // Tarlaları sistematik sırala: son işlem → alan büyüklüğü
@@ -10992,7 +11233,7 @@ const bildirimVerisi = [
     ikon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M3 11c-1.5 0-2.5-1.2-2.5-2.5S1.5 6 3 6c.14 0 .28.01.42.03A3.4 3.4 0 016 3a3.4 3.4 0 013.4 3.4v.3A2.3 2.3 0 0111.7 9a2.3 2.3 0 01-2.3 2.3L3 11z" fill="#3B82F6" opacity=".2" transform="translate(2.5,1.5)"/>
       <path d="M3 11c-1.5 0-2.5-1.2-2.5-2.5S1.5 6 3 6c.14 0 .28.01.42.03A3.4 3.4 0 016 3a3.4 3.4 0 013.4 3.4v.3A2.3 2.3 0 0111.7 9a2.3 2.3 0 01-2.3 2.3" stroke="#3B82F6" stroke-width="1.3" stroke-linecap="round" fill="none" transform="translate(2.5,1.5)"/>
-      <g stroke="#93C5FD" stroke-width="1.3" stroke-linecap="round">
+      <g stroke="var(--sky-drop)" stroke-width="1.3" stroke-linecap="round">
         <line x1="6.5" y1="13.5" x2="5.8" y2="16"/><line x1="9.5" y1="13.5" x2="8.8" y2="16"/>
         <line x1="12.5" y1="13.5" x2="11.8" y2="16"/>
       </g>
