@@ -7372,7 +7372,11 @@ function navTo(id) {
 
   screens.forEach(s => {
     s.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
-    s.style.visibility = ''; // sb-behind'ın visibility:hidden'ını sıfırla
+    s.style.visibility = '';  // sb-behind kalıntısı
+    s.style.display    = '';  // swipe inline display kalıntısı
+    s.style.zIndex     = '';  // swipe zIndex kalıntısı
+    s.style.transform  = '';  // swipe transform kalıntısı
+    s.style.transition = '';  // swipe transition kalıntısı
   });
   currentScreen = id;
   const s = document.getElementById(id);
@@ -7411,7 +7415,11 @@ function openDetail(key) {
   const prevScreen = currentScreen;
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active','back','slide-in','slide-left','sb-behind');
-    s.style.visibility = ''; // önceki sb-behind kalıntısını temizle
+    s.style.visibility = '';
+    s.style.display    = '';
+    s.style.zIndex     = '';
+    s.style.transform  = '';
+    s.style.transition = '';
   });
 
   // Gelinen ekranı (fields vb.) display:none yerine sb-behind ile arkada tut
@@ -7431,9 +7439,14 @@ function navBack() {
     : 'home';
 
   const isTab = navOrder.includes(target);
-  document.querySelectorAll('.screen').forEach(s =>
-    s.classList.remove('active','back','slide-in','slide-left','sb-behind')
-  );
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active','back','slide-in','slide-left','sb-behind');
+    s.style.visibility = '';
+    s.style.display    = '';
+    s.style.zIndex     = '';
+    s.style.transform  = '';
+    s.style.transition = '';
+  });
   const t = document.getElementById(target);
   if (!t) { navTo('home'); return; } // son güvenlik ağı
   t.style.animation = 'none';
