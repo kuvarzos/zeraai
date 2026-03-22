@@ -386,13 +386,18 @@ body.app-ready { background: var(--bg); }
 .sb-greeting {
   display: flex; flex-direction: column;
   justify-content: center; min-width: 0;
-  /* v54: Large Title'dan bağımsız — her zaman görünür */
+  /* Başlangıçta gizli — lt-greeting scroll'da solar, o zaman belirir */
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+/* Scroll ilerleyince JS .visible ekler */
+.sb-greeting.visible {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
 }
-/* v54: sb-greeting her zaman görünür — .visible sınıfı kaldırıldı */
-.sb-greeting.visible { opacity: 1; }
 
 .sb-greeting-sub {
   font-family: 'Inter', sans-serif;
@@ -542,7 +547,7 @@ body.app-ready { background: var(--bg); }
 /* Progress bar — header'ın hemen altında */
 .ob-progress-bar {
   position: absolute;
-  top: 68px; left: 0; right: 0;
+  top: 58px; left: 0; right: 0; /* v54: sb height 58px — bar hemen altına yapışık */
   height: 3px;
   background: var(--border);
   z-index: 101;
@@ -5308,17 +5313,22 @@ body.app-ready { background: var(--bg); }
               backdrop-filter:blur(4px);">
     <div class="op-sheet-inner" style="max-height:50%">
       <div class="op-sheet-handle"></div>
-      <!-- Profil özet başlığı -->
-      <div style="padding:16px 20px 12px;display:flex;align-items:center;gap:12px;
+      <!-- Profil özet başlığı — rapor: "Merhaba, [İsim] 👋" sıcak ton -->
+      <div style="padding:16px 20px 14px;display:flex;align-items:center;gap:14px;
                   border-bottom:1px solid var(--border);">
-        <div style="width:40px;height:40px;border-radius:50%;background:var(--green);
+        <!-- Avatar: fotoğraf varsa img, yoksa harf -->
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--green);
                     display:flex;align-items:center;justify-content:center;
-                    font-family:'Inter',sans-serif;font-size:15px;font-weight:600;
-                    color:white;flex-shrink:0;" id="ava-sheet-harf">A</div>
-        <div>
-          <div style="font-size:15px;font-weight:600;color:var(--text);"
-               id="ava-sheet-isim">Ahmet Bey</div>
-          <div style="font-size:12px;color:var(--text3);" id="ava-sheet-konum">Manisa</div>
+                    font-family:'Inter',sans-serif;font-size:17px;font-weight:600;
+                    color:white;flex-shrink:0;overflow:hidden;" id="ava-sheet-avatar">A</div>
+        <div style="flex:1;min-width:0;">
+          <!-- "Merhaba, [İsim] 👋" — rapor sayfa 8 sentez -->
+          <div style="font-size:12px;font-weight:400;color:var(--text3);margin-bottom:1px;"
+               id="ava-sheet-selam">Merhaba,</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);white-space:nowrap;
+                      overflow:hidden;text-overflow:ellipsis;"
+               id="ava-sheet-isim">Ahmet</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:1px;" id="ava-sheet-konum">Manisa</div>
         </div>
       </div>
       <!-- Menü satırları -->
@@ -5353,11 +5363,12 @@ body.app-ready { background: var(--bg); }
           <div style="width:32px;height:32px;border-radius:8px;background:rgba(120,117,112,.1);
                       display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="2" stroke="var(--text2)" stroke-width="1.3"/>
-              <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8
-                       M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3
-                       M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3"
-                    stroke="var(--text2)" stroke-width="1.3" stroke-linecap="round"/>
+              <!-- Dişli çark — iOS Settings standardı -->
+              <circle cx="8" cy="8" r="2.2" stroke="var(--text2)" stroke-width="1.3"/>
+              <path d="M8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4
+                       M3.55 3.55l1 1M11.45 11.45l1 1
+                       M12.45 3.55l-1 1M4.55 11.45l-1 1"
+                    stroke="var(--text2)" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
           </div>
           <span style="font-size:15px;font-weight:500;color:var(--text);flex:1;">Ayarlar</span>
@@ -5374,12 +5385,14 @@ body.app-ready { background: var(--bg); }
           <div style="width:32px;height:32px;border-radius:8px;background:rgba(59,130,246,.1);
                       display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="#3B82F6" stroke-width="1.3"/>
-              <path d="M8 7v4" stroke="#3B82F6" stroke-width="1.4" stroke-linecap="round"/>
-              <circle cx="8" cy="5" r="0.8" fill="#3B82F6"/>
+              <!-- Konuşma balonu + yıldız — geri bildirim -->
+              <path d="M2 3.5A1.5 1.5 0 013.5 2h9A1.5 1.5 0 0114 3.5v6A1.5 1.5 0 0112.5 11H9l-3 2.5V11H3.5A1.5 1.5 0 012 9.5v-6z"
+                    stroke="#3B82F6" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M8 4.5l.6 1.8h1.9l-1.5 1.1.6 1.8L8 8.2l-1.6 1 .6-1.8-1.5-1.1H7.4z"
+                    fill="#3B82F6" opacity=".7"/>
             </svg>
           </div>
-          <span style="font-size:15px;font-weight:500;color:var(--text);flex:1;">Destek</span>
+          <span style="font-size:15px;font-weight:500;color:var(--text);flex:1;">Geri Bildirim</span>
           <span style="font-size:18px;color:var(--text3);line-height:1;">›</span>
         </div>
         <!-- Çıkış — kırmızı ton -->
@@ -7057,9 +7070,11 @@ function setSbLeft(screenId) {
     if (centerEl) centerEl.style.display = 'none';
     const rightActionHome = document.getElementById('sb-right-action');
     if (rightActionHome) { rightActionHome.style.display = 'none'; rightActionHome.innerHTML = ''; }
-    // Eğer avatar-wrap yoksa yeniden oluştur
+    // Avatar wrap yoksa yeniden oluştur — ismi LS'den al (en güvenilir kaynak)
     if (!document.getElementById('sb-avatar-wrap')) {
-      const isim = document.getElementById('sb-greeting-name')?.textContent || 'Ahmet';
+      const lsP = (() => { try { return JSON.parse(localStorage.getItem('hasat_profil') || '{}'); } catch(e) { return {}; } })();
+      const isim = lsP.isim ? lsP.isim.split(' ')[0]
+                 : (document.getElementById('lt-greeting-name')?.textContent || 'Ahmet');
       const harf = isim.charAt(0).toUpperCase();
       el.innerHTML = `
         <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="avatarSheetAc()">
@@ -7069,7 +7084,7 @@ function setSbLeft(screenId) {
           <span class="sb-greeting-sub" id="sb-greeting-sub">günaydın,</span>
           <span class="sb-greeting-name" id="sb-greeting-name">${isim}</span>
         </div>`;
-      updateGreeting(); // saat bazlı selamlamayı güncelle
+      updateGreeting(); // saat bazlı selam + lt senkron
     }
   }
 
@@ -7295,11 +7310,17 @@ function setupHeaderScroll() {
   sb.style.transform = '';
   sb.classList.remove('scrolled');
 
-  // Tüm lt-tab-title'ları sıfırla — önceki ekrandan kalıntı olmasın
+  // Tüm lt başlıkları sıfırla
   ['lt-greeting','lt-fields','lt-kayitlarim','lt-kasa'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.opacity = '1';
   });
+  // Home'da sb-greeting gizle — lt-greeting görünür başlar
+  // Tab ekranlarında sb-greeting zaten yok (geri butonu var)
+  if (currentScreen === 'home') {
+    const sg = document.getElementById('sb-greeting');
+    if (sg) sg.classList.remove('visible');
+  }
 
   // Home + sekme ekranlarında Large Title scroll aktif
   const ltIdMap = { home: 'lt-greeting', fields: 'lt-fields', kayitlarim: 'lt-kayitlarim', kasa: 'lt-kasa' };
@@ -7349,16 +7370,23 @@ function _applyLargeTitleState(scroller, sb, ltId) {
   // Large Title: scroll ilerledikçe solar
   ltEl.style.opacity = String(1 - progress);
 
-  // v54: inline greeting her zaman görünür — toggle kaldırıldı
+  // sb-greeting: lt tamamen geçince belirir (iOS Large Title → Inline Title geçişi)
+  const inlineGreeting = document.getElementById('sb-greeting');
+  if (inlineGreeting) inlineGreeting.classList.toggle('visible', progress >= 1);
 
-  // Scrolled: border + shadow — Large Title tamamen geçince
+  // Scrolled: border + shadow
   sb.classList.toggle('scrolled', st >= ltBottom);
 }
 
 // Large Title metnini güncelle — profilGuncelle ile senkron
 function ltGreetingGuncelle(isim) {
-  const nameEl = document.getElementById('lt-greeting-name');
-  if (nameEl && isim) nameEl.textContent = isim;
+  // lt ve sb her zaman senkron — her ikisini birden güncelle
+  const ltNameEl = document.getElementById('lt-greeting-name');
+  const sbNameEl = document.getElementById('sb-greeting-name');
+  if (ltNameEl && isim) ltNameEl.textContent = isim;
+  if (sbNameEl && isim) sbNameEl.textContent = isim;
+  // Selam metni: mevcut saatten al
+  updateGreeting();
 }
 
 // ── HAVA 5 GÜNLÜK ──
@@ -7982,17 +8010,23 @@ function updateGreeting() {
   else if (hour >= 18 && hour < 22) selam = 'iyi akşamlar,';
   else selam = 'iyi geceler,';
 
-  // Inline header greeting (header'da, gizli başlar)
-  const subEl = document.getElementById('sb-greeting-sub');
-  if (subEl) subEl.textContent = selam;
-  const nameEl = document.getElementById('sb-greeting-name');
-  if (nameEl && !nameEl.textContent) nameEl.textContent = 'Ahmet';
+  // Güncel ismi tek kaynaktan oku — localStorage > sb-greeting-name > varsayılan
+  const LS_profil = (() => { try { return JSON.parse(localStorage.getItem('hasat_profil') || '{}'); } catch(e) { return {}; } })();
+  const mevcutIsim = LS_profil.isim
+    ? LS_profil.isim.split(' ')[0]
+    : (document.getElementById('sb-greeting-name')?.textContent || 'Ahmet');
 
-  // Large Title greeting (scroll içinde, her zaman görünür başlar)
-  const ltSubEl = document.getElementById('lt-greeting-sub');
-  if (ltSubEl) ltSubEl.textContent = selam;
+  // sb-bar selamlama (her zaman görünür)
+  const subEl  = document.getElementById('sb-greeting-sub');
+  const nameEl = document.getElementById('sb-greeting-name');
+  if (subEl)  subEl.textContent  = selam;
+  if (nameEl) nameEl.textContent = mevcutIsim;
+
+  // lt-greeting (scroll içinde, aynı isim — senkron)
+  const ltSubEl  = document.getElementById('lt-greeting-sub');
   const ltNameEl = document.getElementById('lt-greeting-name');
-  if (ltNameEl && !ltNameEl.textContent) ltNameEl.textContent = 'Ahmet';
+  if (ltSubEl)  ltSubEl.textContent  = selam;
+  if (ltNameEl) ltNameEl.textContent = mevcutIsim;
 }
 
 // Sayfa ilk açıldığında home aktif — scroll listener'ı hemen kur
@@ -11430,22 +11464,39 @@ function avatarSheetAc() {
   const sheet = document.getElementById('avatar-sheet');
   if (!sheet) return;
 
-  // Sheet içindeki profil bilgilerini güncelle
-  const isimEl  = document.getElementById('p-isim');
-  const konumEl = document.getElementById('p-konum');
-  const isim    = isimEl  ? isimEl.textContent  : 'Ahmet Bey';
-  const konum   = konumEl ? konumEl.textContent : 'Manisa';
+  // Rapor: "Merhaba, [İsim] 👋" — LS en güvenilir kaynak, DOM fallback
+  const lsP   = (() => { try { return JSON.parse(localStorage.getItem('hasat_profil') || '{}'); } catch(e) { return {}; } })();
+  const isim  = lsP.isim  || document.getElementById('p-isim')?.textContent  || 'Ahmet';
+  const konum = lsP.konum || document.getElementById('p-konum')?.textContent || '';
+
+  // Selam metni (saat bazlı — tutarlılık için updateGreeting ile aynı mantık)
+  const saat = new Date().getHours();
+  const selam = saat >= 5 && saat < 12 ? 'Günaydın,' :
+                saat >= 12 && saat < 18 ? 'İyi öğlenler,' :
+                saat >= 18 && saat < 22 ? 'İyi akşamlar,' : 'İyi geceler,';
 
   const sheetIsim  = document.getElementById('ava-sheet-isim');
   const sheetKonum = document.getElementById('ava-sheet-konum');
-  const sheetHarf  = document.getElementById('ava-sheet-harf');
-  if (sheetIsim)  sheetIsim.textContent  = isim;
-  if (sheetKonum) sheetKonum.textContent = konum;
-  if (sheetHarf)  sheetHarf.textContent  = isim.charAt(0).toUpperCase();
+  const sheetSelam = document.getElementById('ava-sheet-selam');
+  const sheetAvtr  = document.getElementById('ava-sheet-avatar');
 
-  // Göster — flex ile align-items:flex-end çalışır
+  if (sheetSelam) sheetSelam.textContent = selam;
+  if (sheetIsim)  sheetIsim.textContent  = isim.split(' ')[0]; // sadece ilk isim
+  if (sheetKonum) sheetKonum.textContent = konum;
+
+  // Avatar: fotoğraf yüklendiyse göster, yoksa harf (rapor: fotoğraf > harf)
+  if (sheetAvtr) {
+    const avatarSrc = LS.oku ? LS.oku(LS.KEYS?.avatar) : localStorage.getItem('hasat_avatar');
+    if (avatarSrc) {
+      sheetAvtr.innerHTML = `<img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;" alt="avatar">`;
+    } else {
+      sheetAvtr.innerHTML = '';
+      sheetAvtr.textContent = isim.charAt(0).toUpperCase();
+    }
+  }
+
+  // Göster
   sheet.style.display = 'flex';
-  // Mikro gecikme: display:flex settle olduktan sonra opacity/transform animasyonu
   requestAnimationFrame(() => {
     const inner = sheet.querySelector('.op-sheet-inner');
     if (inner) {
@@ -11464,20 +11515,29 @@ function avatarSheetKapat(e) {
 }
 
 function avatarSheetGit(hedef) {
-  // Sheet'i kapat, sonra hedefe git
+  // Sheet kapat
   const sheet = document.getElementById('avatar-sheet');
   if (sheet) sheet.style.display = 'none';
 
   if (hedef === 'profil') {
+    // Profilim — kullanıcı bilgileri, tarla/sezon yönetimi
     navTo('profil');
   } else if (hedef === 'ayarlar') {
-    // TODO: ayarlar ekranı eklenince navTo('ayarlar')
-    navTo('profil'); // şimdilik profil'e yönlendir
-  } else if (hedef === 'destek') {
-    // TODO: destek sheet'i veya ekranı
+    // Rapor: "Ayarlar, yardım, hakkında — profil avatarına dokunulduğunda açılan alt sheet içine"
+    // Ayarlar profil ekranının bir bölümü — profil'e git
     navTo('profil');
+  } else if (hedef === 'destek') {
+    // Destek: geri bildirim sheet'ini aç (uygulama içi destek)
+    navTo('profil');
+    setTimeout(() => {
+      const gbSheet = document.getElementById('profil-gb-sheet');
+      if (gbSheet) {
+        gbSheet.style.display = 'flex';
+        gbSheet.style.animation = 'overlayIn .22s ease both';
+      }
+    }, 320); // profil geçiş animasyonu bittikten sonra
   } else if (hedef === 'cikis') {
-    // TODO: oturum kapatma mantığı — şimdilik onboarding'e dön
+    // Çıkış: onboarding'e dön (prototip — gerçekte oturum kapatma)
     navTo('onboarding');
   }
 }
