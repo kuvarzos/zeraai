@@ -7427,6 +7427,237 @@ Object.defineProperty(window, 'prevScreen', {
   set(v) { fromScreen = v; }
 });
 
+// ── iOS Swipe-Back Gesture ────────────────────────────────────────────────────
+//
+// Model: Apple UINavigationController interaktif pop gesture
+//
+// ÇALIŞMA KOŞULU — sadece navigation stack'te geri adım varsa aktif:
+//   detail → fields  (tarla kartı açıldıktan sonra)
+//   profil → home
+//   bildirimler → home
+//   (tab bar ekranları arası ÇALIŞMAZ — iOS standardı)
+//
+// GESTURE MEKANİĞİ:
+//   1. Sol kenar bölgesinden (0–30px) dokunuş başlar
+//   2. Yatay >8px hareket → gesture lock (scroll devre dışı)
+//   3. Dikey >30px önce giderse → gesture iptal, scroll'a bırak
+//   4. Sürükleme boyunca: aktif ekran sağa kayar (translateX = dx)
+//      arka ekran: soldan %30 geride başlayıp parallax ile takip eder
+//   5a. dx ≥ 80px veya hız ≥ 350px/s → navBack() tetikle
+//   5b. Yetersizse → her iki ekran spring animasyonla geri döner
+//
+// BLOKLANMA: herhangi bir sheet/overlay açıksa, drag aktifse çalışmaz
+// ─────────────────────────────────────────────────────────────────────────────
+(function() {
+  'use strict';
+
+  // ── Sabitler ────────────────────────────────────────────────────────
+  var EDGE      = 30;   // px — sol kenar başlama bölgesi
+  var COMMIT    = 80;   // px — bu kadar gidilirse tetikle
+  var VEL_MIN   = 350;  // px/s — hız ile erken tetikleme
+  var LOCK_DX   = 8;    // px — bu kadar yatay gidilince gesture devralır
+  var ABORT_DY  = 30;   // px — bu kadar dikey gidilince iptal
+
+  // Tüm sheet/overlay ID'leri — bunlardan biri açıksa çalışma
+  var SHEET_IDS = [
+    'kayit-sheet','hava-sheet','op-sheet','kasa-sheet-overlay',
+    'kasa-sezon-sheet','kasa-yil-sheet','konum-picker-sheet',
+    'profil-edit-sheet','profil-gb-sheet','sezon-sheet',
+    'home-kayit-sheet','tarla-sil-sheet-overlay'
+  ];
+
+  // Swipe state
+  var s = null;
+
+  // ── Yardımcı: geri dönülecek ekran var mı? ──────────────────────────
+  function backTarget() {
+    // fromScreen ile currentScreen farklıysa ve fromScreen geçerliyse
+    var from = fromScreen;
+    if (!from || from === currentScreen) return null;
+    var el = document.getElementById(from);
+    if (!el) return null;
+    return from;
+  }
+
+  // ── Yardımcı: herhangi bir sheet açık mı? ───────────────────────────
+  function anySheetOpen() {
+    for (var i = 0; i < SHEET_IDS.length; i++) {
+      var el = document.getElementById(SHEET_IDS[i]);
+      if (el && el.style.display !== 'none' && el.style.display !== '') return true;
+    }
+    // Context menu
+    if (document.querySelector('.fl-ctx-overlay')) return true;
+    // Drag-drop aktif mi? (fl-card.is-dragging)
+    if (document.querySelector('.fl-card.is-dragging')) return true;
+    return false;
+  }
+
+  // ── Touch start ─────────────────────────────────────────────────────
+  function onStart(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    var t = e.touches[0];
+
+    // Sadece sol kenar bölgesinden başla
+    if (t.clientX > EDGE) return;
+
+    // Geri gidecek ekran yoksa çalışma
+    var target = backTarget();
+    if (!target) return;
+
+    // Sheet açıksa çalışma
+    if (anySheetOpen()) return;
+
+    s = {
+      x0:     t.clientX,
+      y0:     t.clientY,
+      xPrev:  t.clientX,
+      tPrev:  Date.now(),
+      dx:     0,
+      vel:    0,
+      locked: false,
+      done:   false,
+      target: target
+    };
+  }
+
+  // ── Touch move ──────────────────────────────────────────────────────
+  function onMove(e) {
+    if (!s || s.done) return;
+    if (!e.touches || !e.touches[0]) return;
+
+    var t   = e.touches[0];
+    var dx  = t.clientX - s.x0;
+    var dy  = Math.abs(t.clientY - s.y0);
+    var now = Date.now();
+    var dt  = now - s.tPrev;
+
+    // Dikey önce giderse — gesture iptal, scroll'a bırak
+    if (!s.locked && dy > ABORT_DY && dy > Math.abs(dx)) {
+      cancel(); return;
+    }
+
+    // Sola gitme — iptal
+    if (dx < 0) { if (s.locked) cancel(); return; }
+
+    // Yeterince yatay gidildi — gesture devral
+    if (!s.locked && dx > LOCK_DX) {
+      s.locked = true;
+    }
+    if (!s.locked) return;
+
+    // Scroll'u engelle (gesture devralındıktan sonra)
+    e.preventDefault();
+
+    // Hız hesapla (smooth)
+    if (dt > 0) {
+      var rawVel = (t.clientX - s.xPrev) / dt * 1000;
+      s.vel = s.vel * 0.7 + rawVel * 0.3; // exponential smoothing
+    }
+    s.xPrev = t.clientX;
+    s.tPrev = now;
+    s.dx    = dx;
+
+    // Aktif ekranı sürükle
+    var cur = document.getElementById(currentScreen);
+    if (cur) {
+      cur.style.transition = 'none';
+      cur.style.transform  = 'translateX(' + dx + 'px)';
+    }
+
+    // Arka ekranı parallax ile göster — soldan %30 geride, sağa doğru kayar
+    var bk = document.getElementById(s.target);
+    if (bk) {
+      var bkX = -60 + (dx / window.innerWidth) * 60; // -60px → 0px
+      bk.style.display    = 'flex';
+      bk.style.transition = 'none';
+      bk.style.transform  = 'translateX(' + bkX + 'px)';
+      bk.style.zIndex     = '0';
+    }
+  }
+
+  // ── Touch end ───────────────────────────────────────────────────────
+  function onEnd() {
+    if (!s || s.done) { s = null; return; }
+    if (!s.locked) { s = null; return; }
+
+    s.done = true;
+    var shouldCommit = s.dx >= COMMIT || s.vel >= VEL_MIN;
+
+    var cur = document.getElementById(currentScreen);
+    var bk  = document.getElementById(s.target);
+    var W   = window.innerWidth;
+
+    if (shouldCommit) {
+      // ── Commit: aktif ekranı sağa fırlat, arka ekranı yerine getir ──
+      if (cur) {
+        cur.style.transition = 'transform .26s cubic-bezier(.4,0,.2,1)';
+        cur.style.transform  = 'translateX(' + W + 'px)';
+      }
+      if (bk) {
+        bk.style.transition = 'transform .26s cubic-bezier(.4,0,.2,1)';
+        bk.style.transform  = 'translateX(0)';
+      }
+      setTimeout(function() {
+        // Transform temizle, navBack() navigasyonu tamamlasın
+        if (cur) { cur.style.transition = ''; cur.style.transform = ''; }
+        if (bk)  { bk.style.transition  = ''; bk.style.transform  = ''; bk.style.zIndex = ''; }
+        navBack();
+      }, 260);
+    } else {
+      // ── Cancel: her iki ekranı spring ile geri döndür ────────────────
+      if (cur) {
+        cur.style.transition = 'transform .36s cubic-bezier(.34,1.1,.64,1)';
+        cur.style.transform  = 'translateX(0)';
+      }
+      if (bk) {
+        bk.style.transition = 'transform .36s cubic-bezier(.34,1.1,.64,1)';
+        bk.style.transform  = 'translateX(-60px)';
+      }
+      setTimeout(function() {
+        if (cur) { cur.style.transition = ''; cur.style.transform = ''; }
+        if (bk)  {
+          bk.style.transition = '';
+          bk.style.transform  = '';
+          bk.style.display    = '';
+          bk.style.zIndex     = '';
+        }
+      }, 360);
+    }
+    s = null;
+  }
+
+  // ── Cancel (dokunuş iptal) ───────────────────────────────────────────
+  function cancel() {
+    if (!s) return;
+    if (s.locked) {
+      var cur = document.getElementById(currentScreen);
+      var bk  = document.getElementById(s.target);
+      if (cur) {
+        cur.style.transition = 'transform .28s cubic-bezier(.34,1.1,.64,1)';
+        cur.style.transform  = 'translateX(0)';
+        setTimeout(function() { cur.style.transition = ''; cur.style.transform = ''; }, 280);
+      }
+      if (bk) {
+        bk.style.transition = 'transform .28s cubic-bezier(.34,1.1,.64,1)';
+        bk.style.transform  = 'translateX(-60px)';
+        setTimeout(function() {
+          bk.style.transition = '';
+          bk.style.transform  = '';
+          bk.style.display    = '';
+          bk.style.zIndex     = '';
+        }, 280);
+      }
+    }
+    s = null;
+  }
+
+  // passive:false sadece touchmove'da gerekli (e.preventDefault için)
+  document.addEventListener('touchstart',  onStart, { passive: true });
+  document.addEventListener('touchmove',   onMove,  { passive: false });
+  document.addEventListener('touchend',    onEnd,   { passive: true });
+  document.addEventListener('touchcancel', cancel,  { passive: true });
+})();
+
 // ── HEADER SCROLL DAVRANIŞI ──────────────────────────────────────────
 // ── LARGE TITLE → INLINE HEADER GEÇİŞİ ─────────────────────────────────────
 // Apple HIG Large Title pattern:
@@ -10289,138 +10520,6 @@ function renderTarlaSirasi() {
 
 })();
 
-// ── iOS Swipe-Back Gesture (v56c) ────────────────────────────────────────────
-// Apple UINavigationController standardı:
-//   • Sol kenardan (x < 28px) başlayan dokunuş yakalar
-//   • Yatay hareket dikey hareketten büyükse gesture devralır
-//   • 72px+ ilerleme VEYA 400px/s+ hız → navBack() tetiklenir
-//   • Sürükleme sırasında mevcut ekran sağa kayar (translateX)
-//   • Açık sheet/overlay varsa gesture çalışmaz
-// ─────────────────────────────────────────────────────────────────────────────
-(function initSwipeBack() {
-  const EDGE_ZONE     = 28;   // px — sol kenar başlama bölgesi
-  const MIN_DISTANCE  = 72;   // px — tetikleme için min yatay mesafe
-  const MIN_VELOCITY  = 400;  // px/s — hız ile erken tetikleme
-  const MAX_VERTICAL  = 40;   // px — bu kadar dikey gidilirse gesture iptal
-
-  let sw = null; // aktif swipe state
-
-  function canSwipeBack() {
-    // Swipe-back sadece geri dönülecek ekran varsa çalışır
-    if (!fromScreen || fromScreen === currentScreen) return false;
-    // Açık overlay/sheet varsa çalışmaz
-    const overlays = [
-      'kayit-sheet','hava-sheet','op-sheet','kasa-sheet-overlay',
-      'kasa-sezon-sheet','kasa-yil-sheet','konum-picker-sheet',
-      'profil-edit-sheet','profil-gb-sheet','sezon-sheet','home-kayit-sheet'
-    ];
-    for (const id of overlays) {
-      const el = document.getElementById(id);
-      if (el && el.style.display !== 'none') return false;
-    }
-    // Context menu açıksa çalışmaz
-    if (document.querySelector('.fl-ctx-overlay')) return false;
-    return true;
-  }
-
-  function onStart(e) {
-    if (!e.touches || e.touches.length !== 1) return;
-    const t = e.touches[0];
-    if (t.clientX > EDGE_ZONE) return;   // sadece sol kenardan
-    if (!canSwipeBack()) return;
-    sw = {
-      startX:  t.clientX,
-      startY:  t.clientY,
-      lastX:   t.clientX,
-      lastT:   Date.now(),
-      dx:      0,
-      locked:  false,    // gesture devralındı mı?
-      aborted: false,
-    };
-  }
-
-  function onMove(e) {
-    if (!sw || sw.aborted) return;
-    const t = e.touches[0];
-    const dx = t.clientX - sw.startX;
-    const dy = Math.abs(t.clientY - sw.startY);
-
-    // Dikey hareket fazlaysa gesture iptal
-    if (!sw.locked && dy > MAX_VERTICAL) { abort(); return; }
-
-    // Sola gidiyorsa iptal
-    if (dx <= 0) { if (sw.locked) abort(); return; }
-
-    // İlk lock — gesture devral, scroll'u engelle
-    if (!sw.locked && dx > 8) {
-      sw.locked = true;
-    }
-    if (!sw.locked) return;
-
-    e.preventDefault(); // scroll'u engelle
-
-    sw.dx = dx;
-    sw.lastX = t.clientX;
-    sw.lastT = Date.now();
-
-    // Mevcut ekranı sürükle — parallax %100 (iOS gibi tam takip)
-    const screen = document.getElementById(currentScreen);
-    if (screen) {
-      screen.style.transition = 'none';
-      screen.style.transform  = `translateX(${dx}px)`;
-    }
-  }
-
-  function onEnd(e) {
-    if (!sw || sw.aborted || !sw.locked) { sw = null; return; }
-
-    const elapsed = Date.now() - sw.lastT;
-    const velocity = elapsed > 0 ? (sw.dx / elapsed) * 1000 : 0; // px/s
-
-    const shouldBack = sw.dx >= MIN_DISTANCE || velocity >= MIN_VELOCITY;
-
-    const screen = document.getElementById(currentScreen);
-    if (screen) {
-      if (shouldBack) {
-        // Hızlıca sağa fırlat, sonra navBack()
-        screen.style.transition = 'transform .22s cubic-bezier(.4,0,.2,1)';
-        screen.style.transform  = 'translateX(100%)';
-        setTimeout(() => {
-          screen.style.transition = '';
-          screen.style.transform  = '';
-          navBack();
-        }, 220);
-      } else {
-        // Geri yay — iOS spring
-        screen.style.transition = 'transform .32s cubic-bezier(.34,1.2,.64,1)';
-        screen.style.transform  = 'translateX(0)';
-        setTimeout(() => {
-          screen.style.transition = '';
-          screen.style.transform  = '';
-        }, 320);
-      }
-    }
-    sw = null;
-  }
-
-  function abort() {
-    if (!sw) return;
-    sw.aborted = true;
-    const screen = document.getElementById(currentScreen);
-    if (screen && sw.locked) {
-      screen.style.transition = 'transform .28s cubic-bezier(.34,1.2,.64,1)';
-      screen.style.transform  = 'translateX(0)';
-      setTimeout(() => { screen.style.transition = ''; screen.style.transform = ''; }, 280);
-    }
-    sw = null;
-  }
-
-  // passive:false sadece touchmove'da — e.preventDefault() için zorunlu
-  document.addEventListener('touchstart', onStart, { passive: true });
-  document.addEventListener('touchmove',  onMove,  { passive: false });
-  document.addEventListener('touchend',   onEnd,   { passive: true });
-  document.addEventListener('touchcancel', () => abort(), { passive: true });
-})();
 // ══════════════════════════════════════════════════════════════
 const LS = {
   KEYS: {
