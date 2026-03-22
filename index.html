@@ -280,62 +280,120 @@ body.app-ready { background: var(--bg); }
 }
 .phone.app-ready { background: var(--bg); }
 
+/* ── Header (status bar + nav bar birleşik) ──────────────────
+   Rapor önerileri:
+   - Status bar: 59px (iOS safe area)
+   - Nav bar: 44px (Apple HIG standardı)
+   - Toplam yükseklik: 103px
+   - Yatay padding: 16px
+   - Sol: avatar (32px görsel, 44px dokunma) + selamlama
+   - Sağ: bildirim zili (20px görsel, 44px dokunma)
+   - Orta: kasıtlı boş (premium pattern)
+   - Logo yok (araştırma kararı: tek-marka kişisel takip)
+   - Hamburger yok (alt tab bar mevcut)
+────────────────────────────────────────────────────────────── */
 .sb {
-  padding: 0 18px;
+  padding: 0 16px;
   display: flex; justify-content: space-between; align-items: center;
-  flex-shrink: 0; height: 68px;
-  background: var(--bg-header);
-  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  /* 59px status area + 44px nav bar = 103px toplam */
+  height: 103px;
+  padding-top: 59px; /* status bar alanı */
+  background: var(--bg);
+  border-bottom: 1px solid transparent; /* scroll'da JS ile aktif olur */
   position: relative; z-index: 30;
-  transition: background .3s, border-color .3s;
+  transition: background .3s, border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
 }
 
-/* zeraai logo — mutlak orta */
-.app-logo {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  display:flex; align-items:center; gap:9px; cursor:pointer;
-  pointer-events: auto;
+/* Scroll başlayınca header altına ince gölge eklenir */
+.sb.scrolled {
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
-.app-logo-mark {
-  width: 34px; height: 34px; border-radius: 9px;
-  background: var(--card); display:flex; align-items:center; justify-content:center;
-  flex-shrink:0;
-  box-shadow: 0 1px 6px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.05);
-}
-.app-logo-name {
-  font-family: 'Fraunces', serif;
-  font-size: 19px; font-weight: 600;
-  color: var(--text); letter-spacing: -0.4px;
-}
-.app-logo-name span { color: var(--text); }
 
-/* sol alan: geri butonu ya da boş */
+/* ── Sol: avatar + selamlama grubu ──────────────────────────
+   44px dokunma alanı için wrapper kullanıyoruz              */
 .sb-left {
-  width: 40px; display:flex; align-items:center;
-  flex-shrink: 0; z-index: 1;
+  display: flex; align-items: center; gap: 10px;
+  flex: 1; z-index: 1; min-width: 0;
 }
+/* Avatar: 32px görsel, teal arka plan, beyaz baş harf
+   Dokunma alanı: 44×44px (padding ile sağlanır)            */
+.app-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  color: white; cursor: pointer; flex-shrink: 0;
+  /* 44px dokunma alanı: görsel 32px + padding 6px her yön */
+  padding: 0; margin: -6px;
+  width: 32px; height: 32px;
+  /* touch target wrapper ile çözüyoruz */
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), opacity .15s;
+}
+.app-avatar:active { transform: scale(.88); opacity: .8; }
+/* 44×44 dokunma hedefi wrapper */
+.sb-avatar-wrap {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.sb-avatar-wrap:active .app-avatar { transform: scale(.88); opacity: .8; }
+
+/* Selamlama metin grubu */
+.sb-greeting {
+  display: flex; flex-direction: column;
+  justify-content: center; min-width: 0;
+  /* overflow: hidden; ile uzun isimler kırpılır */
+}
+.sb-greeting-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 400;
+  color: var(--text3); line-height: 1.2;
+  white-space: nowrap;
+}
+.sb-greeting-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px; font-weight: 600;
+  color: var(--text); line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Geri butonu (iç ekranlarda sb-left'i değiştirir) ────── */
 .sb-back-btn {
   width: 36px; height: 36px; border-radius: 50%;
   background: var(--c-dismiss-lt); border: 1px solid rgba(122,117,112,.18); cursor: pointer;
-  display:flex; align-items:center; justify-content:center;
+  display: flex; align-items: center; justify-content: center;
   color: var(--c-dismiss-mid);
   transition: background .15s, transform .18s cubic-bezier(.34,1.56,.64,1);
 }
 .sb-back-btn:active { background: rgba(122,117,112,.18); transform: scale(.88); }
 .sb-back-tab { background: var(--c-dismiss-lt); color: var(--c-dismiss-mid); border: 1px solid rgba(122,117,112,.18); }
 
-/* profil avatar sağ */
-.app-avatar {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--green-lt); border: 1.5px solid var(--green);
-  display:flex; align-items:center; justify-content:center;
-  font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500;
-  color: var(--green-mid); cursor: pointer;
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1);
-  flex-shrink: 0; z-index: 1;
-  box-shadow: 0 1px 4px rgba(34,127,131,.15);
+/* ── Sağ: bildirim zili ─────────────────────────────────────
+   44×44px dokunma alanı, 20px görsel ikon (SVG)             */
+.sb-notif-btn {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; position: relative;
+  margin-right: -10px; /* sağ padding dengeleme */
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 50%;
+  transition: background .15s;
 }
-.app-avatar:active { transform: scale(.88); }
+.sb-notif-btn:active { background: rgba(122,117,112,.12); }
+/* Okunmamış bildirim noktası — 7px kırmızı nokta */
+.sb-notif-dot {
+  position: absolute; top: 8px; right: 9px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid var(--bg); /* bg rengiyle çerçeve: ikon üstünde yüzer */
+  display: none; /* JS ile .visible class'ı eklenir */
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.sb-notif-dot.visible { display: block; }
 
 /* ── Progressive onboarding banneri ──────────────────────────
    Kayıt formunun üstünde — ad girilmemişse görünür,
@@ -384,10 +442,11 @@ body.app-ready { background: var(--bg); }
    Onboarding'de: wordmark gizlenir, avatar → Atla butonu,
    header altına ince teal progress bar eklenir
 ──────────────────────────────────────────────────────────── */
+/* Onboarding modunda: selamlama gizlenir, sadece progress bar + Atla kalır */
 .sb.ob-mode { background: var(--bg-header); }
-/* Onboarding'de logo + wordmark tamamen gizlenir — sadece progress bar + Atla kalır */
-.sb.ob-mode .app-logo { display: none; }
-.sb.ob-mode .app-logo-name { display: none; }
+.sb.ob-mode .sb-greeting { display: none; }
+.sb.ob-mode .sb-avatar-wrap { display: none; }
+.sb.ob-mode .sb-notif-btn { display: none; }
 
 /* Atla butonu */
 .ob-skip-btn {
@@ -421,7 +480,7 @@ body.app-ready { background: var(--bg); }
   display: none; flex-direction: column;
   position: absolute; inset: 0;
   background: var(--bg);
-  padding-top: 68px;
+  padding-top: 103px; /* yeni header: 59px status + 44px nav = 103px */
   will-change: transform, opacity;
   transform-origin: 50% 34px;
   transition: transform .32s cubic-bezier(.22,.68,0,1.05),
@@ -638,10 +697,7 @@ body.app-ready { background: var(--bg); }
 ═══════════════════════════════ */
 #home { background: radial-gradient(ellipse at 18% 12%, #E4DDD0 0%, #EDE8DD 52%, #F2EEE5 100%); }
 
-.greeting-bar { margin:14px 18px 0; display:flex; align-items:center; justify-content:space-between; }
-.greeting-text { font-family:'Fraunces',serif; font-size:15px; font-weight:400; color:var(--text); line-height:1.35; }
-.greeting-text em { font-style:normal; font-weight:600; color:var(--green-mid); }
-.greeting-date { font-size:11px; color:var(--text3); font-weight:500; margin-top:2px; }
+/* greeting-bar header'a taşındı — bu stiller artık kullanılmıyor */
 .avatar { width:36px; height:36px; background:var(--green-lt); border:1.5px solid var(--green); border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:14px; font-weight:500; color:var(--green-mid); margin-left:10px; flex-shrink:0; }
 
 /* hava bandı */
@@ -3148,29 +3204,40 @@ body.app-ready { background: var(--bg); }
 <body>
 <div class="phone">
 
-  <!-- STATUS BAR - always on top -->
-  <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;background:var(--bg)">
-    <!-- Sol: bağlama göre geri butonu veya boş -->
-    <div class="sb-left" id="sb-left"></div>
-    <!-- Orta: Logo (mutlak merkez) -->
-    <div class="app-logo" onclick="navTo('home')">
-      <div class="app-logo-mark">
-        <!-- 12.png logosu: yeşil gövde + yan yapraklar + altın çiçek -->
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <!-- gövde -->
-          <line x1="11" y1="20" x2="11" y2="7" stroke="#4F7942" stroke-width="2" stroke-linecap="round"/>
-          <!-- sol yaprak -->
-          <path d="M11 15 C9 13 5.5 13 4.5 10 C6.5 9 9.5 10.5 10.5 14 C10.7 14.6 11 15 11 15Z" fill="#4F7942"/>
-          <!-- sağ yaprak -->
-          <path d="M11 15 C13 13 16.5 13 17.5 10 C15.5 9 12.5 10.5 11.5 14 C11.3 14.6 11 15 11 15Z" fill="#4F7942"/>
-          <!-- altın çiçek — kalp benzeri iki lob -->
-          <path d="M11 3 C11 3 8.5 1 7.5 3 C7 4.5 9 6 11 7 C13 6 15 4.5 14.5 3 C13.5 1 11 3 11 3Z" fill="#D4A017"/>
-        </svg>
+  <!-- ─── HEADER ────────────────────────────────────────────────
+       103px toplam: 59px status area + 44px nav bar
+       Sol: avatar (32px) + selamlama (günaydın + isim)
+       Orta: kasıtlı boş (premium pattern — Apple Health/Things 3)
+       Sağ: bildirim zili (20px ikon, 44px dokunma alanı)
+  ────────────────────────────────────────────────────────────── -->
+  <div class="sb" id="sb-bar" style="position:absolute;top:0;left:0;right:0;z-index:100;">
+
+    <!-- Sol: avatar + selamlama (home'da) veya geri butonu (iç ekranlarda) -->
+    <div class="sb-left" id="sb-left">
+      <!-- Avatar wrap: 44×44px dokunma alanı -->
+      <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="navTo('profil')">
+        <div class="app-avatar" id="sb-avatar">A</div>
       </div>
-      <div class="app-logo-name">zeraai</div>
+      <!-- Selamlama metni: "günaydın," + isim (JS ile güncellenir) -->
+      <div class="sb-greeting" id="sb-greeting">
+        <span class="sb-greeting-sub" id="sb-greeting-sub">günaydın,</span>
+        <span class="sb-greeting-name" id="sb-greeting-name">Ahmet</span>
+      </div>
     </div>
-    <!-- Sağ: Profil avatarı (onboarding'de gizlenir) -->
-    <div class="app-avatar" id="sb-avatar" onclick="navTo('profil')">A</div>
+
+    <!-- Sağ: bildirim zili — 44×44px dokunma alanı -->
+    <div class="sb-notif-btn" id="sb-notif-btn" onclick="notifAc()">
+      <!-- Zil ikonu: outline stili, teal rengi, 20px -->
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="var(--green)" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <!-- Okunmamış bildirim noktası — JS ile .visible eklenir -->
+      <div class="sb-notif-dot" id="sb-notif-dot"></div>
+    </div>
+
   </div>
   <!-- Onboarding progress bar — sadece ob-mode'da görünür -->
   <div class="ob-progress-bar" id="ob-progress-bar" style="display:none;">
@@ -3181,13 +3248,7 @@ body.app-ready { background: var(--bg); }
   <div class="screen" id="home">
     <div class="scroll" style="padding-top:0">
 
-      <!-- SELAMLAMA -->
-      <div class="greeting-bar fu" style="margin-top:14px;">
-        <div>
-          <div class="greeting-text" id="g-isim-wrap">Günaydın, <em id="g-isim">Ahmet Bey</em> 👋</div>
-          <div class="greeting-date" id="g-date">Pazartesi, 16 Mart 2026</div>
-        </div>
-      </div>
+      <!-- greeting-bar header'a taşındı (sb-bar içinde) -->
 
       <!-- HAVA BANDI -->
       <div class="wb fu" onclick="wbTikla()">
@@ -6383,28 +6444,49 @@ const TAB_SCREENS = ['fields','kayitlarim','kasa'];
 function setSbLeft(screenId) {
   const el = document.getElementById('sb-left');
   if (!el) return;
+
   if (DETAIL_SCREENS.includes(screenId)) {
     // Detay ekranı: standart koyu geri tuşu
     el.innerHTML = `<button class="sb-back-btn" onclick="navBack()">${BACK_ICON}</button>`;
   } else if (TAB_SCREENS.includes(screenId)) {
-    // Sekme ekranı: yeşil tonlu, home'a döner
+    // Sekme ekranı (tarlalar, kayıtlarım vb.): yeşil tonlu geri, home'a döner
     el.innerHTML = `<button class="sb-back-btn sb-back-tab" onclick="navTo('home')">${BACK_ICON}</button>`;
   } else {
-    el.innerHTML = '';
+    // Home ekranı: avatar + selamlama göster
+    // Eğer avatar-wrap yoksa yeniden oluştur
+    if (!document.getElementById('sb-avatar-wrap')) {
+      const isim = document.getElementById('sb-greeting-name')?.textContent || 'Ahmet';
+      const harf = isim.charAt(0).toUpperCase();
+      el.innerHTML = `
+        <div class="sb-avatar-wrap" id="sb-avatar-wrap" onclick="navTo('profil')">
+          <div class="app-avatar" id="sb-avatar">${harf}</div>
+        </div>
+        <div class="sb-greeting" id="sb-greeting">
+          <span class="sb-greeting-sub" id="sb-greeting-sub">günaydın,</span>
+          <span class="sb-greeting-name" id="sb-greeting-name">${isim}</span>
+        </div>`;
+      updateGreeting(); // saat bazlı selamlamayı güncelle
+    }
   }
+
+  // Bildirim zilinini home'da göster, iç ekranlarda gizle
+  const notifBtn = document.getElementById('sb-notif-btn');
+  if (notifBtn) {
+    notifBtn.style.display = (DETAIL_SCREENS.includes(screenId) || TAB_SCREENS.includes(screenId)) ? 'none' : '';
+  }
+
   // Onboarding modu: header değişir
   setObMode(screenId === 'onboarding');
 }
 
 function setObMode(aktif) {
-  const sb     = document.getElementById('sb-bar');
-  const avatar = document.getElementById('sb-avatar');
-  const bar    = document.getElementById('ob-progress-bar');
-  if (!sb || !avatar || !bar) return;
+  const sb  = document.getElementById('sb-bar');
+  const bar = document.getElementById('ob-progress-bar');
+  if (!sb || !bar) return;
   if (aktif) {
     sb.classList.add('ob-mode');
-    // Avatar → Atla butonu
-    avatar.style.display = 'none';
+    bar.style.display = 'block';
+    obProgressGuncelle(0);
     // Sağa Atla butonu ekle (yoksa)
     if (!document.getElementById('ob-skip-hdr')) {
       const skip = document.createElement('div');
@@ -6414,11 +6496,8 @@ function setObMode(aktif) {
       skip.onclick = function() { obModKapat(); navTo('home'); };
       sb.appendChild(skip);
     }
-    bar.style.display = 'block';
-    obProgressGuncelle(0);
   } else {
     sb.classList.remove('ob-mode');
-    avatar.style.display = '';
     const skip = document.getElementById('ob-skip-hdr');
     if (skip) skip.remove();
     bar.style.display = 'none';
@@ -7023,8 +7102,8 @@ function obNext(adim) {
     document.getElementById('p-avatar').textContent = harf;
     document.getElementById('sb-avatar').textContent = harf;
     document.getElementById('p-ad-satir').textContent = isim;
-    // Ana sayfa selamlama güncelle
-    const gEl = document.getElementById('g-isim');
+    // Header selamlama ismini güncelle
+    const gEl = document.getElementById('sb-greeting-name');
     if (gEl) gEl.textContent = isim.split(' ')[0];
     // localStorage'a kaydet
     const mevcutKonum = document.getElementById('p-konum')?.textContent || '';
@@ -7130,7 +7209,7 @@ function progObKaydet() {
   document.getElementById('p-isim').textContent = isim;
   const pAdSatir = document.getElementById('p-ad-satir');
   if (pAdSatir) pAdSatir.textContent = isim;
-  const gEl = document.getElementById('g-isim');
+  const gEl = document.getElementById('sb-greeting-name');
   if (gEl) gEl.textContent = isim.split(' ')[0];
   ['sb-avatar','p-avatar'].forEach(id => {
     const el = document.getElementById(id);
@@ -7198,16 +7277,16 @@ function obBitir() {
 function updateGreeting() {
   const hour = new Date().getHours();
   let selam = 'İyi günler';
-  if (hour >= 5 && hour < 12)  selam = 'Günaydın';
-  else if (hour >= 12 && hour < 18) selam = 'İyi öğlenler';
-  else if (hour >= 18 && hour < 22) selam = 'İyi akşamlar';
-  else selam = 'İyi geceler';
-  const wrap = document.getElementById('g-isim-wrap');
-  const isimEl = document.getElementById('g-isim');
-  if (wrap && isimEl) {
-    const isim = isimEl.textContent;
-    wrap.innerHTML = `${selam}, <em id="g-isim">${isim}</em> 👋`;
-  }
+  if (hour >= 5 && hour < 12)  selam = 'günaydın,';
+  else if (hour >= 12 && hour < 18) selam = 'iyi öğlenler,';
+  else if (hour >= 18 && hour < 22) selam = 'iyi akşamlar,';
+  else selam = 'iyi geceler,';
+  // Selamlama sub metnini güncelle (küçük harf, noktalı — marka tonu)
+  const subEl = document.getElementById('sb-greeting-sub');
+  if (subEl) subEl.textContent = selam;
+  // İsim elementini güncelle (varsa, değişmeden kalır)
+  const nameEl = document.getElementById('sb-greeting-name');
+  if (nameEl && !nameEl.textContent) nameEl.textContent = 'Ahmet';
 }
 updateGreeting();
 
@@ -9395,7 +9474,7 @@ function lsProfilYukle() {
       const el = document.getElementById(id);
       if (el && !el.querySelector('img')) el.textContent = p.isim.charAt(0).toUpperCase();
     });
-    const gEl = document.getElementById('g-isim');
+    const gEl = document.getElementById('sb-greeting-name');
     if (gEl) gEl.textContent = p.isim.split(' ')[0];
   }
   if (p.konum) {
@@ -10051,7 +10130,7 @@ function saveProfilField() {
     if (sbAv && !sbAv.querySelector('img')) sbAv.textContent = val.charAt(0).toUpperCase();
     const pAv = document.getElementById('p-avatar');
     if (pAv && !pAv.querySelector('img')) pAv.textContent = val.charAt(0).toUpperCase();
-    const gEl = document.getElementById('g-isim');
+    const gEl = document.getElementById('sb-greeting-name');
     if (gEl) gEl.textContent = val.split(' ')[0];
   } else {
     document.getElementById('p-konum-satir').textContent = val;
@@ -10472,13 +10551,20 @@ function appendTarlaKarti(key, t) {
   renderTarlaSirasi();
 }
 
-// tarih
+// tarih — header'da tarih gösterilmiyor (araştırma kararı: minimal header)
 const days = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 const months2 = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const now = new Date();
-document.getElementById('g-date').textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months2[now.getMonth()] + ' ' + now.getFullYear();
 
 // MODAL
+// Bildirim ziline basılınca — ileride tam bildirim merkezi eklenecek
+// Şimdilik placeholder: dot'u temizler
+function notifAc() {
+  const dot = document.getElementById('sb-notif-dot');
+  if (dot) dot.classList.remove('visible');
+  // TODO: bildirim merkezi sheet'i aç
+}
+
 function openModal() {
   const el = document.getElementById('modal');
   el.classList.remove('closing');
