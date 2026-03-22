@@ -7419,20 +7419,27 @@ function openDetail(key) {
 }
 
 function navBack() {
-  const target = fromScreen; // geri dönülecek ekran
+  // Gidilecek ekranı belirle — fallback: home
+  const target = (fromScreen && fromScreen !== currentScreen && document.getElementById(fromScreen))
+    ? fromScreen
+    : 'home';
+
   const isTab = navOrder.includes(target);
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-in','slide-left'));
+  document.querySelectorAll('.screen').forEach(s =>
+    s.classList.remove('active','back','slide-in','slide-left','sb-behind')
+  );
   const t = document.getElementById(target);
+  if (!t) { navTo('home'); return; } // son güvenlik ağı
   t.style.animation = 'none';
-  t.offsetHeight; // reflow
-  t.style.animation = '';
-  // sb-behind varsa temizle
-  t.classList.remove('sb-behind');
+  t.offsetHeight;
+  t.style.animation  = '';
   t.style.visibility = '';
-  // Tab'a dönüş: cross-fade | Detaydan detaya geri: slide-left
   t.classList.add(isTab ? 'active' : 'slide-left');
   currentScreen = target;
-  fromScreen = navOrder.includes(target) ? target : 'home';
+  // fromScreen hiyerarşisi: tab ekranına dönünce home'u işaret et
+  fromScreen = (target === 'fields' || target === 'kayitlarim' || target === 'kasa')
+    ? 'home'
+    : target;
   setSbLeft(target);
   syncBnav(target);
   setupHeaderScroll();
