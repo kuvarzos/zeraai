@@ -572,6 +572,12 @@ body.app-ready { background: var(--bg); }
               border-radius .32s cubic-bezier(.22,.68,0,1.05);
 }
 /* iOS presenting view — sheet açıkken içerik küçülür, header sabit */
+/* Swipe-back sırasında arkada bekleyen ekran — display:flex kalır, görünmez */
+.screen.sb-behind {
+  display: flex;
+  z-index: 0;
+  visibility: hidden; /* layout korunur, görünmez */
+}
 .screen.sheet-presented {
   transform: scale(0.92) translateY(10px);
   border-radius: 12px;
@@ -7398,7 +7404,15 @@ function openDetail(key) {
   currentDetailKey = key;
   buildDetail(key);
   fromScreen = currentScreen; // gelinen ekranı kaydet
+
+  const prevScreen = currentScreen;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','back','slide-in','slide-left'));
+
+  // Gelinen ekranı (fields vb.) display:none yerine sb-behind ile arkada tut
+  // → swipe-back başladığında layout hazır bekler, flash olmaz
+  const prevEl = document.getElementById(prevScreen);
+  if (prevEl) prevEl.classList.add('sb-behind');
+
   currentScreen = 'detail';
   document.getElementById('detail').classList.add('slide-in');
   setSbLeft('detail');
@@ -7412,14 +7426,16 @@ function navBack() {
   t.style.animation = 'none';
   t.offsetHeight; // reflow
   t.style.animation = '';
+  // sb-behind varsa temizle
+  t.classList.remove('sb-behind');
+  t.style.visibility = '';
   // Tab'a dönüş: cross-fade | Detaydan detaya geri: slide-left
   t.classList.add(isTab ? 'active' : 'slide-left');
   currentScreen = target;
-  // fromScreen'i bir üst seviyeye sıfırla
   fromScreen = navOrder.includes(target) ? target : 'home';
   setSbLeft(target);
   syncBnav(target);
-  setupHeaderScroll(); // home'a dönüşte scroll listener yeniden kur
+  setupHeaderScroll();
 }// ── Swipe-Back Gesture (v60) ─────────────────────────────────────────────────
 //
 //  iOS standartları:
@@ -7514,12 +7530,20 @@ function navBack() {
     var bk  = document.getElementById(target);
     if (!cur || !bk) return;
 
-    // bk'yi göster — CSS transition AÇIKKEN transform set et, sonra kapat
-    // Böylece browser bk'yi ilk olarak doğru konumda render eder
-    bk.style.display   = 'flex';   // görünür — ama transition henüz açık
-    bk.style.zIndex    = '1';
-    bk.offsetHeight;               // reflow — display:flex işlendi
-    freezeEl(bk);                  // şimdi transition kapat
+    // bk'yi göster — sb-behind class'ı varsa layout zaten hazır
+    // sb-behind: display:flex + visibility:hidden — sadece visibility aç
+    var bkHasSbBehind = bk.classList.contains('sb-behind');
+    if (bkHasSbBehind) {
+      // Layout zaten hazır, display değişikliği YOK — flash olmaz
+      bk.classList.remove('sb-behind');
+      bk.style.visibility = 'visible';
+    } else {
+      // sb-behind yoksa (tab ekranı vb.) normal göster
+      bk.style.display = 'flex';
+      bk.offsetHeight; // reflow
+    }
+    bk.style.zIndex = '1';
+    freezeEl(bk); // transition kapat
     bk.style.transform = 'translateX(' + (-W * PAR) + 'px)';
 
     // cur: transition kapat, üste al
@@ -7620,20 +7644,22 @@ function navBack() {
       shadow.style.transition  = '';
       shadow.style.transform   = '';
 
-      // bk: zaten translateX(0)'da ve display:flex — inline style temizle
-      // ÖNCE active ekle → display:flex garantili → SONRA inline'ları temizle
+      // bk: active yap, tüm inline + sb-behind temizle
+      bk.classList.remove('sb-behind');
       bk.classList.add('active');
-      bk.style.transition = '';
-      bk.style.transform  = '';
-      bk.style.zIndex     = '';
-      bk.style.display    = ''; // .active'den geliyor artık
+      bk.style.transition  = '';
+      bk.style.transform   = '';
+      bk.style.zIndex      = '';
+      bk.style.display     = '';
+      bk.style.visibility  = '';
       thawEl(bk);
 
       // cur: ekran dışında — class'larını kaldır (display:none olur)
       cur.style.transition = '';
       cur.style.transform  = '';
       cur.style.zIndex     = '';
-      cur.classList.remove('active','back','slide-in','slide-left','tab-enter');
+      cur.style.visibility = '';
+      cur.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
       thawEl(cur);
 
       // State
@@ -7669,15 +7695,19 @@ function navBack() {
       shadow.style.transition  = '';
       shadow.style.transform   = '';
 
-      bk.style.display    = 'none'; // gizle — .active yok
+      // bk: sb-behind ile gizle (layout korunur, detail altında hazır bekler)
       bk.style.transition = '';
       bk.style.transform  = '';
       bk.style.zIndex     = '';
+      bk.style.visibility = '';
+      bk.style.display    = 'flex';
+      bk.classList.add('sb-behind');
       thawEl(bk);
 
       cur.style.transition = '';
       cur.style.transform  = '';
       cur.style.zIndex     = '';
+      cur.style.visibility = '';
       thawEl(cur);
     }, dur + 16);
   }
@@ -7691,13 +7721,16 @@ function navBack() {
     overlay.style.display = 'none';
     shadow.style.display  = 'none';
 
-    bk.style.display    = 'none';
     bk.style.transform  = '';
     bk.style.zIndex     = '';
+    bk.style.visibility = '';
+    bk.style.display    = 'flex';
+    bk.classList.add('sb-behind'); // layout koru, gizle
     thawEl(bk);
 
-    cur.style.transform = '';
-    cur.style.zIndex    = '';
+    cur.style.transform  = '';
+    cur.style.zIndex     = '';
+    cur.style.visibility = '';
     thawEl(cur);
   }
 
