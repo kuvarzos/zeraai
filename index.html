@@ -7503,6 +7503,15 @@ Object.defineProperty(window, 'prevScreen', {
     var bk  = document.getElementById(target);
     if (!cur || !bk) return;
 
+    console.log('[swipe start]', {
+      currentScreen: currentScreen,
+      fromScreen: fromScreen,
+      target: target,
+      cur_classes: cur.className,
+      bk_classes:  bk.className,
+      bk_display:  window.getComputedStyle(bk).display
+    });
+
     // .swipe-active → transition:none !important — CSS override
     cur.classList.add('swipe-active');
     bk.classList.add('swipe-active');
@@ -7607,20 +7616,39 @@ Object.defineProperty(window, 'prevScreen', {
     bk.style.transform   = 'translateX(0)';
 
     setTimeout(function () {
-      // cur: animasyon bitti, artık ekran dışında — gizle
-      cur.style.transition = '';
-      cur.style.transform  = '';
-      cur.style.zIndex     = '';
-      cur.classList.remove('active','back','slide-in','slide-left','tab-enter','swipe-active');
-      // display:none → .active yok, CSS default
+      console.log('[swipe commit] başladı', {
+        cur_id: cur.id,
+        bk_id:  bk.id,
+        bk_display_before: bk.style.display,
+        bk_classes_before: bk.className,
+        cur_classes_before: cur.className
+      });
 
-      // bk: yerine oturdu — inline style temizle, .active ekle
+      // bk: önce display:flex garantile, SONRA style temizle
+      // Sıra önemli: display hiç none olmamalı
+      bk.classList.remove('back','slide-in','slide-left','tab-enter','swipe-active');
+      if (!bk.classList.contains('active')) bk.classList.add('active');
+      // Şimdi display:flex garantilendi — inline style temizleyebiliriz
       bk.style.transition = '';
       bk.style.transform  = '';
       bk.style.zIndex     = '';
-      bk.style.display    = '';
-      bk.classList.remove('back','slide-in','slide-left','tab-enter','swipe-active');
-      bk.classList.add('active'); // display:flex — kesintisiz görünür
+      bk.style.display    = ''; // .active zaten display:flex yapıyor
+
+      console.log('[swipe commit] bk aktif edildi', {
+        bk_display_after: window.getComputedStyle(bk).display,
+        bk_classes_after: bk.className
+      });
+
+      // cur: ekran dışında, gizle
+      cur.style.transition = 'none'; // CSS transition'ın tetiklenmesini önle
+      cur.style.transform  = '';
+      cur.style.zIndex     = '';
+      cur.classList.remove('active','back','slide-in','slide-left','tab-enter','swipe-active');
+
+      console.log('[swipe commit] cur gizlendi', {
+        cur_display_after: window.getComputedStyle(cur).display,
+        cur_classes_after: cur.className
+      });
 
       // State güncelle
       currentScreen = target;
@@ -7629,6 +7657,11 @@ Object.defineProperty(window, 'prevScreen', {
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
+
+      // transition:none'ı bir frame sonra kaldır
+      requestAnimationFrame(function() {
+        cur.style.transition = '';
+      });
     }, dur);
   }
 
