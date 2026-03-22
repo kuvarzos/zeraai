@@ -794,9 +794,9 @@ body.app-ready { background: var(--bg); }
 .wb:active { background:var(--bg2); }
 .wb-main { display:flex; align-items:center; justify-content:space-between; gap:6px; }
 .wb-left { display:flex; align-items:center; gap:8px; }
-.wb-temp { font-family:var(--num); font-size:19px; font-weight:500; color:var(--text); line-height:1; }
+.wb-temp { font-family:var(--num); font-size:24px; font-weight:600; color:var(--text); line-height:1; } /* v55: 19→24px, 500→600 — outdoor 7:1 okunabilirlik (AgriTech raporu) */
 .wb-desc { font-size:10px; color:var(--text2); font-weight:500; margin-top:1px; }
-.wb-stats { display:flex; align-items:center; gap:8px; flex:1; justify-content:center; }
+.wb-stats { display:flex; align-items:center; gap:6px; flex:1; justify-content:center; } /* v55.3: 8→6px — 3 stat için compact spacing */
 .wb-stat { display:flex; align-items:center; gap:3px; font-size:11px; font-weight:600; color:var(--text2); }
 .wb-stat.wok  { color:var(--green-mid); } /* v51 */
 .wb-stat.wwarn{ color:var(--gold-text); } /* v51: 5.0:1 */
@@ -3482,12 +3482,37 @@ body.app-ready { background: var(--bg); }
       <div class="wb fu" onclick="wbTikla()">
         <div class="wb-main">
           <div class="wb-left">
-            <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="5.5" fill="#FCD34D"/><g stroke="#FDE68A" stroke-width="1.6" stroke-linecap="round" opacity=".65"><line x1="13" y1="2.5" x2="13" y2="5"/><line x1="13" y1="21" x2="13" y2="23.5"/><line x1="2.5" y1="13" x2="5" y2="13"/><line x1="21" y1="13" x2="23.5" y2="13"/><line x1="5.8" y1="5.8" x2="7.7" y2="7.7"/><line x1="18.3" y1="18.3" x2="20.2" y2="20.2"/><line x1="20.2" y1="5.8" x2="18.3" y2="7.7"/><line x1="7.7" y1="18.3" x2="5.8" y2="20.2"/></g></svg>
+<!-- v55.2: Az Bulutlu ikonu — güneş (fill+kontur) + önünde bulut silüeti (dolgu+kontur) -->
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Güneş gövdesi (dolgu) -->
+              <circle cx="11" cy="10" r="4.5" fill="#FCD34D"/>
+              <!-- Güneş konturu -->
+              <circle cx="11" cy="10" r="4.5" stroke="#E8A800" stroke-width="1"/>
+              <!-- Güneş ışınları -->
+              <g stroke="#FCD34D" stroke-width="1.5" stroke-linecap="round" opacity=".8">
+                <line x1="11" y1="3.5" x2="11" y2="5.2"/>
+                <line x1="11" y1="14.8" x2="11" y2="13.2"/>
+                <line x1="4.5" y1="10" x2="6.2" y2="10"/>
+                <line x1="17.5" y1="10" x2="15.8" y2="10"/>
+                <line x1="6.3" y1="5.3" x2="7.5" y2="6.5"/>
+                <line x1="15.7" y1="14.7" x2="14.5" y2="13.5"/>
+                <line x1="15.7" y1="5.3" x2="14.5" y2="6.5"/>
+                <line x1="6.3" y1="14.7" x2="7.5" y2="13.5"/>
+              </g>
+              <!-- Bulut gövdesi (dolgu — güneşin önünde) -->
+              <path d="M7 20.5c-2.2 0-3.8-1.7-3.8-3.8S4.8 13 7 13l.3.02A5 5 0 0 1 12 10a5 5 0 0 1 5 5v.4a3 3 0 0 1 2.5 3 3 3 0 0 1-3 3H7z" fill="#E8F4FF"/>
+              <!-- Bulut konturu -->
+              <path d="M7 20.5c-2.2 0-3.8-1.7-3.8-3.8S4.8 13 7 13l.3.02A5 5 0 0 1 12 10a5 5 0 0 1 5 5v.4a3 3 0 0 1 2.5 3 3 3 0 0 1-3 3H7z" stroke="#A8C8E8" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
             <div><div class="wb-temp" id="wb-temp-val">23°</div><div class="wb-desc" id="wb-desc-val">Az Bulutlu · Manisa</div></div>
           </div>
           <div class="wb-stats">
-            <div class="wb-stat"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M5 1C5 1 1.5 5.5 1.5 8a3.5 3.5 0 007 0C8.5 5.5 5 1 5 1z" stroke="var(--sky)" stroke-width="1.3" stroke-linejoin="round"/></svg>%58</div>
+            <!-- Stat 1: Nem — damla ikonu, --green-mid teal (v55.3a: --sky yeşil semantik hatası düzeltildi) -->
+            <div class="wb-stat"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M5 1C5 1 1.5 5.5 1.5 8a3.5 3.5 0 007 0C8.5 5.5 5 1 5 1z" stroke="var(--green-mid)" stroke-width="1.3" stroke-linejoin="round"/></svg>%58</div>
+            <!-- Stat 2: Rüzgar -->
             <div class="wb-stat wok"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 3.5C2 1.5 4 1 6 2.5M1.5 7c1.5 1.8 4.5.8 4.5-1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 3.5h5M7.5 7h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".4"/></svg>12 km/s</div>
+            <!-- Stat 3: Yağış ihtimali — v55.3: AgriTech raporu zorunlu istatistik -->
+            <div class="wb-stat wok"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M5 1C5 1 1.5 5.5 1.5 8a3.5 3.5 0 007 0C8.5 5.5 5 1 5 1z" fill="var(--sky-drop)" fill-opacity=".25" stroke="var(--sky-drop)" stroke-width="1.3" stroke-linejoin="round"/><line x1="3.5" y1="9.5" x2="3" y2="11" stroke="var(--sky-drop)" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="9.8" x2="4.5" y2="11.3" stroke="var(--sky-drop)" stroke-width="1" stroke-linecap="round"/><line x1="6.5" y1="9.5" x2="6" y2="11" stroke="var(--sky-drop)" stroke-width="1" stroke-linecap="round"/></svg>%12</div>
           </div>
           <div class="wb-badge ok"><div class="wb-dot ok"></div>Hava müsait</div>
           <div class="wb-arr" id="wb-arr" style="transform:rotate(90deg)">›</div>
