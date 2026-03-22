@@ -7512,18 +7512,19 @@ Object.defineProperty(window, 'prevScreen', {
       bk_display:  window.getComputedStyle(bk).display
     });
 
-    // .swipe-active → transition:none !important — CSS override
-    cur.classList.add('swipe-active');
-    bk.classList.add('swipe-active');
-
-    // Ön ekran: en üste al, transform sıfırla
-    cur.style.zIndex    = '2';
-    cur.style.transform = 'translateX(0)';
-
-    // Arka ekran: görünür yap, parallax başlangıç konumu
+    // Arka ekranı ÖNCE görünür ve doğru konuma getir — sonra transition kapat
+    // Sıra kritik: display:flex → reflow → transition:none → transform
     bk.style.display   = 'flex';
     bk.style.zIndex    = '1';
     bk.style.transform = 'translateX(' + (-W * PAR) + 'px)';
+    bk.offsetHeight;   // reflow — tarayıcı pozisyonu işlesin
+    bk.classList.add('swipe-active'); // şimdi transition:none
+
+    // Ön ekran: transition kapat, üste al
+    cur.style.zIndex    = '2';
+    cur.style.transform = 'translateX(0)';
+    cur.offsetHeight;   // reflow
+    cur.classList.add('swipe-active');
 
     g = {
       target : target,
