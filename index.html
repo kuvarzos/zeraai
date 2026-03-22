@@ -7356,12 +7356,11 @@ function navTo(id) {
   }
 
   // Geri butonu gösterilecek ekranlara geçerken gelinen ekranı kaydet
-  // kayitlarim + kasa da swipe-back destekler — fromScreen korunur
-  var SWIPE_BACK_TABS = ['kayitlarim', 'kasa'];
-  if (DETAIL_SCREENS.includes(id) || SWIPE_BACK_TABS.includes(id)) {
+  // kayitlarim + kasa = swipe-back ile home'a dönebilir
+  if (DETAIL_SCREENS.includes(id) || id === 'kayitlarim' || id === 'kasa') {
     fromScreen = currentScreen;
   } else {
-    // Diğer tab geçişlerinde fromScreen'i sıfırla
+    // fields ve home gibi ana tablarda fromScreen'i o ekrana eşitle → swipe yok
     fromScreen = id;
   }
 
@@ -7413,11 +7412,18 @@ function navBack() {
   t.style.animation = 'none';
   t.offsetHeight; // reflow
   t.style.animation = '';
-  // Geri dönüşte her zaman slide-left (iOS pop — hem detay hem tab için)
-  t.classList.add('slide-left');
+  // Tab'a dönüş: cross-fade | Detaydan detaya geri: slide-left
+  t.classList.add(isTab ? 'active' : 'slide-left');
   currentScreen = target;
-  // fromScreen'i bir üst seviyeye sıfırla
-  fromScreen = navOrder.includes(target) ? target : 'home';
+  // Hiyerarşi: fields'e dönünce bir sonraki swipe 'home'a gitsin
+  // detail→fields→home zinciri: fields'e döndükten sonra fromScreen='home'
+  if (target === 'fields') {
+    fromScreen = 'home';
+  } else if (navOrder.includes(target)) {
+    fromScreen = target; // home gibi ana tab — swipe yok
+  } else {
+    fromScreen = 'home';
+  }
   setSbLeft(target);
   syncBnav(target);
   setupHeaderScroll(); // home'a dönüşte scroll listener yeniden kur
@@ -7620,10 +7626,35 @@ Object.defineProperty(window, 'prevScreen', {
     g = null;
 
     setTimeout(function() {
-      // Inline style temizle — navBack() CSS sınıflarını yönetiyor
-      if (cur) { cur.style.transition = ''; cur.style.transform = ''; cur.style.zIndex = ''; }
-      if (bk)  { bk.style.transition  = ''; bk.style.transform  = ''; bk.style.zIndex  = ''; }
-      navBack();
+      // 1. Tüm ekranlardan class temizle
+      document.querySelectorAll('.screen').forEach(function(s) {
+        s.classList.remove('active','back','slide-in','slide-left','tab-enter');
+        s.style.transition = '';
+        s.style.transform  = '';
+        s.style.zIndex     = '';
+        s.style.display    = '';
+      });
+
+      // 2. Arka ekranı (hedef) aktif yap — CSS animasyon YOK, zaten yerine geldi
+      var bkEl = document.getElementById(target);
+      if (bkEl) bkEl.classList.add('active');
+
+      // 3. Navigation state güncelle
+      currentScreen = target;
+
+      // 4. fromScreen hiyerarşisi
+      if (target === 'fields') {
+        fromScreen = 'home';       // fields'ten bir sonraki swipe home'a gitsin
+      } else if (target === 'home' || target === 'kayitlarim' || target === 'kasa') {
+        fromScreen = target;       // bu tablarda swipe-back yok
+      } else {
+        fromScreen = 'home';
+      }
+
+      // 5. UI senkronizasyonu
+      setSbLeft(target);
+      syncBnav(target);
+      setupHeaderScroll();
     }, dur);
   }
 
