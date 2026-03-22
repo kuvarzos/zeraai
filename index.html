@@ -7356,11 +7356,11 @@ function navTo(id) {
   }
 
   // Geri butonu gösterilecek ekranlara geçerken gelinen ekranı kaydet
-  // kayitlarim + kasa = swipe-back ile home'a dönebilir
+  // kayitlarim + kasa swipe-back ile bir önceki sayfaya döner
   if (DETAIL_SCREENS.includes(id) || id === 'kayitlarim' || id === 'kasa') {
     fromScreen = currentScreen;
   } else {
-    // fields ve home gibi ana tablarda fromScreen'i o ekrana eşitle → swipe yok
+    // fields, home gibi ana tablarda fromScreen = kendisi → swipe-back yok
     fromScreen = id;
   }
 
@@ -7415,14 +7415,11 @@ function navBack() {
   // Tab'a dönüş: cross-fade | Detaydan detaya geri: slide-left
   t.classList.add(isTab ? 'active' : 'slide-left');
   currentScreen = target;
-  // Hiyerarşi: fields'e dönünce bir sonraki swipe 'home'a gitsin
-  // detail→fields→home zinciri: fields'e döndükten sonra fromScreen='home'
+  // Hiyerarşi: fields'e dönünce fromScreen='home' → ikinci swipe home'a gider
   if (target === 'fields') {
     fromScreen = 'home';
-  } else if (navOrder.includes(target)) {
-    fromScreen = target; // home gibi ana tab — swipe yok
   } else {
-    fromScreen = 'home';
+    fromScreen = navOrder.includes(target) ? target : 'home';
   }
   setSbLeft(target);
   syncBnav(target);
@@ -7437,15 +7434,17 @@ Object.defineProperty(window, 'prevScreen', {
 
 // ── iOS Swipe-Back Gesture ────────────────────────────────────────────────────
 //
-// Apple UINavigationController interaktif pop gesture — tam birebir:
+// Apple UINavigationController interaktif pop gesture — React Navigation
+// kaynak kodundan alınan birebir iOS değerleri:
 //
 //  TOUCH BAŞLANGIÇ  : sol kenar 0-30px
 //  GESTURE DEVRALMA : yatay Δx > 6px  VE  yatay > dikey
-//  PARALLAX         : arka ekran = -(W * 0.28) + (dx * 0.28)  — iOS birebir oran
+//  PARALLAX         : arka ekran = -(W * 0.3) + dx*0.3  — iOS birebir (0.3)
 //  COMMIT EŞİĞİ     : dx > W*0.38  VEYA  hız > 300px/s
-//  COMMIT ANİMASYON : süre = kalan_px / max(hız, 600) * 1000  — hıza bağlı dinamik
-//  CANCEL ANİMASYON : iOS spring  cubic-bezier(.32,.72,0,1)
+//  COMMIT ANİMASYON : cubic-bezier(0.2833,0.99,0.31833,0.99) — iOS CASpring
+//  CANCEL ANİMASYON : aynı easing, 380ms
 //  BLOKAJ           : sheet/overlay açıksa, drag aktifse, tek parmak değilse
+//  KRİTİK           : commit sonrası navBack() ÇAĞRILMAZ — çift animasyon önlenir
 // ─────────────────────────────────────────────────────────────────────────────
 (function() {
   'use strict';
@@ -7454,7 +7453,10 @@ Object.defineProperty(window, 'prevScreen', {
   var LOCK_DX  = 6;     // px  — gesture devralma eşiği
   var COMMIT_R = 0.38;  // oran — ekran genişliğinin %38'i geçilince commit
   var VEL_MIN  = 300;   // px/s — hız bazlı erken commit
-  var PAR      = 0.28;  // oran — arka ekran parallax oranı (iOS = 0.28)
+  var PAR      = 0.3;   // oran — arka ekran parallax (iOS birebir = 0.3)
+
+  // iOS CASpringAnimation'ın CSS cubic-bezier yaklaşımı
+  var IOS_EASE = 'cubic-bezier(0.2833,0.99,0.31833,0.99)';
 
   var SHEET_IDS = [
     'kayit-sheet','hava-sheet','op-sheet','kasa-sheet-overlay',
@@ -7477,21 +7479,23 @@ Object.defineProperty(window, 'prevScreen', {
       var el = document.getElementById(SHEET_IDS[i]);
       if (el && el.style.display !== 'none' && el.style.display !== '') return true;
     }
-    if (document.querySelector('.fl-ctx-overlay'))    return true;
+    if (document.querySelector('.fl-ctx-overlay'))     return true;
     if (document.querySelector('.fl-card.is-dragging')) return true;
     return false;
   }
 
-  // Ekran üzerindeki CSS animasyonunu sıfırla (kalan animasyon ile çakışmayı önle)
-  function clearAnim(el) {
+  // Ekranın CSS animasyon/transition'ını flush et
+  function clearStyles(el) {
     if (!el) return;
+    el.style.transition = 'none';
     el.style.animation  = 'none';
-    el.offsetHeight;            // reflow — animasyonu flush et
+    el.offsetHeight; // reflow
     el.style.animation  = '';
   }
 
   // ── touchstart ──────────────────────────────────────────────────────
   function onStart(e) {
+    if (g) return; // önceki gesture bitmedi
     if (!e.touches || e.touches.length !== 1) return;
     var t = e.touches[0];
     if (t.clientX > EDGE) return;
@@ -7502,17 +7506,22 @@ Object.defineProperty(window, 'prevScreen', {
     var cur = document.getElementById(currentScreen);
     var bk  = document.getElementById(target);
 
-    // Arka ekranı görünür yap, başlangıç konumuna getir (display flash olmadan)
-    if (bk) {
-      clearAnim(bk);
-      bk.style.display    = 'flex';
-      bk.style.transition = 'none';
-      bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
-      bk.style.zIndex     = '1';
-    }
+    // Ön ekran — en üste al
     if (cur) {
-      clearAnim(cur);
-      cur.style.zIndex = '2';
+      clearStyles(cur);
+      cur.style.zIndex    = '2';
+      cur.style.transform = 'translateX(0)';
+    }
+
+    // Arka ekran — parallax başlangıç konumu, görünür yap
+    if (bk) {
+      clearStyles(bk);
+      // .active class'ı yoksa ekle (display:flex için gerekli)
+      if (!bk.classList.contains('active')) {
+        bk.classList.add('active');
+      }
+      bk.style.zIndex     = '1';
+      bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
     }
 
     g = {
@@ -7544,22 +7553,20 @@ Object.defineProperty(window, 'prevScreen', {
     var now = Date.now();
     var dt  = now - g.tPrev || 1;
 
-    // Yatay geçişe karar verilmeden dikey ağırlıklıysa iptal
+    // Dikey ağırlıklı hareket — gesture iptal
     if (!g.locked && ady > adx && ady > 12) {
-      resetBack();
-      g = null;
+      resetGesture();
       return;
     }
 
-    // Sola gidiyorsa iptal
+    // Sola kayma — iptal
     if (dx < 0) {
-      if (g.locked) { commitCancel(); return; }
-      resetBack();
-      g = null;
+      if (g.locked) { doCancel(); return; }
+      resetGesture();
       return;
     }
 
-    // Gesture devral
+    // Gesture devralma
     if (!g.locked && adx > LOCK_DX) {
       g.locked = true;
     }
@@ -7567,7 +7574,7 @@ Object.defineProperty(window, 'prevScreen', {
 
     e.preventDefault();
 
-    // Hız — exponential moving average
+    // Hız — exponential moving average (EMA)
     var raw = (t.clientX - g.xPrev) / dt * 1000;
     g.vel   = g.vel * 0.6 + raw * 0.4;
     g.xPrev = t.clientX;
@@ -7580,8 +7587,7 @@ Object.defineProperty(window, 'prevScreen', {
       g.cur.style.transform  = 'translateX(' + dx + 'px)';
     }
 
-    // Arka ekran: iOS parallax — başlangıç -W*PAR, bitiş 0
-    // bkX = -W*PAR  +  (dx/W) * W*PAR  =  -W*PAR * (1 - dx/W)
+    // Arka ekran: iOS parallax — -W*0.3 → 0
     if (g.bk) {
       var bkX = -g.W * PAR * (1 - dx / g.W);
       g.bk.style.transition = 'none';
@@ -7592,115 +7598,106 @@ Object.defineProperty(window, 'prevScreen', {
   // ── touchend ────────────────────────────────────────────────────────
   function onEnd() {
     if (!g || g.done) { g = null; return; }
-    if (!g.locked)    { resetBack(); g = null; return; }
+    if (!g.locked)    { resetGesture(); return; }
 
     g.done = true;
     var commit = g.dx >= g.W * COMMIT_R || g.vel >= VEL_MIN;
-
-    if (commit) {
-      doCommit();
-    } else {
-      commitCancel();
-    }
+    if (commit) doCommit(); else doCancel();
   }
 
-  // ── Commit — ön ekran sağa tamamlar, arka ekran yerine oturur ───────
+  // ── Commit ──────────────────────────────────────────────────────────
+  // Ön ekran sağa tamamlanır, arka ekran yerine oturur.
+  // SONRASINDA navBack() ÇAĞRILMAZ — navBack() CSS animasyonu tetikler
+  // ve çift animasyon bozulmasına yol açar. State doğrudan güncellenir.
   function doCommit() {
-    var remaining = g.W - g.dx;                          // kalan px
-    var speed     = Math.max(Math.abs(g.vel), 600);      // px/s min 600
-    var dur       = Math.round(remaining / speed * 1000); // ms
-    dur = Math.max(80, Math.min(320, dur));               // 80–320ms clamp
-
-    var easing = 'cubic-bezier(.32,.72,0,1)'; // iOS pop easing
-
-    if (g.cur) {
-      g.cur.style.transition = 'transform ' + dur + 'ms ' + easing;
-      g.cur.style.transform  = 'translateX(' + g.W + 'px)';
-    }
-    if (g.bk) {
-      g.bk.style.transition = 'transform ' + dur + 'ms ' + easing;
-      g.bk.style.transform  = 'translateX(0)';
-    }
+    var remaining = g.W - g.dx;
+    var speed     = Math.max(Math.abs(g.vel), 600);
+    var dur       = Math.round(remaining / speed * 1000);
+    dur = Math.max(120, Math.min(400, dur)); // 120–400ms
 
     var cur = g.cur, bk = g.bk, target = g.target;
+    var W   = g.W;
     g = null;
 
+    if (cur) {
+      cur.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
+      cur.style.transform  = 'translateX(' + W + 'px)';
+    }
+    if (bk) {
+      bk.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
+      bk.style.transform  = 'translateX(0)';
+    }
+
     setTimeout(function() {
-      // 1. Tüm ekranlardan class temizle
+      // Tüm ekranları sıfırla
       document.querySelectorAll('.screen').forEach(function(s) {
         s.classList.remove('active','back','slide-in','slide-left','tab-enter');
-        s.style.transition = '';
-        s.style.transform  = '';
-        s.style.zIndex     = '';
-        s.style.display    = '';
+        s.style.cssText = '';
       });
 
-      // 2. Arka ekranı (hedef) aktif yap — CSS animasyon YOK, zaten yerine geldi
+      // Hedef ekranı aktif yap — CSS animasyonu YOK (zaten doğru konumda)
       var bkEl = document.getElementById(target);
       if (bkEl) bkEl.classList.add('active');
 
-      // 3. Navigation state güncelle
+      // Navigation state
       currentScreen = target;
 
-      // 4. fromScreen hiyerarşisi
+      // fromScreen hiyerarşisi
       if (target === 'fields') {
-        fromScreen = 'home';       // fields'ten bir sonraki swipe home'a gitsin
-      } else if (target === 'home' || target === 'kayitlarim' || target === 'kasa') {
-        fromScreen = target;       // bu tablarda swipe-back yok
+        fromScreen = 'home'; // fields → swipe → home zinciri
       } else {
-        fromScreen = 'home';
+        fromScreen = navOrder.includes(target) ? target : 'home';
       }
 
-      // 5. UI senkronizasyonu
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
     }, dur);
   }
 
-  // ── Cancel — her iki ekran spring ile eski konumuna döner ───────────
-  function commitCancel() {
+  // ── Cancel ──────────────────────────────────────────────────────────
+  function doCancel() {
     if (!g) return;
-    var easing = 'cubic-bezier(.32,.72,0,1)';
-    var dur    = 320;
-
-    if (g.cur) {
-      g.cur.style.transition = 'transform ' + dur + 'ms ' + easing;
-      g.cur.style.transform  = 'translateX(0)';
-    }
-    if (g.bk) {
-      g.bk.style.transition = 'transform ' + dur + 'ms ' + easing;
-      g.bk.style.transform  = 'translateX(' + (-g.W * PAR) + 'px)';
-    }
-
+    var dur = 380;
     var cur = g.cur, bk = g.bk;
+    var W   = g.W;
     g = null;
 
+    if (cur) {
+      cur.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
+      cur.style.transform  = 'translateX(0)';
+    }
+    if (bk) {
+      bk.style.transition = 'transform ' + dur + 'ms ' + IOS_EASE;
+      bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
+    }
+
     setTimeout(function() {
-      if (cur) { cur.style.transition = ''; cur.style.transform = ''; cur.style.zIndex = ''; }
-      if (bk)  {
-        bk.style.transition = '';
-        bk.style.transform  = '';
-        bk.style.display    = '';
-        bk.style.zIndex     = '';
+      if (bk) {
+        bk.style.cssText = '';
+        bk.classList.remove('active');
       }
+      if (cur) cur.style.cssText = '';
     }, dur);
   }
 
-  // Arka ekranı gizle (gesture başlamadan iptal)
-  function resetBack() {
-    if (!g || !g.bk) return;
-    g.bk.style.display   = '';
-    g.bk.style.transform = '';
-    g.bk.style.zIndex    = '';
-    if (g.cur) g.cur.style.zIndex = '';
+  // Gesture lock öncesi iptal
+  function resetGesture() {
+    if (!g) return;
+    var bk = g.bk, cur = g.cur;
+    g = null;
+    if (bk) {
+      bk.style.cssText = '';
+      bk.classList.remove('active');
+    }
+    if (cur) cur.style.cssText = '';
   }
 
   document.addEventListener('touchstart',  onStart, { passive: true });
   document.addEventListener('touchmove',   onMove,  { passive: false });
   document.addEventListener('touchend',    onEnd,   { passive: true });
   document.addEventListener('touchcancel', function() {
-    if (g && g.locked) commitCancel(); else { resetBack(); g = null; }
+    if (g && g.locked) doCancel(); else resetGesture();
   }, { passive: true });
 })();
 
