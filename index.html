@@ -300,11 +300,9 @@ body.app-ready { background: var(--bg); }
   height: 103px;
   padding-top: 59px; /* status bar alanı */
   background: var(--bg);
-  border-bottom: 1px solid transparent; /* scroll'da JS ile aktif olur */
+  border-bottom: 1px solid transparent;
   position: relative; z-index: 30;
-  will-change: transform;      /* GPU katmanına al — kayma pürüzsüz */
   transition: background .3s, border-color .2s, box-shadow .2s;
-  /* NOT: transform intentionally transition'a dahil değil — scroll hızına 1:1 bağlı */
   box-sizing: border-box;
 }
 
@@ -344,12 +342,46 @@ body.app-ready { background: var(--bg); }
 }
 .sb-avatar-wrap:active .app-avatar { transform: scale(.88); opacity: .8; }
 
-/* Selamlama metin grubu */
+/* ── Large Title selamlama — scroll içinde, header üstünde ─────────────────
+   Apple HIG: Large Title 34pt Bold, status bar + nav bar'ın hemen altında.
+   Scroll ilerledikçe bu alan header altına geçer → inline greeting görünür. */
+.lt-greeting {
+  padding: 8px 16px 18px;      /* üst: nav bar altına hizala, alt: içerikten nefes */
+  display: flex; flex-direction: column;
+  gap: 2px;
+}
+.lt-greeting-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 400;
+  color: #6B6B6B;
+  line-height: 1.3;
+}
+.lt-greeting-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 34px; font-weight: 700;  /* Apple HIG: Large Title 34pt Bold */
+  color: #1A1A1A;
+  line-height: 1.1;
+  letter-spacing: -0.5px;             /* Apple'ın büyük başlık letter-spacing'i */
+}
+
+/* ── Inline greeting (header'da) — Large Title'dan geçiş durumları ─────────
+   Başlangıçta gizli (opacity:0), scroll ilerleyince görünür (opacity:1).
+   transform ile hafif yukarı kayarak belirir — SF Pro animasyonu.            */
 .sb-greeting {
   display: flex; flex-direction: column;
   justify-content: center; min-width: 0;
-  /* overflow: hidden; ile uzun isimler kırpılır */
+  /* Geçiş: Large Title kaybolunca belirir */
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none; /* gizliyken tıklamayı engelleme */
 }
+.sb-greeting.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
 .sb-greeting-sub {
   font-family: 'Inter', sans-serif;
   font-size: 11px; font-weight: 400;
@@ -3322,16 +3354,27 @@ body.app-ready { background: var(--bg); }
 
     <!-- Sağ: bildirim zili — 44×44px dokunma alanı -->
     <div class="sb-notif-btn" id="sb-notif-btn" onclick="notifAc()">
-      <!-- Zil ikonu: E — ultra minimal, Revolut tarzı, 1.4px stroke — rapor: 24px görsel -->
+      <!-- Zil ikonu: C — Organik, 2px stroke, Apple HIG outline standardı
+           viewBox 24×24 | görsel 24px | dokunma alanı 44px (wrapper)
+           Anatomisi:
+             - Anten: küçük yuvarlak yay (M10 3.5 Q12 2 14 3.5)
+             - Gövde: simetrik organik çan, omuzlar bezier ile (x:6–18, y:4.5–16)
+             - Taban düzlüğü: yatay çizgi (5,16)→(19,16) gövde path içinde
+             - Çıkıntı: belirgin yay (Q12 19.2) -->
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-           stroke="var(--green)" stroke-width="1.4"
+           stroke="var(--green)" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round">
-        <!-- anten -->
-        <line x1="12" y1="3" x2="12" y2="5.5"/>
-        <!-- gövde: ince, kompakt -->
-        <path d="M12 5.5 C7.5 5.5 5.5 8.5 5.5 11.5 L5.5 16 L18.5 16 L18.5 11.5 C18.5 8.5 16.5 5.5 12 5.5 Z"/>
-        <!-- alt çıkıntı -->
-        <path d="M10 16 Q12 18.5 14 16"/>
+        <!-- Anten: yay şeklinde çan kolu -->
+        <path d="M10 3.8 Q12 2.2 14 3.8" fill="none"/>
+        <!-- Gövde: organik çan formu, omuzlar bezier, taban düz -->
+        <path d="M12 4.8
+                 C8.0 4.8 6.2 7.6 6.2 10.8
+                 L6.2 14.2 L5.0 16.2
+                 L19.0 16.2
+                 L17.8 14.2 L17.8 10.8
+                 C17.8 7.6 16.0 4.8 12 4.8 Z"/>
+        <!-- Alt çıkıntı: belirgin, simetrik yay -->
+        <path d="M9.5 16.2 Q12 19.2 14.5 16.2" fill="none"/>
       </svg>
       <!-- Okunmamış bildirim noktası — JS ile .visible eklenir -->
       <div class="sb-notif-dot" id="sb-notif-dot"></div>
@@ -3346,6 +3389,15 @@ body.app-ready { background: var(--bg); }
   <!-- ═══════ ANA SAYFA ═══════ -->
   <div class="screen" id="home">
     <div class="scroll" style="padding-top:0">
+
+      <!-- ── Large Title selamlama ─────────────────────────────────────────
+           Apple HIG Large Title pattern: 34pt Bold, scroll'da inline'a geçer.
+           Bu div scroll container'ın içinde — header'ın altında başlar.
+           id="lt-greeting": JS scroll listener bu element'i izler.          -->
+      <div class="lt-greeting" id="lt-greeting">
+        <span class="lt-greeting-sub" id="lt-greeting-sub">günaydın,</span>
+        <span class="lt-greeting-name" id="lt-greeting-name">Ahmet</span>
+      </div>
 
       <!-- greeting-bar header'a taşındı (sb-bar içinde) -->
 
@@ -6923,20 +6975,16 @@ Object.defineProperty(window, 'prevScreen', {
 });
 
 // ── HEADER SCROLL DAVRANIŞI ──────────────────────────────────────────
-// Rapor: "Scroll başladığında hafif border-bottom veya box-shadow belirir"
-// Home ekranının .scroll container'ına bağlanır; her navTo('home') çağrısında
-// yeniden kurulur (ekran değiştiğinde eski listener otomatik geçersiz kalır).
+// ── LARGE TITLE → INLINE HEADER GEÇİŞİ ─────────────────────────────────────
+// Apple HIG Large Title pattern:
+//   • Home'da 34pt Bold selamlama scroll içinde gösterilir
+//   • Large Title scroll ile header altına geçince inline greeting belirir
+//   • Header hiç kaybolmaz — avatar ve zil her zaman erişilebilir
+//   • Geçiş eşiği: Large Title'ın alt kenarı header seviyesine ulaşınca
+//
+// Referans: Things 3, Apple Health, Notion, UIKit UINavigationBar Large Title
 
-// ── HEADER AUTO-HIDE (X/Twitter timeline pattern) ────────────────────────────
-// Yukarı scroll → header kayar (sadece 44px nav bar — status bar sabit)
-// Aşağı scroll → header geri gelir, scroll hızıyla 1:1 orantılı
-// Transform: translateY(0) → translateY(-44px), transition YOK — tam 1:1
-
-const NAV_BAR_H   = 44; // sadece nav bar kayar, status bar (59px) sabit
-let _scrollListenerEl  = null;
-let _lastScrollTop     = 0;  // bir önceki scroll pozisyonu
-let _headerOffset      = 0;  // mevcut translateY değeri (0 → -44)
-let _ticking           = false; // rAF throttle
+let _scrollListenerEl = null;
 
 function setupHeaderScroll() {
   const sb = document.getElementById('sb-bar');
@@ -6944,15 +6992,21 @@ function setupHeaderScroll() {
 
   // Önceki listener'ı temizle — memory leak önleme
   if (_scrollListenerEl) {
-    _scrollListenerEl.removeEventListener('scroll', _onHeaderScroll);
+    _scrollListenerEl.removeEventListener('scroll', _onLargeTitleScroll);
     _scrollListenerEl = null;
   }
 
-  // Header'ı sıfırla
-  _headerOffset  = 0;
-  _lastScrollTop = 0;
-  sb.style.transform = 'translateY(0)';
+  // Header'ı tam sıfırla
+  sb.style.transform = '';
   sb.classList.remove('scrolled');
+
+  // Inline greeting'i sıfırla — gizli başlar
+  const inlineGreeting = document.getElementById('sb-greeting');
+  if (inlineGreeting) inlineGreeting.classList.remove('visible');
+
+  // Large Title'ı göster
+  const ltEl = document.getElementById('lt-greeting');
+  if (ltEl) ltEl.style.opacity = '1';
 
   // Sadece home ekranında aktif
   if (currentScreen !== 'home') return;
@@ -6962,31 +7016,46 @@ function setupHeaderScroll() {
   const scroller = homeEl.querySelector('.scroll');
   if (!scroller) return;
 
-  _lastScrollTop = scroller.scrollTop;
-  scroller.addEventListener('scroll', _onHeaderScroll, { passive: true });
+  // İlk render: mevcut scroll pozisyonuna göre hemen uygula
+  _applyLargeTitleState(scroller, sb);
+
+  scroller.addEventListener('scroll', _onLargeTitleScroll, { passive: true });
   _scrollListenerEl = scroller;
 }
 
-function _onHeaderScroll() {
-  if (_ticking) return;
-  _ticking = true;
-  requestAnimationFrame(() => {
-    _ticking = false;
-    const sb = document.getElementById('sb-bar');
-    if (!sb) return;
+function _onLargeTitleScroll() {
+  const sb = document.getElementById('sb-bar');
+  if (!sb) return;
+  _applyLargeTitleState(this, sb);
+}
 
-    const st    = this.scrollTop;
-    const delta = st - _lastScrollTop; // + = aşağı scroll, - = yukarı scroll
-    _lastScrollTop = st;
+function _applyLargeTitleState(scroller, sb) {
+  const ltEl          = document.getElementById('lt-greeting');
+  const inlineGreeting = document.getElementById('sb-greeting');
+  if (!ltEl || !inlineGreeting) return;
 
-    // Offset'i delta kadar güncelle, 0 ile -NAV_BAR_H arasında sıkıştır
-    _headerOffset = Math.min(0, Math.max(-NAV_BAR_H, _headerOffset - delta));
+  const st       = scroller.scrollTop;
+  const ltBottom = ltEl.offsetTop + ltEl.offsetHeight; // Large Title alt kenarı
 
-    sb.style.transform = `translateY(${_headerOffset}px)`;
+  // Fade zone: Large Title'ın son %40'ında inline greeting belirir
+  // Örn: ltBottom=80px → fadeStart=48px → fadeEnd=80px
+  const fadeStart  = ltBottom * 0.6;
+  const progress   = Math.min(1, Math.max(0, (st - fadeStart) / (ltBottom - fadeStart)));
 
-    // Scrolled class: içerik header altına geçtiyse border/shadow
-    sb.classList.toggle('scrolled', st > 2 && _headerOffset > -NAV_BAR_H + 2);
-  });
+  // Large Title: geçiş ilerledikçe solar
+  ltEl.style.opacity = String(1 - progress);
+
+  // Inline greeting: Large Title tamamen geçince belirir (CSS transition ile)
+  inlineGreeting.classList.toggle('visible', progress >= 1);
+
+  // Scrolled: border + shadow — Large Title tamamen geçince
+  sb.classList.toggle('scrolled', st >= ltBottom);
+}
+
+// Large Title metnini güncelle — profilGuncelle ile senkron
+function ltGreetingGuncelle(isim) {
+  const nameEl = document.getElementById('lt-greeting-name');
+  if (nameEl && isim) nameEl.textContent = isim;
 }
 
 // ── HAVA 5 GÜNLÜK ──
@@ -7431,7 +7500,8 @@ function obNext(adim) {
     // Header selamlama ismini güncelle
     const gEl = document.getElementById('sb-greeting-name');
     if (gEl) gEl.textContent = isim.split(' ')[0];
-    // localStorage'a kaydet
+    // Large Title selamlama ismini senkronize et
+    ltGreetingGuncelle(isim.split(' ')[0]);
     const mevcutKonum = document.getElementById('p-konum')?.textContent || '';
     lsProfilKaydet(isim, mevcutKonum);
   }
@@ -7537,6 +7607,7 @@ function progObKaydet() {
   if (pAdSatir) pAdSatir.textContent = isim;
   const gEl = document.getElementById('sb-greeting-name');
   if (gEl) gEl.textContent = isim.split(' ')[0];
+  ltGreetingGuncelle(isim.split(' ')[0]); // Large Title senkronize et
   ['sb-avatar','p-avatar'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.querySelector('img')) el.textContent = harf;
@@ -7602,15 +7673,23 @@ function obBitir() {
 
 function updateGreeting() {
   const hour = new Date().getHours();
-  let selam = 'İyi günler';
+  let selam = 'İyi günler,';
   if (hour >= 5 && hour < 12)  selam = 'günaydın,';
   else if (hour >= 12 && hour < 18) selam = 'iyi öğlenler,';
   else if (hour >= 18 && hour < 22) selam = 'iyi akşamlar,';
   else selam = 'iyi geceler,';
+
+  // Inline header greeting (header'da, gizli başlar)
   const subEl = document.getElementById('sb-greeting-sub');
   if (subEl) subEl.textContent = selam;
   const nameEl = document.getElementById('sb-greeting-name');
   if (nameEl && !nameEl.textContent) nameEl.textContent = 'Ahmet';
+
+  // Large Title greeting (scroll içinde, her zaman görünür başlar)
+  const ltSubEl = document.getElementById('lt-greeting-sub');
+  if (ltSubEl) ltSubEl.textContent = selam;
+  const ltNameEl = document.getElementById('lt-greeting-name');
+  if (ltNameEl && !ltNameEl.textContent) ltNameEl.textContent = 'Ahmet';
 }
 
 // Sayfa ilk açıldığında home aktif — scroll listener'ı hemen kur
@@ -9802,6 +9881,7 @@ function lsProfilYukle() {
     });
     const gEl = document.getElementById('sb-greeting-name');
     if (gEl) gEl.textContent = p.isim.split(' ')[0];
+    ltGreetingGuncelle(p.isim.split(' ')[0]); // Large Title senkronize et
   }
   if (p.konum) {
     ['p-konum-satir','p-konum'].forEach(id => {
@@ -10458,6 +10538,7 @@ function saveProfilField() {
     if (pAv && !pAv.querySelector('img')) pAv.textContent = val.charAt(0).toUpperCase();
     const gEl = document.getElementById('sb-greeting-name');
     if (gEl) gEl.textContent = val.split(' ')[0];
+    ltGreetingGuncelle(val.split(' ')[0]); // Large Title senkronize et
   } else {
     document.getElementById('p-konum-satir').textContent = val;
     document.getElementById('p-konum').textContent       = val;
