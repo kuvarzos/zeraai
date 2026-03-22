@@ -7356,10 +7356,12 @@ function navTo(id) {
   }
 
   // Geri butonu gösterilecek ekranlara geçerken gelinen ekranı kaydet
-  if (DETAIL_SCREENS.includes(id)) {
+  // kayitlarim + kasa da swipe-back destekler — fromScreen korunur
+  var SWIPE_BACK_TABS = ['kayitlarim', 'kasa'];
+  if (DETAIL_SCREENS.includes(id) || SWIPE_BACK_TABS.includes(id)) {
     fromScreen = currentScreen;
   } else {
-    // Tab/normal ekranlarda fromScreen'i sıfırla — navBack karışmasin
+    // Diğer tab geçişlerinde fromScreen'i sıfırla
     fromScreen = id;
   }
 
@@ -7411,8 +7413,8 @@ function navBack() {
   t.style.animation = 'none';
   t.offsetHeight; // reflow
   t.style.animation = '';
-  // Tab'a dönüş: cross-fade | Detaydan detaya geri: slide-left
-  t.classList.add(isTab ? 'active' : 'slide-left');
+  // Geri dönüşte her zaman slide-left (iOS pop — hem detay hem tab için)
+  t.classList.add('slide-left');
   currentScreen = target;
   // fromScreen'i bir üst seviyeye sıfırla
   fromScreen = navOrder.includes(target) ? target : 'home';
