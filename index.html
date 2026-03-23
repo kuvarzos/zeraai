@@ -679,6 +679,12 @@ body.app-ready { background: var(--bg); }
   opacity: 1;
 }
 
+/* Splash özel: uygulama ilk açıldığında en üstte olmalı */
+#splash.ns-active {
+  z-index: 100;
+  pointer-events: auto;
+}
+
 /* Arka ekran: detach=false — DOM'da canlı, ama görünmez
    Geçiş başladığında anında hazır, re-render yok */
 .screen.ns-back {
@@ -3042,6 +3048,10 @@ body.app-ready { background: var(--bg); }
   font-family: 'Inter', sans-serif;
   font-size: 17px; font-weight: 700;
   cursor: pointer; letter-spacing: .2px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+  position: relative; z-index: 10;
   /* Sadece splashContent giriş animasyonu — box-shadow/transform'a dokunmaz */
   animation: splashContent 1.3s 1.45s ease-out both;
   /* Tüm interaktif geçişler transition ile — animation ile çakışma yok */
@@ -4275,7 +4285,7 @@ body.app-ready { background: var(--bg); }
            "emeğini kaydet." = gerçek çiftçi dilinden türetildi.
            Orijinal cümle: "Aç uygulamayı kaydet. Unutmak yok." -->
       <div class="splash-tagline">emeğini kaydet.</div>
-      <button class="splash-btn" id="splashBtn" onclick="navTo('onboarding')">Başla</button>
+      <button class="splash-btn" id="splashBtn" onclick="console.log('[Başla] onclick tetiklendi'); navTo('onboarding')">Başla</button>
     </div>
     <div class="splash-version">v1.0 · 2026</div>
   </div>
@@ -11703,12 +11713,39 @@ document.addEventListener('DOMContentLoaded', function() {
       // Glow durumunu koru — timer kaldığı yerden devam eder
     }
 
-    splashBtn.addEventListener('touchstart',  pressIn,  { passive: true });
-    splashBtn.addEventListener('touchend',    pressOut, { passive: true });
-    splashBtn.addEventListener('touchcancel', pressOut, { passive: true });
-    splashBtn.addEventListener('mousedown',   pressIn);
-    splashBtn.addEventListener('mouseup',     pressOut);
-    splashBtn.addEventListener('mouseleave',  pressOut);
+    var btnMoved = false;
+
+    splashBtn.addEventListener('touchstart', function(e) {
+      btnMoved = false;
+      pressIn();
+      // Sheet Manager'ın bu event'i kaçırmasını engelle (stopPropagation değil,
+      // sadece kendi touch pipeline'ımızı işaretliyoruz)
+    }, { passive: true });
+
+    splashBtn.addEventListener('touchmove', function() {
+      btnMoved = true;
+    }, { passive: true });
+
+    splashBtn.addEventListener('touchend', function(e) {
+      pressOut();
+      if (btnMoved) return;           // parmak kaydıysa → iptal
+      if (isTransitioning) {
+        console.log('[Başla] isTransitioning=true, bekleniyor');
+        return;
+      }
+      console.log('[Başla] touchend tetiklendi → navTo(onboarding)');
+      e.preventDefault();             // ghost click önleme
+      navTo('onboarding');
+    }, { passive: false });           // preventDefault için passive:false ZORUNLU
+
+    splashBtn.addEventListener('touchcancel', function() {
+      btnMoved = true;
+      pressOut();
+    }, { passive: true });
+
+    splashBtn.addEventListener('mousedown',  pressIn);
+    splashBtn.addEventListener('mouseup',    pressOut);
+    splashBtn.addEventListener('mouseleave', pressOut);
   }
   // ────────────────────────────────────────────────────────────────────
 
@@ -13024,6 +13061,9 @@ function selChip(el) {
   function isPanelVisible(panel) {
     if (panel.style.display === 'none') return false;
     if (panel.style.visibility === 'hidden') return false;
+    // Splash ve onboarding içindeki elementler — hiçbir zaman sheet gesture almaz
+    var parentScreen = panel.closest('#splash, #onboarding');
+    if (parentScreen) return false;
     var overlay = findOverlay(panel);
     if (overlay) {
       if (overlay.style.display === 'none') return false;
