@@ -7908,6 +7908,282 @@ function navBack() {
   }); // navSafe
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// NS GESTURE LISTENER — Swipe-Back Hareket Kontrolcusu (v64)
+//
+//  ns- mimarisinin gesture katmani. Calisma prensibi:
+//
+//  1. EDGE DETECTION : Sol kenardan (0-20px) baslayan dokunuslar
+//                      yakalanir. Sayfa icindeki scroll ile cakismaz.
+//  2. INTERACTIVE    : parmak x konumuna gore ns-active + ns-back
+//                      anlık kaydırılır — requestAnimationFrame ile 60fps.
+//  3. PARALLAX       : arka ekran one ekranin %30 hizinda ilerler.
+//  4. DIMMING SYNC   : siyah maske opacity parmakla senkron azalir.
+//  5. COMMIT / CANCEL: %50 esigi veya velocity >= 300px/s → navBack().
+//                      Yarim kalirsa spring ease-out ile yerine doner.
+// ══════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  // ── Sabitler (Default Screen Options ile senkron) ──────────────────
+  var EDGE        = 20;    // sol kenar alani (px)
+  var LOCK_X      = 6;     // yatay lock esigi (px)  — scroll ayirimi
+  var COMMIT_PCT  = 0.50;  // commit esigi — ekranin %50si
+  var VEL_MIN     = 300;   // hizli firlatma esigi (px/s)
+  var PARALLAX    = 0.30;  // arka ekranin hiz orani
+  var SPRING      = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+  var DUR_COMMIT  = 340;   // ms — commit animasyonu
+  var DUR_CANCEL  = 300;   // ms — iptal spring animasyonu
+
+  // ── Aktif sheet kontrolu — gesture'i bloklar ──────────────────────
+  var SHEET_IDS = [
+    'kayit-sheet','hava-sheet','op-sheet','kasa-sheet-overlay',
+    'kasa-sezon-sheet','kasa-yil-sheet','konum-picker-sheet',
+    'profil-edit-sheet','profil-gb-sheet','sezon-sheet',
+    'home-kayit-sheet','tarla-sil-sheet-overlay'
+  ];
+
+  function isSheetOpen() {
+    for (var i = 0; i < SHEET_IDS.length; i++) {
+      var el = document.getElementById(SHEET_IDS[i]);
+      if (el && el.style.display !== 'none' && el.style.display !== '') return true;
+    }
+    return false;
+  }
+
+  // ── Dimming overlay (ns- mimarisiyle ortak) ────────────────────────
+  var _dim = (function () {
+    var el = document.getElementById('ns-dim');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'ns-dim';
+      el.style.cssText = [
+        'position:absolute', 'inset:0', 'z-index:1',
+        'background:rgba(0,0,0,0.18)', 'pointer-events:none',
+        'display:none', 'will-change:opacity'
+      ].join(';');
+      (document.querySelector('.phone') || document.body).appendChild(el);
+    }
+    return el;
+  }());
+
+  // ── Gesture state ──────────────────────────────────────────────────
+  var g = null;
+
+  // ── Hedef ekrani bul ───────────────────────────────────────────────
+  function getBack() {
+    if (!fromScreen || fromScreen === currentScreen) return null;
+    var el = document.getElementById(fromScreen);
+    return el ? el : null;
+  }
+
+  // ── rAF handle — sadece bir frame bekle ────────────────────────────
+  var _raf = null;
+
+  // ── touchstart ────────────────────────────────────────────────────
+  function onStart(e) {
+    if (g) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    var t = e.touches[0];
+    // Sadece sol kenar
+    if (t.clientX > EDGE) return;
+    // Sheet aciksa blokla
+    if (isSheetOpen()) return;
+    // Geri donulecek ekran var mi?
+    var bk = getBack();
+    if (!bk) return;
+
+    var cur = document.getElementById(currentScreen);
+    if (!cur) return;
+
+    var W = window.innerWidth;
+
+    // bk: ns-back konumunda olmali — yoksa hemen koy
+    if (!bk.classList.contains('ns-back')) {
+      bk.classList.remove(...NS_CLASSES);
+      bk.classList.add('ns-back');
+    }
+    // Animasyon varsa durdur
+    bk.style.transition  = 'none';
+    cur.style.transition = 'none';
+    bk.offsetHeight; // reflow
+
+    // Dim overlay goster
+    _dim.style.display  = 'block';
+    _dim.style.opacity  = '0.18';
+    // ns-shadow
+    _navShadow.style.display  = 'block';
+    _navShadow.style.opacity  = '1';
+    _navShadow.style.transform = 'translateX(0)';
+
+    g = {
+      cur: cur, bk: bk, W: W,
+      x0: t.clientX, y0: t.clientY,
+      xp: t.clientX, tp: Date.now(),
+      dx: 0, vel: 0,
+      locked: false, done: false
+    };
+  }
+
+  // ── touchmove ─────────────────────────────────────────────────────
+  function onMove(e) {
+    if (!g || g.done) return;
+    var t = e.touches[0];
+    if (!t) return;
+
+    var dx  = t.clientX - g.x0;
+    var adx = Math.abs(dx);
+    var ady = Math.abs(t.clientY - g.y0);
+
+    // Henuz lock olmadiysa yon belirle
+    if (!g.locked) {
+      if (ady > adx && ady > 8) { doAbort(); return; }  // dikey scroll
+      if (dx < 0)               { doAbort(); return; }  // sola hareket
+      if (adx < LOCK_X)         return;                 // henuz yetmedi
+      g.locked = true;
+    }
+
+    // Geri hareket → iptal
+    if (dx < 0) { doCancel(); return; }
+
+    // Scroll'u blokla — yatay gesture kazandi
+    e.preventDefault();
+
+    // Velocity hesapla (rolling avg)
+    var now = Date.now();
+    var dt  = now - g.tp || 1;
+    g.vel   = g.vel * 0.6 + ((t.clientX - g.xp) / dt * 1000) * 0.4;
+    g.xp    = t.clientX;
+    g.tp    = now;
+    g.dx    = dx;
+
+    // rAF ile gorseli guncelle
+    if (_raf) cancelAnimationFrame(_raf);
+    _raf = requestAnimationFrame(function () {
+      if (!g) return;
+      var pct = Math.min(g.dx / g.W, 1);
+
+      // Cur: parmakla 1:1
+      g.cur.style.transform = 'translateX(' + g.dx + 'px) translateZ(0)';
+
+      // Bk: parallax — tam kapali konumdan (-%30W) merkeze dogru
+      var bkX = -g.W * PARALLAX * (1 - pct);
+      g.bk.style.transform = 'translateX(' + bkX + 'px) translateZ(0)';
+
+      // Dim opacity azal
+      _dim.style.opacity = String((1 - pct) * 0.18);
+
+      // Shadow cur ile birlikte kayar
+      _navShadow.style.transform = 'translateX(' + g.dx + 'px)';
+    });
+  }
+
+  // ── touchend ──────────────────────────────────────────────────────
+  function onEnd() {
+    if (!g || g.done) { g = null; return; }
+    if (!g.locked)    { doAbort(); return; }
+    g.done = true;
+    // Commit kosulu: %50 esigi VEYA hizli firlatma
+    if (g.dx >= g.W * COMMIT_PCT || g.vel >= VEL_MIN) {
+      doCommit();
+    } else {
+      doCancel();
+    }
+  }
+
+  // ── Commit: navBack() cagir, animasyonu tamamla ────────────────────
+  function doCommit() {
+    if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+    var cur = g.cur, bk = g.bk, W = g.W, dx = g.dx;
+    g = null;
+
+    // Kalan mesafeye gore sure — hiz esle
+    var remaining = W - dx;
+    var dur = Math.max(120, Math.min(DUR_COMMIT, Math.round(remaining / 800 * 1000)));
+
+    cur.style.transition = 'transform ' + dur + 'ms ' + SPRING;
+    cur.style.transform  = 'translateX(' + W + 'px) translateZ(0)';
+
+    bk.style.transition  = 'transform ' + dur + 'ms ' + SPRING;
+    bk.style.transform   = 'translateX(0) translateZ(0)';
+
+    _dim.style.transition = 'opacity ' + dur + 'ms ' + SPRING;
+    _dim.style.opacity    = '0';
+
+    _navShadow.style.transition = 'transform ' + dur + 'ms ' + SPRING + ', opacity ' + dur + 'ms';
+    _navShadow.style.transform  = 'translateX(' + W + 'px)';
+    _navShadow.style.opacity    = '0';
+
+    setTimeout(function () {
+      // Animasyon bitti — ns- mimarisine devret
+      cur.style.transition  = '';
+      cur.style.transform   = '';
+      bk.style.transition   = '';
+      bk.style.transform    = '';
+      _dim.style.transition = '';
+      _dim.style.display    = 'none';
+      _dim.style.opacity    = '0.18';
+      _navShadow.style.transition = '';
+      _navShadow.style.display    = 'none';
+      _navShadow.style.opacity    = '1';
+      _navShadow.style.transform  = '';
+
+      // ns- state'i navBack() uzerinden guncelle
+      navBack();
+    }, dur + 16);
+  }
+
+  // ── Cancel: spring ile yerine don ────────────────────────────────
+  function doCancel() {
+    if (!g) return;
+    if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+    var cur = g.cur, bk = g.bk, W = g.W;
+    g = null;
+
+    cur.style.transition = 'transform ' + DUR_CANCEL + 'ms ' + SPRING;
+    cur.style.transform  = 'translateX(0) translateZ(0)';
+
+    bk.style.transition  = 'transform ' + DUR_CANCEL + 'ms ' + SPRING;
+    bk.style.transform   = 'translateX(-' + (W * PARALLAX) + 'px) translateZ(0)';
+
+    _dim.style.transition = 'opacity ' + DUR_CANCEL + 'ms ' + SPRING;
+    _dim.style.opacity    = '0.18';
+
+    _navShadow.style.transition = 'opacity ' + DUR_CANCEL + 'ms';
+    _navShadow.style.opacity    = '0';
+
+    setTimeout(function () {
+      cur.style.transition  = '';
+      cur.style.transform   = '';
+      bk.style.transition   = '';
+      // bk: ns-back CSS'e birak (--nav-parallax ile)
+      bk.style.transform    = '';
+      _dim.style.transition = '';
+      _dim.style.display    = 'none';
+      _dim.style.opacity    = '0.18';
+      _navShadow.style.transition = '';
+      _navShadow.style.display    = 'none';
+      _navShadow.style.opacity    = '1';
+    }, DUR_CANCEL + 16);
+  }
+
+  // ── Abort: lock olmadan iptal — hicbir gorsel degisiklik yok ───────
+  function doAbort() {
+    g = null;
+    if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+  }
+
+  // ── Event listener'lar ────────────────────────────────────────────
+  var phone = document.querySelector('.phone') || document;
+  phone.addEventListener('touchstart',  onStart,  { passive: true  });
+  phone.addEventListener('touchmove',   onMove,   { passive: false });
+  phone.addEventListener('touchend',    onEnd,    { passive: true  });
+  phone.addEventListener('touchcancel', function () {
+    if (g && g.locked) doCancel(); else doAbort();
+  }, { passive: true });
+
+}());
+
 // ── HEADER SCROLL DAVRANIŞI ──────────────────────────────────────────
 // ── LARGE TITLE → INLINE HEADER GEÇİŞİ ─────────────────────────────────────
 // Apple HIG Large Title pattern:
