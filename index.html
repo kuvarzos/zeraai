@@ -278,6 +278,7 @@ body.app-ready { background: var(--bg); }
   width: 393px; height: 852px;
   background: #1a1208; /* splash bg — beyaz flash önler */
   border-radius: 50px; overflow: hidden;
+  isolation: isolate; /* v61: yeni katman bağlamı — z-index çakışması ve geçiş flickerı önler */
   box-shadow: 0 0 0 1px rgba(120,100,80,0.12), 0 28px 70px rgba(80,60,40,0.22), inset 0 1px 0 rgba(255,255,255,0.8);
   display: flex; flex-direction: column; position: relative;
   transition: background 0.4s ease;
@@ -577,6 +578,17 @@ body.app-ready { background: var(--bg); }
   display: flex;
   z-index: 0;
   visibility: hidden; /* layout korunur, görünmez */
+}
+/* v61: detail→geri akışında arka ekranı animasyonsuz restore et.
+   openDetail() bk'yi display:flex bıraktı; navBack() sadece sınıf ekler,
+   display değişmez = sıfır flicker */
+.screen.sb-restore {
+  display: flex;
+}
+/* v61: GPU katmanı garantisi — compositing sınırı, layout thrash önler */
+.screen {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .screen.sheet-presented {
   transform: scale(0.92) translateY(10px);
@@ -7461,18 +7473,26 @@ function navTo(id) {
     s.classList.add('tab-enter');
   }
 
+  // ── Ekran render optimizasyonu (v61) ─────────────────────────────────────
+  // requestAnimationFrame ile render'ı bir sonraki çerçeveye ertele:
+  // ekran DOM'a eklensin, sonra veri yazılsın → layout thrash ve flicker önlenir.
+
   // kayitlarim ekranına geçince listeyi render et (aktif filtreyi koru)
   if (id === 'kayitlarim') {
-    renderKayitlar(aktifFiltre);
-    document.querySelectorAll('.filtre-chip').forEach(c => {
-      c.classList.toggle('active', c.dataset.tip === aktifFiltre);
+    requestAnimationFrame(() => {
+      renderKayitlar(aktifFiltre);
+      document.querySelectorAll('.filtre-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.tip === aktifFiltre);
+      });
     });
   }
   // kasa ekranına geçince mevcut sezon ile render et
   if (id === 'kasa' && typeof kasaSezonVeri !== 'undefined') {
-    const aktifYil = (document.querySelector('.kasa-sezon-sec')?.textContent || '2025').replace(' Sezonu ▾','').trim();
-    const v = kasaSezonVeri[aktifYil];
-    if (v) renderKasaEkrani(aktifYil, v);
+    requestAnimationFrame(() => {
+      const aktifYil = (document.querySelector('.kasa-sezon-sec')?.textContent || '2025').replace(' Sezonu ▾','').trim();
+      const v = kasaSezonVeri[aktifYil];
+      if (v) renderKasaEkrani(aktifYil, v);
+    });
   }
 
   setSbLeft(id);
@@ -7520,32 +7540,106 @@ function openDetail(key) {
 }
 
 function navBack() {
+  // ── v61: Anti-Flicker navBack ──────────────────────────────────────────────
+  //
+  //  KÖK SORUN (v60 ve öncesi):
+  //  openDetail() arka ekranı (bk/fields) display:flex + zIndex:1 konumunda AÇIK bırakır.
+  //  Eski navBack() tüm ekranları sıfırlayıp hedef ekrana slide-left + display:flex ekler.
+  //  Bu display:none→flex→animasyon geçişi browser'ın layout hesaplamasını tetikler = FLICKER.
+  //
+  //  ÇÖZÜM (v61):
+  //  • detail'den geri gelirken bk'ye (fields/kayitlarim vb.) HİÇ display dokunma.
+  //  • openDetail() onu hazır bıraktı, biz sadece cur (detail) kapatır, bk'yi öne çıkarırız.
+  //  • display değişikliği = sıfır → flicker = sıfır.
+  //  • Diğer geri senaryoları (profil, onboarding vb.) eski güvenli yolu kullanır.
+  // ─────────────────────────────────────────────────────────────────────────────
+
   // Gidilecek ekranı belirle — fallback: home
   const target = (fromScreen && fromScreen !== currentScreen && document.getElementById(fromScreen))
     ? fromScreen
     : 'home';
 
+  const targetEl = document.getElementById(target);
+  if (!targetEl) { navTo('home'); return; } // son güvenlik ağı
+
   const isTab = navOrder.includes(target);
+
+  // ── KRİTİK YOL: detail'den geri ─────────────────────────────────────────
+  // openDetail() → bk: display:flex + zIndex:1 + parallax transform AÇIK BIRAKTI
+  // Bu yolda bk'ye dokunmadan sadece cur'ı (detail) kapat, bk'yi öne çıkar.
+  if (currentScreen === 'detail') {
+    const curEl = document.getElementById('detail');
+
+    // 1. cur (detail) animasyonunu durdur ve tüm stil kalıntılarını temizle
+    if (curEl) {
+      curEl.style.transition = 'none';
+      curEl.style.animation  = 'none';
+      curEl.offsetHeight; // reflow: animasyonu anında durdur
+      curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter', 'sb-restore', 'sb-behind');
+      curEl.style.zIndex     = '';
+      curEl.style.transform  = '';
+      curEl.style.display    = ''; // display:none → .screen default devreye girer
+      curEl.style.visibility = '';
+      curEl.style.transition = '';
+      curEl.style.animation  = '';
+    }
+
+    // 2. Diğer tüm ekranları temizle (cur ve target hariç)
+    document.querySelectorAll('.screen').forEach(s => {
+      if (s === curEl || s === targetEl) return;
+      s.classList.remove('active', 'back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter', 'sb-restore');
+      s.style.visibility = '';
+      s.style.display    = '';
+      s.style.zIndex     = '';
+      s.style.transform  = '';
+      s.style.transition = '';
+      s.style.animation  = '';
+    });
+
+    // 3. bk (targetEl): openDetail() onu display:flex + parallax transform konumunda bıraktı.
+    //    Sadece transform sıfırla (parallax offset kaldır) ve sb-restore sınıfı ekle.
+    //    display değişmez — browser layout yeniden hesaplamaz = FLICKER YOK.
+    targetEl.style.transition = 'none'; // geçiş animasyonu olmasın
+    targetEl.offsetHeight;              // reflow: transition yokluğunu uygula
+    targetEl.style.transform  = '';     // parallax offset temizle, yerine otur
+    targetEl.style.zIndex     = '';     // z-index serbest bırak
+    targetEl.classList.remove('back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter', 'sb-restore');
+    targetEl.classList.add('active');   // artık tam görünür ve aktif
+
+    // 4. 1 frame sonra transition'ı eski haline döndür (scroll etkileşimleri için)
+    requestAnimationFrame(() => {
+      targetEl.style.transition = '';
+    });
+
+    // 5. State güncelle
+    currentScreen = target;
+    fromScreen = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
+    setSbLeft(target);
+    syncBnav(target);
+    setupHeaderScroll();
+    return;
+  }
+
+  // ── NORMAL GERİ (profil→home, onboarding→home vb.) ─────────────────────
+  // Bu yolda detail→fields akışı YOK, arka ekran hazır değil → eski güvenli yol.
   document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active','back','slide-in','slide-left','sb-behind');
+    s.classList.remove('active', 'back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter', 'sb-restore');
     s.style.visibility = '';
     s.style.display    = '';
     s.style.zIndex     = '';
     s.style.transform  = '';
     s.style.transition = '';
+    s.style.animation  = '';
   });
-  const t = document.getElementById(target);
-  if (!t) { navTo('home'); return; } // son güvenlik ağı
-  t.style.animation = 'none';
-  t.offsetHeight;
-  t.style.animation  = '';
-  t.style.visibility = '';
-  t.classList.add(isTab ? 'active' : 'slide-left');
+
+  // Hedef ekranı animasyon sıfırla + aktif et
+  targetEl.style.animation = 'none';
+  targetEl.offsetHeight; // reflow
+  targetEl.style.animation = '';
+  targetEl.classList.add(isTab ? 'active' : 'slide-left');
+
   currentScreen = target;
-  // fromScreen hiyerarşisi: tab ekranına dönünce home'u işaret et
-  fromScreen = (target === 'fields' || target === 'kayitlarim' || target === 'kasa')
-    ? 'home'
-    : target;
+  fromScreen = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
   setSbLeft(target);
   syncBnav(target);
   setupHeaderScroll();
