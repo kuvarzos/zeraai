@@ -822,22 +822,57 @@ body.app-ready { background: var(--bg); }
   animation: earthRise .55s cubic-bezier(.25,.46,.45,.94) both;
 }
 
-/* Onboarding çıkış — Scale+Fade: butondan ekran açılıyor hissi */
+/* ══════════════════════════════════════════════════════════════
+   PREMIUM LAUNCH — Onboarding → Home geçişi (v64, 2026 iOS)
+   
+   Felsefe: Onboarding "içinden geçiliyormuş" gibi büyür ve solar.
+   Home arka planda blur+scale ile bekler, yay efektiyle açılır.
+   Tab bar alttan süzülür.
+   
+   Toplam süre: 560ms — cubic-bezier(0.32,0.72,0,1) iOS spring
+   Z-index: ob=10 (üstte), home=9 (hemen altında hazır)
+══════════════════════════════════════════════════════════════ */
+
+/* Onboarding çıkış:
+   scale(1) → scale(1.1): "içinden geçiliyormuş" depth hissi
+   opacity 1 → 0: solar */
 @keyframes obExitAnim {
-  from { opacity: 1; transform: scale(1);    filter: blur(0px);   }
-  to   { opacity: 0; transform: scale(1.04); filter: blur(2px);   }
+  from { opacity: 1; transform: scale(1);   }
+  to   { opacity: 0; transform: scale(1.1); }
 }
 #onboarding.ob-exiting {
-  animation: obExitAnim 300ms cubic-bezier(0.4,0,1,1) both;
+  animation: obExitAnim 420ms cubic-bezier(0.32,0.72,0,1) both;
   pointer-events: none;
+  z-index: 10;
+  position: absolute; inset: 0;
 }
-/* Home giriş — hafif aşağıdan yükselir, onboardingden bağımsız */
+
+/* Home giriş:
+   scale(0.92) + blur(10px) → scale(1) + blur(0): arka perdeden sahneye */
 @keyframes homeEnterAnim {
-  from { opacity: 0; transform: scale(0.97) translateY(10px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+  from {
+    opacity: 0.4;
+    transform: scale(0.92) translateZ(0);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+    filter: blur(0px);
+  }
 }
-.screen.home-entering {
-  animation: homeEnterAnim 380ms cubic-bezier(0.32,0.72,0,1) both;
+#home.home-entering {
+  animation: homeEnterAnim 560ms cubic-bezier(0.32,0.72,0,1) both;
+  z-index: 9;
+}
+
+/* Tab bar giriş: alttan süzülür, home-entering ile senkron */
+@keyframes bnavSlideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+#home.home-entering .bnav {
+  animation: bnavSlideUp 480ms 80ms cubic-bezier(0.32,0.72,0,1) both;
 }
 
 /* Ekranı görünür kıl — animasyon yok */
@@ -7483,7 +7518,35 @@ function setObMode(aktif) {
       skip.id = 'ob-skip-hdr';
       skip.className = 'ob-skip-btn';
       skip.textContent = 'Atla';
-      skip.onclick = function() { obModKapat(); navTo('home'); };
+      skip.onclick = function() {
+        updateGreeting();
+        const obEl   = document.getElementById('onboarding');
+        const homeEl = document.getElementById('home');
+        if (!obEl || !homeEl) { obModKapat(); navTo('home'); return; }
+
+        currentScreen = 'home'; fromScreen = 'home';
+        _unlockTransition();
+
+        obEl.classList.add('ob-exiting');
+        _nsHardReset(homeEl);
+        homeEl.classList.add('ns-active', 'home-entering');
+        homeEl.style.zIndex = '9';
+        syncBnav('home'); setSbLeft('home'); setupHeaderScroll();
+
+        var cleaned = false;
+        function skipCleanup() {
+          if (cleaned) return; cleaned = true;
+          obEl.classList.remove('ob-exiting');
+          obEl.style.visibility = 'hidden'; obEl.style.display = 'none';
+          homeEl.classList.remove('home-entering'); homeEl.style.zIndex = '';
+          obModKapat(); _nsValidate('home');
+        }
+        obEl.addEventListener('animationend', function onAE(e) {
+          if (e.animationName !== 'obExitAnim') return;
+          obEl.removeEventListener('animationend', onAE); skipCleanup();
+        });
+        setTimeout(skipCleanup, 600);
+      };
       sb.appendChild(skip);
     }
   } else {
@@ -9009,50 +9072,92 @@ function progObKaydet() {
 // ─────────────────────────────────────────────────────────────
 
 function obBitir() {
-  // Profil verilerini kaydet
+  // ── Profil kaydet + selamlama guncelle ──────────────────────────
   const finalIsim  = document.getElementById('p-isim')?.textContent || '';
   const finalKonum = document.getElementById('p-konum-satir')?.textContent || '';
   if (finalIsim) lsProfilKaydet(finalIsim, finalKonum);
   updateGreeting();
 
-  // ── Onay anı: buton metni solarken ✓ pop eder ───────────────
-  const btn     = document.getElementById('ob-bitir-btn');
-  const textEl  = btn?.querySelector('.ob-next-text');
+  // ── Onay ani: buton metni solarken tik cizer (150ms + 380ms) ────
+  const btn    = document.getElementById('ob-bitir-btn');
+  const textEl = btn?.querySelector('.ob-next-text');
   if (btn && textEl) {
     btn.classList.add('confirming');
-    // 1. Metin solar (150ms)
     textEl.classList.add('fading');
     setTimeout(() => {
-      // 2. SVG draw-on tik — ikonlarımızla aynı sistem
       btn.innerHTML = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <path class="ob-check-path"
-          d="M8 16 L13.5 22 L24 10"
+        <path class="ob-check-path" d="M8 16 L13.5 22 L24 10"
           stroke="white" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round"/>
       </svg>`;
-      // rAF ile bir frame bekle — DOM'a eklenince animasyonu tetikle
       requestAnimationFrame(() => {
         btn.querySelector('.ob-check-path')?.classList.add('drawing');
       });
     }, 150);
   }
 
-  // ── Scale+Fade geçişi — 680ms sonra (onay anı bittikten sonra) ──
+  // ── Premium Launch: 560ms sonra baslar (tik animasyonu biter) ───
+  // Toplam gecikme: 150ms fade + 380ms draw + 50ms izleme = 580ms
   setTimeout(() => {
     const obEl   = document.getElementById('onboarding');
     const homeEl = document.getElementById('home');
+    if (!obEl || !homeEl) return;
 
-    obEl.classList.add('ob-exiting');
-    homeEl.classList.add('active', 'home-entering');
-    syncBnav('home');
+    // ── STATE: motor durumunu hemen guncelle ─────────────────────
+    // navTo('home') yerine manuel — cunku bu ozel bir "launch" gecisi,
+    // ns- push/pop animasyonu degil. navSafe ile guncelle ama animasyonu biz yonetiyoruz.
     currentScreen = 'home';
+    fromScreen    = 'home';
+    _unlockTransition(); // onceki lock kalintisi varsa temizle
 
-    setTimeout(() => {
-      obEl.classList.remove('active', 'ob-exiting');
+    // ── DOM: iki ekran ayni anda var — handoff ───────────────────
+    // ob: z-index:10, üstte, exiting animasyonu
+    // home: z-index:9, hemen altinda, entering animasyonu
+    obEl.classList.add('ob-exiting');                  // scale+fade out (420ms)
+
+    _nsHardReset(homeEl);                              // kalinti style yok
+    homeEl.classList.add('ns-active', 'home-entering'); // scale+blur in (560ms)
+    homeEl.style.zIndex = '9';
+
+    syncBnav('home');
+    setSbLeft('home');
+    setupHeaderScroll();
+
+    // ── CLEANUP: animasyon bittikten sonra (560ms + 20ms buffer) ─
+    const TOTAL = 580;
+    let cleaned = false;
+
+    function launchCleanup() {
+      if (cleaned) return;
+      cleaned = true;
+
+      // ob: display:none — navigasyon motoru artik onu gormez
+      obEl.classList.remove('ob-exiting');
+      obEl.style.visibility = 'hidden';
+      obEl.style.display    = 'none'; // kesin kapat
+
+      // home: animasyon sinifini kaldir, inline style temizle
+      homeEl.classList.remove('home-entering');
+      homeEl.style.zIndex = '';
+
+      // Tab bar animasyon sinifini temizle (bnav kendi CSS'ine doner)
       obModKapat();
-      setTimeout(() => homeEl.classList.remove('home-entering'), 380);
-    }, 300);
-  }, 680); // 150ms text fade + 380ms checkPop + ~150ms izleme süresi
+
+      // DOM Validator: sadece home ns-active olmali
+      _nsValidate('home');
+    }
+
+    // transitionend garantisi (ob-exiting animasyonu biter)
+    obEl.addEventListener('animationend', function onAE(e) {
+      if (e.animationName !== 'obExitAnim') return;
+      obEl.removeEventListener('animationend', onAE);
+      launchCleanup();
+    });
+
+    // Garantili fallback
+    setTimeout(launchCleanup, TOTAL);
+
+  }, 580);
 }
 
 function updateGreeting() {
