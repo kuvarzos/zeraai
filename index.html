@@ -7854,53 +7854,72 @@ function openDetail(key) {
 // ══════════════════════════════════════════════════════════════════════
 // navBack — Stack pop (geri)
 // ══════════════════════════════════════════════════════════════════════
-function navBack() {
+function navBack(opts) {
+  // opts.gestureHandoff = true → gesture cleanup zaten yapildi,
+  //   cur gizlendi, animasyon tamamlandi. Sadece state + bk aktiflestir.
+  var fromGesture = opts && opts.gestureHandoff;
+
   navSafe(() => {
-    // Fallback: home
     const target   = (fromScreen && fromScreen !== currentScreen && document.getElementById(fromScreen))
       ? fromScreen : 'home';
     const targetEl = document.getElementById(target);
     const curEl    = document.getElementById(currentScreen);
 
-    if (!targetEl) throw new Error('Hedef ekran bulunamadı: ' + target);
+    if (!targetEl) throw new Error('Hedef ekran bulunamadi: ' + target);
 
-    // ── POP animasyonu ──────────────────────────────────────────────
-    // curEl : sağa çıkar (ns-pop-exit)
-    // targetEl: -%30'dan merkeze döner (ns-pop-back) — detach=false, zaten canlı
+    if (fromGesture) {
+      // ── GESTURE HANDOFF YOLU ─────────────────────────────────────
+      // doCommit() cur'i zaten: visibility:hidden + ekran disi + temizlendi.
+      // Burada animasyon YOK — sadece ns- state'i guncelle.
+      // curEl zaten gizli → ns-pop-exit eklersek snap riski var, atla.
+      if (curEl) {
+        _nsClear(curEl);
+        // visibility:hidden zaten var (doCommit koydu), koru
+        curEl.style.visibility = 'hidden';
+      }
 
+      // bk (targetEl) zaten orada, tam gorunur, transition:none ile yerinde
+      _nsClear(targetEl);
+      targetEl.classList.add('ns-active');
+      targetEl.style.visibility = '';
+
+      currentScreen = target;
+      fromScreen    = TAB_SCREENS.includes(target) ? 'home' : target;
+
+      setSbLeft(target);
+      syncBnav(target);
+      setupHeaderScroll();
+      return;
+    }
+
+    // ── NORMAL POP YOLU (buton ile geri, programatik vb.) ──────────
     if (curEl) {
       _nsClear(curEl);
       curEl.classList.add('ns-pop-exit');
     }
 
-    // targetEl zaten ns-back konumunda (canlı, -%30) — sadece animasyon ekle
     _nsClear(targetEl);
     targetEl.classList.add('ns-pop-back');
 
-    // Native gölge (pop sırasında sol kenarda azalır)
     _navShadow.style.display = 'block';
     _navShadow.style.opacity = '0.5';
 
     const dur = _navDur('pop');
     setTimeout(() => {
-      // Animasyon bitti — cleanup
-      if (curEl) {
-        _nsClear(curEl);
-        // Gizle (ns-active değil → visibility:hidden, ama DOM'da)
-      }
+      if (curEl) { _nsClear(curEl); }
       _nsClear(targetEl);
       targetEl.classList.add('ns-active');
       _navShadow.style.display = 'none';
 
       currentScreen = target;
-      fromScreen = TAB_SCREENS.includes(target) ? 'home' : target;
+      fromScreen    = TAB_SCREENS.includes(target) ? 'home' : target;
 
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
     }, dur);
 
-    // State hemen güncelle (header için)
+    // State hemen guncelle (header icin)
     currentScreen = target;
     setSbLeft(target);
     syncBnav(target);
@@ -8091,46 +8110,87 @@ function navBack() {
     }
   }
 
-  // ── Commit: navBack() cagir, animasyonu tamamla ────────────────────
+  // ── Commit: Handoff protokolu — gorsel tamamlaninca state guncelle ───
+  //
+  //  Kok sorun (onceki versiyon):
+  //    setTimeout sonunda cur.style.transform = '' → CSS default'una (translateX 0) snap-back
+  //    → 1 frame beyaz/eski ekran gorulur → navBack() class ekler → ikinci render = DOUBLE FLICKER
+  //
+  //  Cozum — 4 adimli Handoff:
+  //    1. POINTER LOCK   : Animasyon baslar baslamaz pointer-events:none
+  //    2. GORSEL ONCE    : cur CSS transition ile %100W'a gider, transform sabit — snap yok
+  //    3. BK SABIT       : bk hareketsiz, tam gorunur, ns-back ellenmez
+  //    4. TRANSITIONEND  : cur gorunmez yapilir (visibility:hidden), SONRA transform temizlenir,
+  //                        SONRA navBack() — race condition yok, snap imkansiz
   function doCommit() {
     if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
     var cur = g.cur, bk = g.bk, W = g.W, dx = g.dx;
     g = null;
 
-    // Kalan mesafeye gore sure — hiz esle
     var remaining = W - dx;
     var dur = Math.max(120, Math.min(DUR_COMMIT, Math.round(remaining / 800 * 1000)));
 
+    // ADIM 1: Pointer lock
+    cur.style.pointerEvents = 'none';
+    bk.style.pointerEvents  = 'none';
+
+    // ADIM 2: bk sabit + tam gorunur — transition:none ile anlik yerles
+    bk.style.transition = 'none';
+    bk.style.transform  = 'translateX(0) translateZ(0)';
+    bk.style.zIndex     = '0';
+    bk.offsetHeight;
+
+    // ADIM 3: cur sağa — CSS transition, JS touch yok
     cur.style.transition = 'transform ' + dur + 'ms ' + SPRING;
     cur.style.transform  = 'translateX(' + W + 'px) translateZ(0)';
-
-    bk.style.transition  = 'transform ' + dur + 'ms ' + SPRING;
-    bk.style.transform   = 'translateX(0) translateZ(0)';
+    cur.style.zIndex     = '2';
 
     _dim.style.transition = 'opacity ' + dur + 'ms ' + SPRING;
     _dim.style.opacity    = '0';
-
     _navShadow.style.transition = 'transform ' + dur + 'ms ' + SPRING + ', opacity ' + dur + 'ms';
     _navShadow.style.transform  = 'translateX(' + W + 'px)';
     _navShadow.style.opacity    = '0';
 
-    setTimeout(function () {
-      // Animasyon bitti — ns- mimarisine devret
-      cur.style.transition  = '';
-      cur.style.transform   = '';
-      bk.style.transition   = '';
-      bk.style.transform    = '';
-      _dim.style.transition = '';
-      _dim.style.display    = 'none';
-      _dim.style.opacity    = '0.18';
+    // ADIM 4: transitionend + setTimeout yarisi — ilk ulasan cleanup'i tetikler
+    var handled = false;
+
+    function cleanup() {
+      if (handled) return;
+      handled = true;
+
+      // Once gizle (visibility) — transform temizlenmeden once → snap imkansiz
+      cur.style.visibility    = 'hidden';
+      // Simdi guvenle temizle
+      cur.style.transition    = 'none';
+      cur.style.transform     = '';
+      cur.style.zIndex        = '';
+      cur.style.pointerEvents = '';
+
+      bk.style.transition    = '';
+      bk.style.transform     = '';
+      bk.style.zIndex        = '';
+      bk.style.pointerEvents = '';
+
+      _dim.style.transition  = '';
+      _dim.style.display     = 'none';
+      _dim.style.opacity     = '0.18';
       _navShadow.style.transition = '';
       _navShadow.style.display    = 'none';
       _navShadow.style.opacity    = '1';
       _navShadow.style.transform  = '';
 
-      // ns- state'i navBack() uzerinden guncelle
-      navBack();
-    }, dur + 16);
+      // Artik guvenli: gestureHandoff=true → navBack animasyon atlar, sadece state gunceller
+      navBack({ gestureHandoff: true });
+    }
+
+    cur.addEventListener('transitionend', function onTE(e) {
+      if (e.propertyName !== 'transform') return;
+      cur.removeEventListener('transitionend', onTE);
+      cleanup();
+    });
+
+    // Garantili fallback
+    setTimeout(cleanup, dur + 32);
   }
 
   // ── Cancel: spring ile yerine don ────────────────────────────────
