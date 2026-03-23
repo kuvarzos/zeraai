@@ -7490,8 +7490,9 @@ function openDetail(key) {
   const prevScreen = currentScreen;
   const prevEl = document.getElementById(prevScreen);
 
-  // Tüm ekranları temizle
+  // Tüm ekranları temizle — prevEl'i son yapacağız
   document.querySelectorAll('.screen').forEach(s => {
+    if (s.id === prevScreen) return; // prevEl'e dokunma
     s.classList.remove('active','back','slide-in','slide-left','sb-behind');
     s.style.visibility = '';
     s.style.display    = '';
@@ -7500,12 +7501,15 @@ function openDetail(key) {
     s.style.transition = '';
   });
 
-  // prevEl (fields gibi): display:flex ile AÇIK bırak — z-index:1 ile altta bekle
-  // detail onun üstüne gelecek (z-index:2 ile slide-in)
-  // Bu sayede swipe-back'te bk'ye hiç dokunmaya gerek kalmaz
+  // prevEl: display:flex + zIndex:1 + parallax başlangıç pozisyonu
+  // Swipe başladığında zaten doğru yerde bekliyor — anında görünür
   if (prevEl) {
-    prevEl.style.display = 'flex';
-    prevEl.style.zIndex  = '1';
+    prevEl.classList.remove('active','back','slide-in','slide-left','sb-behind');
+    prevEl.style.visibility = '';
+    prevEl.style.display    = 'flex';
+    prevEl.style.zIndex     = '1';
+    prevEl.style.transition = 'none';
+    prevEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
   }
 
   currentScreen = 'detail';
