@@ -12956,7 +12956,337 @@ function selChip(el) {
 
 
 
+// ══════════════════════════════════════════════════════════════════════
+// GLOBAL SHEET MANAGER — Interactive Pull-to-Dismiss (v64, 2026 iOS)
+//
+//  Tüm .sheet, .op-sheet-inner, .modal panellerine otomatik bağlanır.
+//  MutationObserver ile sonradan eklenen paneller de yakalanır.
+//
+//  Fizik motoru:
+//    • 1:1 parmak takibi (rAF, 60fps)
+//    • Rubber-banding: yukarı çekişe direnç (log scale)
+//    • Dismiss: %25 eşik VEYA velocity ≥ 250px/s
+//    • Spring geri: cubic-bezier(0.32,0.72,0,1)
+//    • Backdrop opacity: parmakla senkron
+//    • Scroll conflict: scrollTop>2 ise drag başlamaz
+//
+//  Kapsanan panel tipleri:
+//    TYPE_A → .sheet (kayit-sheet, tarla-sheet)
+//              overlay: en yakın .sheet-overlay ata
+//    TYPE_B → .op-sheet-inner (tüm op/sezon/kasa/profil sheet'leri)
+//              overlay: parentElement (position:absolute backdrop)
+//    TYPE_C → .modal (hatırlatıcı modal)
+//              overlay: en yakın .modal-overlay ata
+//
+//  ns- navigasyon sistemiyle çakışma önleme:
+//    • touchstart sol kenardan (0-20px) başlıyorsa → ns- gesture'a bırak
+//    • sheet kapalıyken gesture başlamaz
+// ══════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
 
-</script>
-</body>
-</html>
+  // ── Sabitler ──────────────────────────────────────────────────────
+  var DISMISS_PCT  = 0.25;   // Panel yüksekliğinin %25'i → dismiss
+  var DISMISS_VEL  = 250;    // px/s hızlı flick → dismiss
+  var SPRING       = 'cubic-bezier(0.32,0.72,0,1)';
+  var DUR_DISMISS  = 320;    // ms
+  var DUR_RESTORE  = 380;    // ms
+  var RESIST       = 0.35;   // Rubber-band direnci (0-1, düşük=daha sert)
+  var NS_EDGE      = 20;     // Sol px — ns- gesture çakışma önleme
+
+  // ── Aktif gesture state ───────────────────────────────────────────
+  var g = null;
+  var _raf = null;
+
+  // ── Overlay bul: panel tipine göre ───────────────────────────────
+  function findOverlay(panel) {
+    // TYPE_A: .sheet → en yakın .sheet-overlay ancestor
+    if (panel.classList.contains('sheet')) {
+      var p = panel.parentElement;
+      while (p) {
+        if (p.classList.contains('sheet-overlay')) return p;
+        p = p.parentElement;
+      }
+    }
+    // TYPE_C: .modal → en yakın .modal-overlay ancestor
+    if (panel.classList.contains('modal')) {
+      var p = panel.parentElement;
+      while (p) {
+        if (p.classList.contains('modal-overlay')) return p;
+        p = p.parentElement;
+      }
+    }
+    // TYPE_B: .op-sheet-inner → parentElement (backdrop div)
+    return panel.parentElement || null;
+  }
+
+  // ── Panel görünür mü? ─────────────────────────────────────────────
+  function isPanelVisible(panel) {
+    if (panel.style.display === 'none') return false;
+    if (panel.style.visibility === 'hidden') return false;
+    var overlay = findOverlay(panel);
+    if (overlay) {
+      if (overlay.style.display === 'none') return false;
+      if (!overlay.classList.contains('open') &&
+          overlay.style.display !== 'flex' &&
+          overlay.style.display !== 'block') return false;
+    }
+    return true;
+  }
+
+  // ── Kapatma fonksiyonu: mevcut close fn'lerini çağır ─────────────
+  // Her panel'in kendi close fonksiyonu var — o'nu çağırıyoruz.
+  function closePanel(panel, overlay) {
+    var id = panel.id || (overlay && overlay.id) || '';
+
+    // TYPE_A: .sheet-overlay → open/closing class sistemi
+    if (overlay && overlay.classList.contains('sheet-overlay')) {
+      overlay.classList.add('closing');
+      setTimeout(function() { overlay.classList.remove('open','closing'); }, 230);
+      return;
+    }
+    // TYPE_B/C: inline style overlay → overlayOut animasyonu
+    if (overlay) {
+      overlay.style.animation = 'overlayOut .28s ' + SPRING + ' both';
+      panel.style.animation   = 'sheetDown .28s ' + SPRING + ' both';
+      setTimeout(function() {
+        overlay.style.display    = 'none';
+        overlay.style.animation  = '';
+        panel.style.animation    = '';
+        panel.style.transform    = '';
+        panel.style.transition   = '';
+        panel.style.visibility   = '';
+      }, 300);
+    }
+  }
+
+  // ── CSS temizle: gesture bitti ────────────────────────────────────
+  function clearGestureStyle(panel) {
+    panel.style.transform  = '';
+    panel.style.transition = '';
+    panel.style.willChange = '';
+  }
+
+  // ── touchstart ───────────────────────────────────────────────────
+  function onStart(e) {
+    if (g) return;
+    if (!e.touches || e.touches.length !== 1) return;
+
+    var t = e.touches[0];
+
+    // ns- swipe-back ile çakışma önleme: sol kenar ns-'e ait
+    if (t.clientX <= NS_EDGE) return;
+
+    // Panel ve overlay bul
+    var panel = this; // bind ile panel bağlandı
+    if (!isPanelVisible(panel)) return;
+
+    var overlay    = findOverlay(panel);
+    var scrollEl   = panel.querySelector('.sheet-scroll, .op-sheet-scroll, .modal-scroll');
+    var scrollTop  = scrollEl ? scrollEl.scrollTop : 0;
+
+    g = {
+      panel    : panel,
+      overlay  : overlay,
+      scrollEl : scrollEl,
+      y0       : t.clientY,
+      yp       : t.clientY,
+      tp       : Date.now(),
+      dy       : 0,
+      vel      : 0,
+      locked   : false,
+      done     : false,
+      h        : panel.offsetHeight || 400,
+      scrollTop: scrollTop,
+    };
+  }
+
+  // ── touchmove ────────────────────────────────────────────────────
+  function onMove(e) {
+    if (!g || g.done) return;
+    var t = e.touches[0];
+    if (!t) return;
+
+    var dy  = t.clientY - g.y0;
+    var ady = Math.abs(dy);
+    var adx = Math.abs(t.clientX - (e.touches[0] ? e.touches[0].clientX : 0));
+
+    // Scroll çakışma: içerik scrollluysa gesture başlamaz
+    if (!g.locked && g.scrollEl) {
+      g.scrollTop = g.scrollEl.scrollTop;
+    }
+    if (!g.locked && g.scrollTop > 2 && dy < 0) return; // scroll yukarı
+    if (!g.locked && g.scrollTop > 2 && dy > 0) {
+      // Scroll alanındayız ve içerik yukarıda değil → scroll'a bırak
+      if (ady < 12) return;
+    }
+
+    // Yön kilidi
+    if (!g.locked) {
+      if (ady < 6) return; // henüz emin değil
+      g.locked = true;
+      g.panel.style.willChange = 'transform';
+      g.panel.style.transition = 'none';
+    }
+
+    e.preventDefault(); // scroll blokla — gesture kazandı
+
+    // Velocity
+    var now = Date.now();
+    var dt  = now - g.tp || 1;
+    g.vel   = g.vel * 0.6 + ((t.clientY - g.yp) / dt * 1000) * 0.4;
+    g.yp    = t.clientY;
+    g.tp    = now;
+    g.dy    = dy;
+
+    if (_raf) cancelAnimationFrame(_raf);
+    _raf = requestAnimationFrame(function () {
+      if (!g) return;
+      var visual;
+      if (g.dy <= 0) {
+        // Yukarı çekiş → rubber-banding (logaritmik direnç)
+        visual = g.dy * RESIST * Math.log(1 + Math.abs(g.dy) * 0.01);
+      } else {
+        visual = g.dy; // Aşağı → 1:1
+      }
+
+      g.panel.style.transform = 'translateY(' + visual + 'px) translateZ(0)';
+
+      // Backdrop opacity senkron
+      if (g.overlay) {
+        var pct = Math.max(0, Math.min(g.dy / g.h, 1));
+        // rgba(0,0,0,0.36) → 0 lineer
+        g.overlay.style.background = 'rgba(0,0,0,' + (0.36 * (1 - pct)) + ')';
+      }
+    });
+  }
+
+  // ── touchend ─────────────────────────────────────────────────────
+  function onEnd() {
+    if (!g || g.done) { g = null; return; }
+    if (!g.locked)    { g = null; return; }
+    g.done = true;
+    if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+
+    var dismiss = g.dy >= g.h * DISMISS_PCT || g.vel >= DISMISS_VEL;
+    if (dismiss) {
+      doDismiss();
+    } else {
+      doRestore();
+    }
+  }
+
+  // ── Dismiss: panel tamamen aşağı çıkar ───────────────────────────
+  function doDismiss() {
+    var panel   = g.panel;
+    var overlay = g.overlay;
+    var h       = g.h;
+    var dy      = g.dy;
+    g = null;
+
+    panel.style.pointerEvents = 'none';
+
+    // Kalan mesafeye göre süre — hız eşle
+    var remaining = h - dy;
+    var dur = Math.max(160, Math.min(DUR_DISMISS, Math.round(remaining / 600 * 1000)));
+
+    panel.style.transition = 'transform ' + dur + 'ms ' + SPRING;
+    panel.style.transform  = 'translateY(' + h + 'px) translateZ(0)';
+
+    if (overlay) {
+      overlay.style.transition = 'background ' + dur + 'ms ' + SPRING;
+      overlay.style.background = 'rgba(0,0,0,0)';
+    }
+
+    var handled = false;
+    function afterDismiss() {
+      if (handled) return; handled = true;
+      clearGestureStyle(panel);
+      panel.style.pointerEvents = '';
+      if (overlay) {
+        overlay.style.transition = '';
+        overlay.style.background = '';
+      }
+      closePanel(panel, overlay);
+    }
+
+    panel.addEventListener('transitionend', function onTE(e) {
+      if (e.propertyName !== 'transform') return;
+      panel.removeEventListener('transitionend', onTE);
+      afterDismiss();
+    });
+    setTimeout(afterDismiss, dur + 32);
+  }
+
+  // ── Restore: spring ile yerine otur ──────────────────────────────
+  function doRestore() {
+    var panel   = g.panel;
+    var overlay = g.overlay;
+    g = null;
+
+    panel.style.transition = 'transform ' + DUR_RESTORE + 'ms ' + SPRING;
+    panel.style.transform  = 'translateY(0) translateZ(0)';
+
+    if (overlay) {
+      overlay.style.transition = 'background ' + DUR_RESTORE + 'ms ' + SPRING;
+      overlay.style.background = 'rgba(0,0,0,0.36)';
+    }
+
+    setTimeout(function() {
+      clearGestureStyle(panel);
+      if (overlay) {
+        overlay.style.transition = '';
+        overlay.style.background = '';
+      }
+    }, DUR_RESTORE + 16);
+  }
+
+  // ── Panel'e event bağla ───────────────────────────────────────────
+  function bindPanel(panel) {
+    if (panel._sheetGesture) return; // Çift bağlanma önlemi
+    panel._sheetGesture = true;
+
+    var bound = { onStart: onStart.bind(panel), onMove, onEnd };
+    panel.addEventListener('touchstart',  bound.onStart,  { passive: true  });
+    panel.addEventListener('touchmove',   bound.onMove,   { passive: false });
+    panel.addEventListener('touchend',    bound.onEnd,    { passive: true  });
+    panel.addEventListener('touchcancel', function() {
+      if (g && g.locked) doRestore(); else { if (g) { clearGestureStyle(g.panel); } g = null; }
+    }, { passive: true });
+  }
+
+  // ── Tüm mevcut panelleri bağla ────────────────────────────────────
+  function bindAll() {
+    document.querySelectorAll('.sheet, .op-sheet-inner, .modal').forEach(bindPanel);
+  }
+
+  // ── MutationObserver: sonradan eklenen paneller ───────────────────
+  function observeDOM() {
+    new MutationObserver(function(muts) {
+      muts.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+          if (node.nodeType !== 1) return;
+          var cl = node.classList;
+          if (cl && (cl.contains('sheet') || cl.contains('op-sheet-inner') || cl.contains('modal'))) {
+            bindPanel(node);
+          }
+          if (node.querySelectorAll) {
+            node.querySelectorAll('.sheet, .op-sheet-inner, .modal').forEach(bindPanel);
+          }
+        });
+      });
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { bindAll(); observeDOM(); });
+  } else {
+    bindAll();
+    observeDOM();
+  }
+
+}());
+
+
+
