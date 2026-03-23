@@ -7413,6 +7413,9 @@ function openDetail(key) {
   fromScreen = currentScreen; // gelinen ekranı kaydet
 
   const prevScreen = currentScreen;
+  const prevEl = document.getElementById(prevScreen);
+
+  // Tüm ekranları temizle
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active','back','slide-in','slide-left','sb-behind');
     s.style.visibility = '';
@@ -7422,13 +7425,18 @@ function openDetail(key) {
     s.style.transition = '';
   });
 
-  // Gelinen ekranı (fields vb.) display:none yerine sb-behind ile arkada tut
-  // → swipe-back başladığında layout hazır bekler, flash olmaz
-  const prevEl = document.getElementById(prevScreen);
-  if (prevEl) prevEl.classList.add('sb-behind');
+  // prevEl (fields gibi): display:flex ile AÇIK bırak — z-index:1 ile altta bekle
+  // detail onun üstüne gelecek (z-index:2 ile slide-in)
+  // Bu sayede swipe-back'te bk'ye hiç dokunmaya gerek kalmaz
+  if (prevEl) {
+    prevEl.style.display = 'flex';
+    prevEl.style.zIndex  = '1';
+  }
 
   currentScreen = 'detail';
-  document.getElementById('detail').classList.add('slide-in');
+  const detailEl = document.getElementById('detail');
+  detailEl.style.zIndex = '2';
+  detailEl.classList.add('slide-in');
   setSbLeft('detail');
 }
 
@@ -7462,86 +7470,83 @@ function navBack() {
   setSbLeft(target);
   syncBnav(target);
   setupHeaderScroll();
-}// ── Swipe-Back Gesture (v60) ─────────────────────────────────────────────────
+}// ── Swipe-Back Gesture (v61) ─────────────────────────────────────────────────
+//
+//  FLICKER'IN KÖK ÇÖZÜMÜ:
+//  • bk (arka ekran) swipe boyunca HİÇ display/visibility değişmez
+//  • openDetail: fields AÇIK KALIR, detail onun ÜSTÜNE gelir (z-index)
+//  • Cancel: cur yerine döner, bk zaten yerinde - hiç dokunulmaz
+//  • Commit: cur çıkar, bk'ye active eklenir
+//  • Böylece bk'de sıfır display değişikliği = sıfır flicker
 //
 //  iOS standartları:
-//  • Sol kenar 0-44px pan gesture
-//  • Parmak 1:1 senkronizasyon (zaman çizelgesi)
-//  • Parallax: bk -W*0.3 → 0
-//  • Dimming overlay: üst ekranda opacity azalır
-//  • Shadow: üst ekranın sol kenarı
-//  • Commit: dx>W*0.5 VEYA velocity>500px/s → ease-out tamamla
-//  • CSS transition override: swipe sırasında kapalı
-//  • Flash yok: bk hiç display:none olmadan gösterilir
+//  • Sol kenar 0-44px, parallax %30, ease-out, velocity-based commit
 // ─────────────────────────────────────────────────────────────────────────────
 (function () {
   'use strict';
 
-  // ── Sabitler ────────────────────────────────────────────────────────────────
-  var EDGE      = 44;    // px  sol kenar bölgesi
-  var LOCK_X    = 10;    // px  yatay lock eşiği
-  var COMMIT_R  = 0.50;  // %50 geçince commit
-  var VEL_FLICK = 500;   // px/s hız bazlı commit
-  var PAR       = 0.30;  // parallax oranı
+  var EDGE     = 44;
+  var LOCK_X   = 8;
+  var COMMIT_R = 0.38;
+  var VEL_MIN  = 300;
+  var PAR      = 0.3;
+  var EASE     = 'cubic-bezier(0.25,0.46,0.45,0.94)';
 
   var SHEETS = ['kayit-sheet','hava-sheet','op-sheet','kasa-sheet-overlay',
     'kasa-sezon-sheet','kasa-yil-sheet','konum-picker-sheet','profil-edit-sheet',
     'profil-gb-sheet','sezon-sheet','home-kayit-sheet','tarla-sil-sheet-overlay'];
 
-  var g = null; // gesture state
+  var g = null;
 
-  // ── Overlay ve shadow elementleri — DOM'a bir kere eklenir ─────────────────
-  var overlay = document.createElement('div');
-  overlay.id  = 'sb-dim-overlay';
-  overlay.style.cssText = [
-    'position:absolute','inset:0','z-index:3',
-    'background:rgba(0,0,0,0.2)','pointer-events:none',
-    'display:none','will-change:opacity'
-  ].join(';');
-  document.querySelector('.phone, body').appendChild(overlay);
+  // Overlay ve shadow
+  var overlay = (function(){
+    var el = document.getElementById('sb-dim-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'sb-dim-overlay';
+      el.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.18);pointer-events:none;display:none;will-change:opacity';
+      (document.querySelector('.phone') || document.body).appendChild(el);
+    }
+    return el;
+  }());
 
-  var shadow = document.createElement('div');
-  shadow.id  = 'sb-shadow';
-  shadow.style.cssText = [
-    'position:fixed','top:0','bottom:0','left:0','width:16px',
-    'z-index:4','pointer-events:none','display:none',
-    'background:linear-gradient(to right,rgba(0,0,0,0.18),transparent)',
-    'will-change:transform'
-  ].join(';');
-  document.querySelector('.phone, body').appendChild(shadow);
+  var shadow = (function(){
+    var el = document.getElementById('sb-shadow');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'sb-shadow';
+      el.style.cssText = 'position:absolute;top:0;bottom:0;left:0;width:20px;z-index:9;pointer-events:none;display:none;background:linear-gradient(to right,rgba(0,0,0,0.15),transparent);will-change:transform';
+      (document.querySelector('.phone') || document.body).appendChild(el);
+    }
+    return el;
+  }());
 
-  // ── Yardımcılar ─────────────────────────────────────────────────────────────
   function getTarget() {
     if (!fromScreen || fromScreen === currentScreen) return null;
     return document.getElementById(fromScreen) ? fromScreen : null;
   }
 
   function isBlocked() {
-    if (currentScreen === 'home') return true;
     for (var i = 0; i < SHEETS.length; i++) {
       var el = document.getElementById(SHEETS[i]);
       if (el && el.style.display !== 'none' && el.style.display !== '') return true;
     }
-    return !!(document.querySelector('.fl-ctx-overlay') ||
-              document.querySelector('.fl-card.is-dragging'));
+    return !!(document.querySelector('.fl-ctx-overlay') || document.querySelector('.fl-card.is-dragging'));
   }
 
-  // CSS transition'ı kapat — inline style ile eziyoruz
-  function freezeEl(el) {
+  // CSS transition'ı kapat
+  function freeze(el) {
     el.style.transition = 'none';
     el.style.animation  = 'none';
-    el.offsetHeight; // reflow — browser flush
+    el.offsetHeight;
   }
 
-  // CSS transition'ı geri aç — 1 rAF bekle ki mevcut frame tamamlansın
-  function thawEl(el) {
-    requestAnimationFrame(function() {
-      el.style.transition = '';
-      el.style.animation  = '';
-    });
+  // CSS transition'ı 1 frame sonra aç
+  function thaw(el) {
+    requestAnimationFrame(function(){ el.style.transition = ''; el.style.animation = ''; });
   }
 
-  // ── touchstart ──────────────────────────────────────────────────────────────
+  // ── touchstart ────────────────────────────────────────────────────
   function onStart(e) {
     if (g) return;
     if (!e.touches || e.touches.length !== 1) return;
@@ -7552,45 +7557,35 @@ function navBack() {
     if (!target) return;
 
     var W   = window.innerWidth;
-    var cur = document.getElementById(currentScreen);
-    var bk  = document.getElementById(target);
+    var cur = document.getElementById(currentScreen); // detail (üst)
+    var bk  = document.getElementById(target);        // fields (alt - ZATEN AÇIK)
     if (!cur || !bk) return;
 
-    // bk'yi göster — display değiştirme, sadece visibility kullan
-    // sb-behind class'ı veya visibility:hidden inline → her ikisini temizle
-    bk.classList.remove('sb-behind');
-    bk.style.visibility = 'visible';
-    // Eğer display:none ise (sb-behind'sız normal ekran) göster
-    if (window.getComputedStyle(bk).display === 'none') {
-      bk.style.display = 'flex';
-      bk.offsetHeight; // reflow
-    }
-    bk.style.zIndex = '1';
-    freezeEl(bk); // transition kapat
+    // bk: zaten display:flex ve görünür (openDetail onu kapatmadı)
+    // Sadece z-index ve transform ayarla
+    freeze(bk);
+    bk.style.zIndex    = '1';
     bk.style.transform = 'translateX(' + (-W * PAR) + 'px)';
 
-    // cur: transition kapat, üste al
-    freezeEl(cur);
+    // cur: üste al
+    freeze(cur);
     cur.style.zIndex    = '2';
     cur.style.transform = 'translateX(0)';
 
-    // overlay: göster, başlangıç opacity'si tam (0.2)
     overlay.style.display = 'block';
-    overlay.style.opacity = '0.2';
-
-    // shadow: göster
-    shadow.style.display = 'block';
+    overlay.style.opacity = '0.18';
+    shadow.style.display  = 'block';
+    shadow.style.transform = 'translateX(0)';
 
     g = {
-      target : target, W : W,
-      cur : cur, bk : bk,
-      x0 : t.clientX, y0 : t.clientY,
-      xPrev : t.clientX, tPrev : Date.now(),
-      dx : 0, vel : 0, locked : false, done : false
+      target: target, W: W, cur: cur, bk: bk,
+      x0: t.clientX, y0: t.clientY,
+      xPrev: t.clientX, tPrev: Date.now(),
+      dx: 0, vel: 0, locked: false, done: false
     };
   }
 
-  // ── touchmove ───────────────────────────────────────────────────────────────
+  // ── touchmove ─────────────────────────────────────────────────────
   function onMove(e) {
     if (!g || g.done) return;
     if (!e.touches || !e.touches[0]) return;
@@ -7608,133 +7603,120 @@ function navBack() {
 
     e.preventDefault();
 
-    // Hız EMA
     g.vel   = g.vel * 0.6 + ((t.clientX - g.xPrev) / dt * 1000) * 0.4;
     g.xPrev = t.clientX;
     g.tPrev = now;
     g.dx    = dx;
 
-    var pct = dx / g.W; // 0 → 1
+    var pct = Math.min(dx / g.W, 1);
 
-    // Üst ekran: parmakla 1:1
     g.cur.style.transform = 'translateX(' + dx + 'px)';
-
-    // Alt ekran: parallax
-    g.bk.style.transform = 'translateX(' + (-g.W * PAR * (1 - pct)) + 'px)';
-
-    // Overlay: ilerledikçe azal (0.2 → 0)
-    overlay.style.opacity = String((1 - pct) * 0.2);
-
-    // Shadow: cur ile birlikte kayar
+    g.bk.style.transform  = 'translateX(' + (-g.W * PAR * (1 - pct)) + 'px)';
+    overlay.style.opacity  = String((1 - pct) * 0.18);
     shadow.style.transform = 'translateX(' + dx + 'px)';
   }
 
-  // ── touchend ────────────────────────────────────────────────────────────────
+  // ── touchend ──────────────────────────────────────────────────────
   function onEnd() {
     if (!g || g.done) { g = null; return; }
     if (!g.locked)    { doAbort(); return; }
     g.done = true;
-    (g.dx >= g.W * COMMIT_R || g.vel >= VEL_FLICK) ? doCommit() : doCancel();
+    (g.dx >= g.W * COMMIT_R || g.vel >= VEL_MIN) ? doCommit() : doCancel();
   }
 
-  // ── Commit ──────────────────────────────────────────────────────────────────
+  // ── Commit ────────────────────────────────────────────────────────
+  // cur sağa çıkar, bk yerine oturur - BK'DE HİÇ DISPLAY DEĞİŞMEZ
   function doCommit() {
     var remaining = g.W - g.dx;
-    var speed     = Math.max(Math.abs(g.vel), 800);
-    var dur       = Math.max(150, Math.min(400, Math.round(remaining / speed * 1000)));
-    var ease      = 'cubic-bezier(0.25,0.46,0.45,0.94)'; // ease-out
+    var speed = Math.max(Math.abs(g.vel), 600);
+    var dur   = Math.max(120, Math.min(380, Math.round(remaining / speed * 1000)));
 
     var cur = g.cur, bk = g.bk, target = g.target, W = g.W;
     g = null;
 
-    // Transition'ı manuel set et (freeze kaldırıldı, kendi transition'ımız)
-    cur.style.transition = 'transform ' + dur + 'ms ' + ease;
+    cur.style.transition = 'transform ' + dur + 'ms ' + EASE;
     cur.style.transform  = 'translateX(' + W + 'px)';
-    bk.style.transition  = 'transform ' + dur + 'ms ' + ease;
+    bk.style.transition  = 'transform ' + dur + 'ms ' + EASE;
     bk.style.transform   = 'translateX(0)';
-    overlay.style.transition = 'opacity ' + dur + 'ms ' + ease;
+    overlay.style.transition = 'opacity ' + dur + 'ms ' + EASE;
     overlay.style.opacity    = '0';
-    shadow.style.transition  = 'transform ' + dur + 'ms ' + ease;
+    shadow.style.transition  = 'transform ' + dur + 'ms ' + EASE;
     shadow.style.transform   = 'translateX(' + W + 'px)';
 
     setTimeout(function () {
-      // Temizle
-      overlay.style.cssText = overlay.style.cssText; // keep
-      overlay.style.display    = 'none';
-      overlay.style.transition = '';
-      overlay.style.opacity    = '0.2';
-      shadow.style.display     = 'none';
-      shadow.style.transition  = '';
-      shadow.style.transform   = '';
+      overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.18);pointer-events:none;display:none;will-change:opacity';
+      shadow.style.display = 'none';
+      shadow.style.transition = '';
+      shadow.style.transform  = '';
 
-      // bk: active yap, tüm inline + sb-behind temizle
-      bk.classList.remove('sb-behind');
-      bk.classList.add('active');
-      bk.style.transition  = '';
-      bk.style.transform   = '';
-      bk.style.zIndex      = '';
-      bk.style.display     = '';
-      bk.style.visibility  = '';
-      thawEl(bk);
-
-      // cur: ekran dışında — class'larını kaldır (display:none olur)
+      // cur: gizle - sadece class kaldır
       cur.style.transition = '';
       cur.style.transform  = '';
       cur.style.zIndex     = '';
-      cur.style.visibility = '';
-      cur.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
-      thawEl(cur);
+      cur.classList.remove('active','slide-in','slide-left','back','tab-enter');
 
-      // State
+      // bk: zaten doğru yerde - z-index ve transition temizle, active yap
+      bk.style.transition = '';
+      bk.style.transform  = '';
+      bk.style.zIndex     = '';
+      // bk zaten display:flex ve görünür - active sadece class için
+      if (!bk.classList.contains('active')) bk.classList.add('active');
+      thaw(bk);
+      thaw(cur);
+
       currentScreen = target;
       fromScreen    = ['fields','kayitlarim','kasa'].includes(target) ? 'home' : target;
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
-    }, dur + 16); // +16ms ekstra buffer
-  }
-
-  // ── Cancel ──────────────────────────────────────────────────────────────────
-  function doCancel() {
-    if (!g) return;
-    var dur  = 380;
-    var ease = 'cubic-bezier(0.25,0.46,0.45,0.94)';
-    var cur = g.cur, bk = g.bk, W = g.W;
-    g = null;
-
-    cur.style.transition = 'transform ' + dur + 'ms ' + ease;
-    cur.style.transform  = 'translateX(0)';
-    bk.style.transition  = 'transform ' + dur + 'ms ' + ease;
-    bk.style.transform   = 'translateX(' + (-W * PAR) + 'px)';
-    overlay.style.transition = 'opacity ' + dur + 'ms ' + ease;
-    overlay.style.opacity    = '0.2';
-    shadow.style.transition  = 'transform ' + dur + 'ms ' + ease;
-    shadow.style.transform   = 'translateX(0)';
-
-    setTimeout(function () {
-      overlay.style.display    = 'none';
-      overlay.style.transition = '';
-      shadow.style.display     = 'none';
-      shadow.style.transition  = '';
-      shadow.style.transform   = '';
-
-      // bk: display DEĞİŞTİRME — sadece visibility:hidden ile gizle
-      // display değişikliği (flex→none→flex) flicker yaratır
-      bk.style.transition  = '';
-      bk.style.transform   = '';
-      bk.style.zIndex      = '';
-      bk.style.visibility  = 'hidden'; // layout yerinde, görünmez
-      thawEl(bk);
-
-      cur.style.transition = '';
-      cur.style.transform  = '';
-      cur.style.zIndex     = '';
-      cur.style.visibility = '';
-      thawEl(cur);
     }, dur + 16);
   }
 
-  // ── Abort (lock öncesi iptal) ────────────────────────────────────────────────
+  // ── Cancel ────────────────────────────────────────────────────────
+  // cur yerine döner - BK'YE HİÇ DOKUNULMAZ
+  function doCancel() {
+    if (!g) return;
+    var dur = 350;
+    var cur = g.cur, bk = g.bk, W = g.W;
+    g = null;
+
+    // cur yerine dön
+    cur.style.transition = 'transform ' + dur + 'ms ' + EASE;
+    cur.style.transform  = 'translateX(0)';
+
+    // bk: sadece başlangıç konumuna dön - başka hiçbir şey değişmez
+    bk.style.transition  = 'transform ' + dur + 'ms ' + EASE;
+    bk.style.transform   = 'translateX(' + (-W * PAR) + 'px)';
+
+    overlay.style.transition = 'opacity ' + dur + 'ms ' + EASE;
+    overlay.style.opacity    = '0';
+    shadow.style.transition  = 'transform ' + dur + 'ms ' + EASE;
+    shadow.style.transform   = 'translateX(0)';
+
+    setTimeout(function () {
+      overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.18);pointer-events:none;display:none;will-change:opacity';
+      shadow.style.display    = 'none';
+      shadow.style.transition = '';
+      shadow.style.transform  = '';
+
+      // cur: transition temizle - yerine oturdu
+      cur.style.transition = '';
+      cur.style.transform  = '';
+      cur.style.zIndex     = '';
+      thaw(cur);
+
+      // bk: SADECE z-index ve transform temizle - DISPLAY/VISIBILITY DOKUNMA
+      bk.style.transition = '';
+      bk.style.transform  = '';
+      bk.style.zIndex     = '';
+      thaw(bk);
+      // bk burada parallax başlangıç pozisyonunda - ama detail arkasında (z-index:auto)
+      // detail (cur) z-index:auto = üstte, bk görünmez - DISPLAY DEĞİŞMEDEN
+    }, dur + 16);
+  }
+
+  // ── Abort ─────────────────────────────────────────────────────────
+  // Lock öncesi - minimum değişiklik
   function doAbort() {
     if (!g) return;
     var cur = g.cur, bk = g.bk;
@@ -7743,16 +7725,14 @@ function navBack() {
     overlay.style.display = 'none';
     shadow.style.display  = 'none';
 
-    // bk: lock öncesi abort — henüz hareket yok, display değiştirme
-    bk.style.transform   = '';
-    bk.style.zIndex      = '';
-    bk.style.visibility  = 'hidden'; // layout yerinde, görünmez
-    thawEl(bk);
+    // bk: SADECE z-index ve transform sıfırla - display/visibility yok
+    bk.style.transform = '';
+    bk.style.zIndex    = '';
+    thaw(bk);
 
-    cur.style.transform  = '';
-    cur.style.zIndex     = '';
-    cur.style.visibility = '';
-    thawEl(cur);
+    cur.style.transform = '';
+    cur.style.zIndex    = '';
+    thaw(cur);
   }
 
   document.addEventListener('touchstart',  onStart, { passive: true  });
@@ -7763,6 +7743,7 @@ function navBack() {
   }, { passive: true });
 
 }());
+
 
 // ── HEADER SCROLL DAVRANIŞI ──────────────────────────────────────────
 // ── LARGE TITLE → INLINE HEADER GEÇİŞİ ─────────────────────────────────────
