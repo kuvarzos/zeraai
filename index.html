@@ -7728,19 +7728,19 @@ function navBack() {
       shadow.style.transition = '';
       shadow.style.transform  = '';
 
-      // cur: gizle - sadece class kaldır
-      cur.style.transition = '';
-      cur.style.transform  = '';
-      cur.style.zIndex     = '';
-      cur.classList.remove('active','slide-in','slide-left','back','tab-enter');
-
-      // bk: zaten doğru yerde - z-index ve transition temizle, active yap
+      // bk: ÖNCE aktif et — display:flex garantili, görünür
       bk.style.transition = '';
       bk.style.transform  = '';
       bk.style.zIndex     = '';
-      // bk zaten display:flex ve görünür - active sadece class için
       if (!bk.classList.contains('active')) bk.classList.add('active');
       thaw(bk);
+
+      // cur: bk aktif olduktan SONRA gizle — aralarında boşluk olmaz
+      cur.style.transition = '';
+      cur.style.transform  = 'translateX(' + W + 'px)'; // ekran dışında tut
+      cur.style.zIndex     = '';
+      cur.classList.remove('active','slide-in','slide-left','back','tab-enter');
+      cur.style.transform  = ''; // şimdi temizle — display:none devreye girer
       thaw(cur);
 
       currentScreen = target;
