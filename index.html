@@ -7556,15 +7556,12 @@ function navBack() {
     var bk  = document.getElementById(target);
     if (!cur || !bk) return;
 
-    // bk'yi göster — sb-behind class'ı varsa layout zaten hazır
-    // sb-behind: display:flex + visibility:hidden — sadece visibility aç
-    var bkHasSbBehind = bk.classList.contains('sb-behind');
-    if (bkHasSbBehind) {
-      // Layout zaten hazır, display değişikliği YOK — flash olmaz
-      bk.classList.remove('sb-behind');
-      bk.style.visibility = 'visible';
-    } else {
-      // sb-behind yoksa (tab ekranı vb.) normal göster
+    // bk'yi göster — display değiştirme, sadece visibility kullan
+    // sb-behind class'ı veya visibility:hidden inline → her ikisini temizle
+    bk.classList.remove('sb-behind');
+    bk.style.visibility = 'visible';
+    // Eğer display:none ise (sb-behind'sız normal ekran) göster
+    if (window.getComputedStyle(bk).display === 'none') {
       bk.style.display = 'flex';
       bk.offsetHeight; // reflow
     }
@@ -7721,13 +7718,12 @@ function navBack() {
       shadow.style.transition  = '';
       shadow.style.transform   = '';
 
-      // bk: sb-behind ile gizle (layout korunur, detail altında hazır bekler)
-      bk.style.transition = '';
-      bk.style.transform  = '';
-      bk.style.zIndex     = '';
-      bk.style.visibility = '';
-      bk.style.display    = 'flex';
-      bk.classList.add('sb-behind');
+      // bk: display DEĞİŞTİRME — sadece visibility:hidden ile gizle
+      // display değişikliği (flex→none→flex) flicker yaratır
+      bk.style.transition  = '';
+      bk.style.transform   = '';
+      bk.style.zIndex      = '';
+      bk.style.visibility  = 'hidden'; // layout yerinde, görünmez
       thawEl(bk);
 
       cur.style.transition = '';
@@ -7747,11 +7743,10 @@ function navBack() {
     overlay.style.display = 'none';
     shadow.style.display  = 'none';
 
-    bk.style.transform  = '';
-    bk.style.zIndex     = '';
-    bk.style.visibility = '';
-    bk.style.display    = 'flex';
-    bk.classList.add('sb-behind'); // layout koru, gizle
+    // bk: lock öncesi abort — henüz hareket yok, display değiştirme
+    bk.style.transform   = '';
+    bk.style.zIndex      = '';
+    bk.style.visibility  = 'hidden'; // layout yerinde, görünmez
     thawEl(bk);
 
     cur.style.transform  = '';
