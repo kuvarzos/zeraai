@@ -7613,15 +7613,15 @@ if (document.readyState === 'loading') {
 //    parallaxFactor      : --nav-parallax (30%)
 // ══════════════════════════════════════════════════════════════════════
 
-// ── Nav gölge overlay (push/pop sırasında sol kenarda) ─────────────────
+// ── Nav gölge overlay ─────────────────────────────────────────────────
 const _navShadow = (function () {
   let el = document.getElementById('ns-shadow');
   if (!el) {
     el = document.createElement('div');
     el.id = 'ns-shadow';
     el.style.cssText = [
-      'position:absolute', 'top:0', 'bottom:0', 'left:0', 'width:24px',
-      'z-index:3', 'pointer-events:none', 'display:none',
+      'position:absolute','top:0','bottom:0','left:0','width:24px',
+      'z-index:3','pointer-events:none','display:none',
       'background:linear-gradient(to right,rgba(0,0,0,0.20),transparent)',
       'will-change:opacity,transform',
     ].join(';');
@@ -7630,31 +7630,81 @@ const _navShadow = (function () {
   return el;
 }());
 
-// ── Animasyon süresi (CSS token'la senkron) ────────────────────────────
+// ── Transition Lock — bir animasyon bitmeden diğeri başlamaz ───────────
+// isTransitioning: global kilit bayrağı
+// _transitionTimer: kilit açma garantisi (transitionend + setTimeout yarışı)
+let isTransitioning = false;
+let _transitionTimer = null;
+
+function _lockTransition(dur) {
+  isTransitioning = true;
+  if (_transitionTimer) clearTimeout(_transitionTimer);
+  // Garantili kilit açma: animasyon süresi + buffer
+  _transitionTimer = setTimeout(() => {
+    isTransitioning = false;
+    _transitionTimer = null;
+  }, dur + 60);
+}
+
+function _unlockTransition() {
+  isTransitioning = false;
+  if (_transitionTimer) { clearTimeout(_transitionTimer); _transitionTimer = null; }
+}
+
+// ── Animasyon süresi (CSS token'la senkron) ───────────────────────────
 function _navDur(type) {
-  const el = document.documentElement;
-  const v  = getComputedStyle(el).getPropertyValue(
-    type === 'tab' ? '--nav-tab-dur' : '--nav-dur'
-  ).trim();
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue(type === 'tab' ? '--nav-tab-dur' : '--nav-dur').trim();
   return parseInt(v) || (type === 'tab' ? 220 : 380);
 }
 
-// ── Tüm NS class'larını temizle ────────────────────────────────────────
+// ── NS class listesi ──────────────────────────────────────────────────
 const NS_CLASSES = [
   'ns-active','ns-back',
   'ns-push-enter','ns-push-back',
   'ns-pop-exit','ns-pop-back',
   'ns-tab-enter',
 ];
-function _nsClear(el) {
+
+// ── Ekran tam temizleme: class + inline style + visibility ─────────────
+// Her push/pop başında hedef ekrana uygulanır (State Reset on Push)
+function _nsHardReset(el) {
+  if (!el) return;
   el.classList.remove(...NS_CLASSES);
-}
-function _nsReset() {
-  document.querySelectorAll('.screen').forEach(_nsClear);
-  _navShadow.style.display = 'none';
+  // Tüm inline style kalıntılarını sil — swipe transform, visibility, z-index
+  el.style.cssText = '';
 }
 
-// ── Ekran render yardımcısı ────────────────────────────────────────────
+// ── Hafif temizleme: sadece NS class'ları ─────────────────────────────
+function _nsClear(el) {
+  if (!el) return;
+  el.classList.remove(...NS_CLASSES);
+}
+
+// ── Global reset: tüm ekranlar + overlayler ───────────────────────────
+function _nsReset() {
+  document.querySelectorAll('.screen').forEach(_nsHardReset);
+  _navShadow.style.cssText = [
+    'position:absolute','top:0','bottom:0','left:0','width:24px',
+    'z-index:3','pointer-events:none','display:none',
+    'background:linear-gradient(to right,rgba(0,0,0,0.20),transparent)',
+    'will-change:opacity,transform',
+  ].join(';');
+  _unlockTransition();
+}
+
+// ── DOM Validator: geçiş bittikten sonra sadece 1 ns-active kalır ─────
+function _nsValidate(activeId) {
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.id === activeId) return;
+    // Aktif olmayan ekranda ns-active varsa temizle
+    if (s.classList.contains('ns-active')) {
+      _nsHardReset(s);
+    }
+  });
+}
+
+// ── Ekran render yardımcısı ───────────────────────────────────────────
 function _nsRender(id) {
   if (id === 'kayitlarim') {
     requestAnimationFrame(() => {
@@ -7674,7 +7724,7 @@ function _nsRender(id) {
   }
 }
 
-// ── Güvenli navigasyon — fallback: home ───────────────────────────────
+// ── Güvenli navigasyon — fallback: home ──────────────────────────────
 function navSafe(fn) {
   try {
     fn();
@@ -7683,7 +7733,10 @@ function navSafe(fn) {
     _nsReset();
     const homeEl = document.getElementById('home');
     if (homeEl) {
+      _nsHardReset(homeEl);
       homeEl.classList.add('ns-active');
+      homeEl.style.visibility = 'visible';
+      homeEl.style.zIndex     = '2';
       currentScreen = 'home';
       fromScreen    = 'home';
       setSbLeft('home');
@@ -7697,9 +7750,12 @@ function navSafe(fn) {
 // navTo — Tab ve stack geçişleri
 // ══════════════════════════════════════════════════════════════════════
 function navTo(id) {
+  // Transition lock: animasyon bitene kadar yeni geçiş başlamaz
+  if (isTransitioning) return;
+
   navSafe(() => {
 
-    // ── ÖZEL GEÇİŞ: splash → onboarding ──────────────────────────────
+    // ── ÖZEL GEÇİŞ: splash → onboarding ────────────────────────────
     if (currentScreen === 'splash' && id === 'onboarding') {
       const splashEl = document.getElementById('splash');
       const obEl     = document.getElementById('onboarding');
@@ -7711,18 +7767,11 @@ function navTo(id) {
       document.querySelector('.phone')?.classList.add('app-ready');
       obEl.classList.add('ns-active', 'ob-entering');
 
-      setTimeout(() => {
-        splashEl.classList.remove('splash-exit');
-        splashEl.style.visibility = 'hidden';
-      }, 420);
+      setTimeout(() => { splashEl.classList.remove('splash-exit'); splashEl.style.visibility = 'hidden'; }, 420);
       setTimeout(() => { obEl.classList.remove('ob-entering'); }, 620);
 
       const sqIcon = document.getElementById('ob-squircle-icon');
-      if (sqIcon) {
-        sqIcon.classList.remove('animate');
-        void sqIcon.offsetWidth;
-        sqIcon.classList.add('animate');
-      }
+      if (sqIcon) { sqIcon.classList.remove('animate'); void sqIcon.offsetWidth; sqIcon.classList.add('animate'); }
 
       currentScreen = 'onboarding';
       fromScreen    = 'onboarding';
@@ -7733,66 +7782,68 @@ function navTo(id) {
 
     const toEl   = document.getElementById(id);
     const fromEl = document.getElementById(currentScreen);
-    if (!toEl) throw new Error('Ekran bulunamadı: ' + id);
-
-    const isTab = navOrder.includes(id);
+    if (!toEl) throw new Error('Ekran bulunamadi: ' + id);
 
     // fromScreen güncelle
-    if (DETAIL_SCREENS.includes(id)) {
-      fromScreen = currentScreen;
-    } else if (TAB_SCREENS.includes(id)) {
-      fromScreen = 'home';
-    } else {
-      fromScreen = id;
-    }
+    if (DETAIL_SCREENS.includes(id))       fromScreen = currentScreen;
+    else if (TAB_SCREENS.includes(id))     fromScreen = 'home';
+    else                                   fromScreen = id;
+
+    const isTab = navOrder.includes(id);
+    const dur   = _navDur(isTab ? 'tab' : 'push');
+    _lockTransition(dur);
 
     if (isTab) {
-      // ── TAB GEÇİŞİ: cross-fade, arka ekran detach edilmez ───────────
-      // Önce mevcut aktifi kapat
-      if (fromEl) _nsClear(fromEl);
-      // Diğer tüm ekranları temizle
-      document.querySelectorAll('.screen').forEach(s => {
-        if (s === toEl || s === fromEl) return;
-        _nsClear(s);
-      });
+      // ── TAB GEÇİŞİ ────────────────────────────────────────────────
+      // Tüm ekranları hard-reset — kalıntı yok
+      document.querySelectorAll('.screen').forEach(s => _nsHardReset(s));
 
-      // Yeni ekran: tab-enter animasyonuyla gir
-      _nsClear(toEl);
+      // toEl: temiz başlangıç + z-index + visibility garantisi
+      _nsHardReset(toEl);
+      toEl.style.visibility = 'visible';
+      toEl.style.zIndex     = '2';
       toEl.classList.add('ns-tab-enter');
 
-      const dur = _navDur('tab');
       setTimeout(() => {
         _nsClear(toEl);
         toEl.classList.add('ns-active');
+        toEl.style.zIndex     = '';
+        toEl.style.visibility = '';
+        _nsValidate(id);
+        _unlockTransition();
         _nsRender(id);
       }, dur);
 
     } else {
-      // ── PUSH (STACK) GEÇİŞİ: sağdan giriş + parallax ───────────────
-      // fromEl: detach=false → arka ekran canlı kalır (ns-push-back)
-      // toEl  : sağdan girer (ns-push-enter)
+      // ── PUSH GEÇİŞİ ───────────────────────────────────────────────
+      // fromEl: arka ekran — sadece NS class temizle, inline style koru
       if (fromEl) {
         _nsClear(fromEl);
-        fromEl.classList.add('ns-push-back'); // parallax: 0 → -%30
+        fromEl.classList.add('ns-push-back');
       }
 
-      // Sol kenarda native gölge
+      // toEl: STATE RESET — her kalıntıyı sil, temiz başlangıç
+      _nsHardReset(toEl);
+      toEl.style.visibility = 'visible';   // Z-Index & Visibility Force
+      toEl.style.zIndex     = '2';
+      toEl.classList.add('ns-push-enter');
+
       _navShadow.style.display = 'block';
       _navShadow.style.opacity = '1';
 
-      _nsClear(toEl);
-      toEl.classList.add('ns-push-enter'); // sağdan giriş
-
-      const dur = _navDur('push');
       setTimeout(() => {
-        // Animasyon bitti — state'i temizle
         if (fromEl) {
           _nsClear(fromEl);
-          fromEl.classList.add('ns-back'); // detach=false: arka ekranda canlı
+          fromEl.classList.add('ns-back');
+          fromEl.style.zIndex = '';
         }
         _nsClear(toEl);
         toEl.classList.add('ns-active');
+        toEl.style.zIndex     = '';
+        toEl.style.visibility = '';
         _navShadow.style.display = 'none';
+        _nsValidate(id);
+        _unlockTransition();
         _nsRender(id);
       }, dur);
     }
@@ -7811,39 +7862,48 @@ function navTo(id) {
 let currentDetailKey = null;
 
 function openDetail(key) {
+  if (isTransitioning) return;
+
   navSafe(() => {
     currentDetailKey = key;
     buildDetail(key);
 
     const fromEl   = document.getElementById(currentScreen);
     const detailEl = document.getElementById('detail');
-    if (!detailEl) throw new Error('detail ekranı bulunamadı');
+    if (!detailEl) throw new Error('detail ekrani bulunamadi');
 
     fromScreen = currentScreen;
+    const dur  = _navDur('push');
+    _lockTransition(dur);
 
-    // fromEl: detach=false — canlı, parallax konumuna gider
+    // fromEl: arka ekran — parallax konuma gider
     if (fromEl) {
       _nsClear(fromEl);
       fromEl.classList.add('ns-push-back');
     }
 
-    // Native gölge
+    // detailEl: STATE RESET — tam temizlik, tertemiz başlangıç
+    _nsHardReset(detailEl);
+    detailEl.style.visibility = 'visible';
+    detailEl.style.zIndex     = '2';
+    detailEl.classList.add('ns-push-enter');
+
     _navShadow.style.display = 'block';
     _navShadow.style.opacity = '1';
 
-    // detail: sağdan giriş
-    _nsClear(detailEl);
-    detailEl.classList.add('ns-push-enter');
-
-    const dur = _navDur('push');
     setTimeout(() => {
       if (fromEl) {
         _nsClear(fromEl);
-        fromEl.classList.add('ns-back'); // canlı, arka planda
+        fromEl.classList.add('ns-back');
+        fromEl.style.zIndex = '';
       }
       _nsClear(detailEl);
       detailEl.classList.add('ns-active');
-      _navShadow.style.display = 'none';
+      detailEl.style.zIndex     = '';
+      detailEl.style.visibility = '';
+      _navShadow.style.display  = 'none';
+      _nsValidate('detail');
+      _unlockTransition();
     }, dur);
 
     currentScreen = 'detail';
@@ -7855,9 +7915,10 @@ function openDetail(key) {
 // navBack — Stack pop (geri)
 // ══════════════════════════════════════════════════════════════════════
 function navBack(opts) {
-  // opts.gestureHandoff = true → gesture cleanup zaten yapildi,
-  //   cur gizlendi, animasyon tamamlandi. Sadece state + bk aktiflestir.
   var fromGesture = opts && opts.gestureHandoff;
+
+  // Gesture handoff'ta kilidi atlama — gesture zaten animasyonu bitirdi
+  if (!fromGesture && isTransitioning) return;
 
   navSafe(() => {
     const target   = (fromScreen && fromScreen !== currentScreen && document.getElementById(fromScreen))
@@ -7868,64 +7929,79 @@ function navBack(opts) {
     if (!targetEl) throw new Error('Hedef ekran bulunamadi: ' + target);
 
     if (fromGesture) {
-      // ── GESTURE HANDOFF YOLU ─────────────────────────────────────
-      // doCommit() cur'i zaten: visibility:hidden + ekran disi + temizlendi.
-      // Burada animasyon YOK — sadece ns- state'i guncelle.
-      // curEl zaten gizli → ns-pop-exit eklersek snap riski var, atla.
+      // ── GESTURE HANDOFF YOLU ──────────────────────────────────────
+      // doCommit(): cur visibility:hidden + ekran dışı + style temizlendi.
+      // Animasyon yok — sadece state güncelle.
       if (curEl) {
-        _nsClear(curEl);
-        // visibility:hidden zaten var (doCommit koydu), koru
-        curEl.style.visibility = 'hidden';
+        _nsHardReset(curEl);
+        curEl.style.visibility = 'hidden'; // DOM'da ama görünmez
       }
 
-      // bk (targetEl) zaten orada, tam gorunur, transition:none ile yerinde
-      _nsClear(targetEl);
+      // targetEl: hard-reset + ns-active + visibility garantisi
+      _nsHardReset(targetEl);
       targetEl.classList.add('ns-active');
-      targetEl.style.visibility = '';
+      targetEl.style.visibility = 'visible';
+      targetEl.style.zIndex     = '2';
+
+      // 1 frame sonra inline override'ları CSS'e bırak
+      requestAnimationFrame(() => {
+        targetEl.style.visibility = '';
+        targetEl.style.zIndex     = '';
+        _nsValidate(target);
+        _unlockTransition();
+      });
 
       currentScreen = target;
       fromScreen    = TAB_SCREENS.includes(target) ? 'home' : target;
-
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
       return;
     }
 
-    // ── NORMAL POP YOLU (buton ile geri, programatik vb.) ──────────
+    // ── NORMAL POP YOLU (buton, programatik) ──────────────────────
+    const dur = _navDur('pop');
+    _lockTransition(dur);
+
     if (curEl) {
       _nsClear(curEl);
       curEl.classList.add('ns-pop-exit');
     }
 
-    _nsClear(targetEl);
+    // targetEl: STATE RESET — kalıntı sil, temiz başlangıç
+    _nsHardReset(targetEl);
+    targetEl.style.visibility = 'visible';
+    targetEl.style.zIndex     = '0';
     targetEl.classList.add('ns-pop-back');
 
     _navShadow.style.display = 'block';
     _navShadow.style.opacity = '0.5';
 
-    const dur = _navDur('pop');
     setTimeout(() => {
-      if (curEl) { _nsClear(curEl); }
+      if (curEl) _nsHardReset(curEl); // Gesture Cleanup: tüm kalıntı silinir
       _nsClear(targetEl);
       targetEl.classList.add('ns-active');
-      _navShadow.style.display = 'none';
+      targetEl.style.visibility = '';
+      targetEl.style.zIndex     = '';
+      _navShadow.style.display  = 'none';
+      _nsValidate(target);
+      _unlockTransition();
 
       currentScreen = target;
       fromScreen    = TAB_SCREENS.includes(target) ? 'home' : target;
-
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
     }, dur);
 
-    // State hemen guncelle (header icin)
+    // State hemen güncelle (header için)
     currentScreen = target;
     setSbLeft(target);
     syncBnav(target);
 
   }); // navSafe
 }
+
 
 // ══════════════════════════════════════════════════════════════════════
 // NS GESTURE LISTENER — Swipe-Back Hareket Kontrolcusu (v64)
@@ -8002,6 +8078,7 @@ function navBack(opts) {
   // ── touchstart ────────────────────────────────────────────────────
   function onStart(e) {
     if (g) return;
+    if (isTransitioning) return;            // Transition lock: animasyon sırasında gesture yok
     if (!e.touches || e.touches.length !== 1) return;
     var t = e.touches[0];
     // Sadece sol kenar
@@ -8213,24 +8290,40 @@ function navBack(opts) {
     _navShadow.style.opacity    = '0';
 
     setTimeout(function () {
-      cur.style.transition  = '';
-      cur.style.transform   = '';
-      bk.style.transition   = '';
-      // bk: ns-back CSS'e birak (--nav-parallax ile)
-      bk.style.transform    = '';
-      _dim.style.transition = '';
-      _dim.style.display    = 'none';
-      _dim.style.opacity    = '0.18';
+      // Gesture Cleanup: spring bitti, tüm gesture inline style kalıntısını sil
+      // cur: ns-active CSS'e bırak — sadece class kalıntısı değil inline style de temiz
+      cur.style.transition    = '';
+      cur.style.transform     = '';
+      cur.style.pointerEvents = '';
+      cur.style.zIndex        = '';
+      // bk: ns-back CSS class'ı inline override olmadan çalışsın
+      bk.style.transition     = '';
+      bk.style.transform      = '';
+      bk.style.pointerEvents  = '';
+      bk.style.zIndex         = '';
+      _dim.style.transition   = '';
+      _dim.style.display      = 'none';
+      _dim.style.opacity      = '0.18';
       _navShadow.style.transition = '';
       _navShadow.style.display    = 'none';
       _navShadow.style.opacity    = '1';
+      _navShadow.style.transform  = '';
+      // Kilit: doCancel sonrası yeni gesture başlayabilir
+      _unlockTransition();
     }, DUR_CANCEL + 16);
   }
 
-  // ── Abort: lock olmadan iptal — hicbir gorsel degisiklik yok ───────
+  // ── Abort: lock olmadan iptal — minimum temizlik ───────────────────
   function doAbort() {
-    g = null;
     if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+    // Eğer g varsa (onStart'tan sonra ama lock öncesi) inline style temizle
+    if (g) {
+      if (g.cur) { g.cur.style.transform = ''; g.cur.style.transition = ''; }
+      if (g.bk)  { g.bk.style.transform  = ''; g.bk.style.transition  = ''; }
+      g = null;
+    }
+    _dim.style.display          = 'none';
+    _navShadow.style.display    = 'none';
   }
 
   // ── Event listener'lar ────────────────────────────────────────────
