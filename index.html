@@ -7457,14 +7457,44 @@ function navTo(id) {
     fromScreen = id;                      // home'da swipe yok
   }
 
+  // ── v62: Tab geçişlerinde fromScreen'i "standby" konumda bırak ─────────────
+  // openDetail() fields'i display:flex + parallax konumunda bırakır → swipe anında görünür.
+  // navTo() tab geçişlerinde de aynı mantık: fromScreen display:flex kalır,
+  // sadece z-index ve transform ayarlanır → swipe başladığında bk hazır, beyaz flash yok.
+  //
+  // Hangi ekran "standby" olacak?
+  // Tab geçişi (fields/kayitlarim/kasa → home veya aralarında):
+  //   fromScreen = swipe ile geri dönülecek ekran → o standby kalır
+  // Diğer tüm ekranlar temizlenir.
+
+  const standbyId = fromScreen; // swipe hedefi — bu ekranı kapatma
+
   screens.forEach(s => {
+    // standby ekranına (fromScreen) dokunma — o display:flex kalacak
+    if (s.id === standbyId && standbyId && standbyId !== id) return;
     s.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
-    s.style.visibility = '';  // sb-behind kalıntısı
-    s.style.display    = '';  // swipe inline display kalıntısı
-    s.style.zIndex     = '';  // swipe zIndex kalıntısı
-    s.style.transform  = '';  // swipe transform kalıntısı
-    s.style.transition = '';  // swipe transition kalıntısı
+    s.style.visibility = '';
+    s.style.display    = '';
+    s.style.zIndex     = '';
+    s.style.transform  = '';
+    s.style.transition = '';
+    s.style.animation  = '';
   });
+
+  // Standby ekranını swipe için hazır konuma getir (parallax başlangıcı)
+  // display:flex zaten açık (ya da açıksa korunuyor), sadece z-index + transform
+  if (standbyId && standbyId !== id) {
+    const standbyEl = document.getElementById(standbyId);
+    if (standbyEl) {
+      standbyEl.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
+      standbyEl.style.display    = 'flex';           // display:flex garantili — flicker önler
+      standbyEl.style.zIndex     = '1';              // cur'ın (yeni ekranın) altında
+      standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)'; // parallax başlangıç
+      standbyEl.style.transition = 'none';           // ilk frame'de animasyon yok
+      standbyEl.style.visibility = '';
+    }
+  }
+
   currentScreen = id;
   const s = document.getElementById(id);
   s.classList.add(animClass);
@@ -7613,7 +7643,20 @@ function navBack() {
 
     // 5. State güncelle
     currentScreen = target;
-    fromScreen = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
+    const newFromDetail = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
+    fromScreen = newFromDetail;
+
+    // v62: yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
+    if (newFromDetail && newFromDetail !== target) {
+      const standbyEl = document.getElementById(newFromDetail);
+      if (standbyEl) {
+        standbyEl.style.display    = 'flex';
+        standbyEl.style.zIndex     = '1';
+        standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+        standbyEl.style.transition = 'none';
+      }
+    }
+
     setSbLeft(target);
     syncBnav(target);
     setupHeaderScroll();
@@ -7639,7 +7682,20 @@ function navBack() {
   targetEl.classList.add(isTab ? 'active' : 'slide-left');
 
   currentScreen = target;
-  fromScreen = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
+  const newFromNormal = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
+  fromScreen = newFromNormal;
+
+  // v62: yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
+  if (newFromNormal && newFromNormal !== target) {
+    const standbyEl = document.getElementById(newFromNormal);
+    if (standbyEl) {
+      standbyEl.style.display    = 'flex';
+      standbyEl.style.zIndex     = '1';
+      standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+      standbyEl.style.transition = 'none';
+    }
+  }
+
   setSbLeft(target);
   syncBnav(target);
   setupHeaderScroll();
@@ -7730,13 +7786,21 @@ function navBack() {
     if (!target) return;
 
     var W   = window.innerWidth;
-    var cur = document.getElementById(currentScreen); // detail (üst)
-    var bk  = document.getElementById(target);        // fields (alt - ZATEN AÇIK)
+    var cur = document.getElementById(currentScreen); // üstteki ekran
+    var bk  = document.getElementById(target);        // alttaki ekran (geri dönülecek)
     if (!cur || !bk) return;
 
-    // bk: zaten display:flex ve görünür (openDetail onu kapatmadı)
-    // Sadece z-index ve transform ayarla
+    // ── v62: bk hazırlığı ─────────────────────────────────────────────────
+    // openDetail() → bk (fields) display:flex + parallax konumunda AÇIK bırakır. ✓
+    // navTo() tab geçişi → bk (home) artık display:flex + parallax standby'da. ✓
+    // Güvence: bk display:none'daysa (beklenmedik durum) anında aç, flicker minimum.
     freeze(bk);
+    if (bk.style.display === 'none' || bk.style.display === '') {
+      // Fallback: bk henüz standby'a alınmamış (eski navTo çağrısı kalıntısı)
+      // display:flex ver + 1 reflow ile GPU'ya bildir
+      bk.style.display = 'flex';
+      bk.offsetHeight; // reflow — browser'ın layout'u tanıması için
+    }
     bk.style.zIndex    = '1';
     bk.style.transform = 'translateX(' + (-W * PAR) + 'px)';
 
@@ -7744,6 +7808,7 @@ function navBack() {
     freeze(cur);
     cur.style.zIndex    = '2';
     cur.style.transform = 'translateX(0)';
+    cur.style.display   = 'flex'; // güvence
 
     overlay.style.display = 'block';
     overlay.style.opacity = '0.18';
@@ -7838,7 +7903,24 @@ function navBack() {
       thaw(cur);
 
       currentScreen = target;
-      fromScreen    = ['fields','kayitlarim','kasa'].includes(target) ? 'home' : target;
+      // v62: fromScreen güncelle + yeni standby'ı hazırla
+      var newFrom = ['fields','kayitlarim','kasa'].includes(target) ? 'home' : target;
+      fromScreen  = newFrom;
+
+      // Eski cur (artık kapalı) dışındaki standby ekranları temizle
+      // Yeni fromScreen (newFrom) standby'a alınacak — navTo bunu halleder
+      // Burada sadece eski cur'ı temizliyoruz, geri kalanı navTo yönetir
+      document.querySelectorAll('.screen').forEach(function(s) {
+        if (s === bk) return; // aktif ekran — dokunma
+        if (s === cur) return; // zaten temizlendi
+        // Diğer standby ekranlar: z-index ve transform sıfırla, display'i koru
+        if (s.style.zIndex === '1') {
+          s.style.zIndex    = '';
+          s.style.transform = '';
+          s.style.transition = '';
+        }
+      });
+
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
@@ -7878,13 +7960,14 @@ function navBack() {
       cur.style.zIndex     = '';
       thaw(cur);
 
-      // bk: SADECE z-index ve transform temizle - DISPLAY/VISIBILITY DOKUNMA
+      // bk: SADECE z-index ve transform temizle - display:flex KORUNUYOR (standby konumu)
+      // z-index'i sıfırlayınca cur (z-index:auto) üste geçer — bk görünmez ama display:flex.
+      // Bir sonraki swipe için bk anında hazır — flicker yok.
       bk.style.transition = '';
-      bk.style.transform  = '';
+      bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)'; // parallax başlangıca geri
       bk.style.zIndex     = '';
       thaw(bk);
-      // bk burada parallax başlangıç pozisyonunda - ama detail arkasında (z-index:auto)
-      // detail (cur) z-index:auto = üstte, bk görünmez - DISPLAY DEĞİŞMEDEN
+      // bk: display:flex + parallax standby'da — onStart() anında kullanabilir
     }, dur + 16);
   }
 
