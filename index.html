@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v75                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v76                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v75                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v76                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -34,31 +34,30 @@
 ║  Swipe-back  : Sol kenar 0-44px, parallax %30, velocity commit  ║
 ║  Standby sys : fromScreen display:flex+visibility:hidden park   ║
 ║                → swipe onStart()'ta visibility açılır           ║
-║  Tab geçişi  : Spatial Depth 350ms — enter:scale(0.96→1)+fade   ║
-║                exit:scale(1→1.04)+fade, cross-fade z-index       ║
+║  Tab geçişi  : X-Style Cross-Fade 200ms — enter:scale(0.98→1)+fade ║
+║                exit:opacity fade 150ms, slayt YOK              ║
 ║  Detail geç. : iosSlideIn/iosSlideBack (.38s)                   ║
 ║  z-index     : aktif ekran=2, standby=1, sheet=80+, modal=200  ║
 ║  Fontlar     : Fraunces (başlık), Inter (gövde), Outfit (sayı) ║
 ║  Veri        : localStorage — FIELDS, KAYITLAR, USER_PREFS     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  BOTTOM TAB BAR — v75 MEVCUT DURUM                              ║
+║  BOTTOM TAB BAR — v76 MEVCUT DURUM                              ║
 ║  • 4 sekme: Ana Sayfa / Tarlalarım / Kayıtlarım / Kasa         ║
 ║  • Ortada FAB — sadece openKayit() tetikler, nav YOK           ║
 ║  • Glassmorphism: rgba(226,220,208,0.96) + blur(25px)          ║
 ║  • Separatör: border-top 0.5px rgba(255,255,255,0.72)          ║
 ║  • Morphing pill: .bnav-pill, JS translate3d, transition:none  ║
-║  • İKON ANİMASYONU TAMAMEN KAPALI:                              ║
-║      transition:none, will-change:auto                         ║
-║      bnavPress keyframe: SİLİNDİ                               ║
-║      bnav-pressing JS mantığı: SİLİNDİ                         ║
-║  • v75 FLİCKER FİX: GPU İzolasyon + Counter-Scale              ║
-║      .bnav → backface-visibility:hidden + translateZ(0)        ║
-║      .bnav-item/.bnav-icon-wrap/.bnav-item svg →               ║
-║        translateZ(0) + backface-visibility:hidden              ║
-║      transition:all → tamamen kaldırıldı (transition:none)     ║
-║      bnavCounterEnter/Exit keyframes → tab geçişi sırasında    ║
-║        .screen'in scale(0.96/1.04) efektini nötralize eder     ║
-║        .bnav görsel olarak sabit kalır, titreme sıfır          ║
+║  • v76 X-STYLE ZERİF MİMARİ:                                   ║
+║      .bnav → contain:layout style (render izolasyonu)          ║
+║      transition:all → TAMAMEN SİLİNDİ (transition:none)        ║
+║      İkon: sadece tıklanan SVG → .bnav-icon-popping sınıfı     ║
+║        xIconPop: scale(1→1.2→1) 150ms spring, diğerleri sabit  ║
+║      ic-outline/ic-filled swap: sadece opacity (reflow:0)      ║
+║      will-change:transform → SVG GPU compositor katmanı        ║
+║      Hit target: 44×44pt sabit (::before, left/right:0)        ║
+║  • v76 GEÇİŞ: X-Style Cross-Fade (Spatial Depth kaldırıldı)   ║
+║      xTabEnter: opacity+scale(0.98→1) 200ms                    ║
+║      xTabExit: opacity fade 150ms, scale YOK → titreme imkansız║
 ║  • Aktif sekme: renk teal + filled ikon + bold label — ANLIK   ║
 ║  • Pasif sekme: renk gri + outline ikon + soluk label — ANLIK  ║
 ║  !! MİMARİ KISIT: .bnav her .screen içinde yaşıyor (6 kopya).  ║
@@ -661,36 +660,23 @@ body.app-ready { background: var(--bg); }
   z-index: 2;
 }
 
-/* ── Tab Geçişi v74: Spatial Depth Engine ────────────────────────────
-   2026 iOS Premium — Apple'ın "Hacimsel Derinlik" geçiş motoru.
+/* ── Tab Geçişi v76: X (Twitter) Style — Instant Cross-Fade ─────────
+   X/Twitter mobil standartı: slayt yok, scale yok, sadece opacity.
+   Yeni sayfa: opacity 0→1 + çok hafif scale(0.98→1) — 200ms.
+   Eski sayfa: opacity 1→0 — 150ms (daha hızlı solar, geride kalmaz).
 
-   YENİ SAYFA (tab-enter):
-     opacity: 0→1  +  scale: 0.96→1.0
-     Ekran derinlikten öne çıkıyor gibi belirir.
+   TAB BAR FLICKER SIFIR: scale olmadığı için .bnav hiç ölçeklenmez.
+   bnavCounter keyframe'lere artık gerek yok — korundu ama tetiklenmez.
 
-   ESKİ SAYFA (tab-exit):
-     opacity: 1→0  +  scale: 1.0→1.04
-     Kullanıcıya doğru hafifçe büyür ve solar — "depth push" hissi.
-
-   CROSS-FADE: Yeni sayfa (z:3) eski (z:2) üstünde başlar →
-     eski silinmeden önce yeni beliriyor = boşluk/beyazlama sıfır.
-
-   MİMARİ NOT: .bnav her .screen içinde. Eski sayfada scale(1.04)
-     uygulanırken .bnav da ölçeklenir — bu tamam çünkü o ekran
-     zaten opacity:0 ile yok olurken görünmez kalır.
-     Yeni sayfada scale(0.96→1) ile .bnav da girer; ama bu ekranın
-     .bnav'ı doğru renkte ve 350ms boyunca maksimum 4% küçük —
-     insan gözü bu farkı tab bar bölgesinde algılamaz.
-
-   GPU: will-change:transform,opacity + translateZ(0) ile 60fps.
-   Süre: 350ms, cubic-bezier(0.32,0.72,0,1) — Apple spring eğrisi.
+   GPU: translateZ(0) ile compositor thread'de render. 60fps garantili.
+   Süre: 200ms — X'in "native" hızı, algısal olarak anlık ama geçişli.
 ──────────────────────────────────────────────────────────────────── */
 
-/* Yeni sayfa: derinlikten öne çıkış */
-@keyframes tabSpatialEnter {
+/* Yeni sayfa: hafif derinlik + opacity */
+@keyframes xTabEnter {
   from {
     opacity: 0;
-    transform: scale(0.96) translateZ(0);
+    transform: scale(0.98) translateZ(0);
   }
   to {
     opacity: 1;
@@ -698,15 +684,15 @@ body.app-ready { background: var(--bg); }
   }
 }
 
-/* Eski sayfa: kullanıcıya doğru büyüyüp solar */
-@keyframes tabSpatialExit {
+/* Eski sayfa: sadece solar — scale yok, tab bar titremiyor */
+@keyframes xTabExit {
   from {
     opacity: 1;
-    transform: scale(1.0) translateZ(0);
+    transform: translateZ(0);
   }
   to {
     opacity: 0;
-    transform: scale(1.04) translateZ(0);
+    transform: translateZ(0);
   }
 }
 
@@ -714,8 +700,8 @@ body.app-ready { background: var(--bg); }
 .screen.tab-enter {
   display: flex;
   z-index: 3;  /* eski (z:2) üstünde — cross-fade garantisi */
-  animation: tabSpatialEnter 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
-  will-change: transform, opacity;
+  animation: xTabEnter 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  will-change: opacity, transform;
 }
 
 /* Giden eski sekme */
@@ -723,8 +709,8 @@ body.app-ready { background: var(--bg); }
   display: flex;
   z-index: 2;
   pointer-events: none;  /* geçiş anında tıklamayı engelle */
-  animation: tabSpatialExit 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
-  will-change: transform, opacity;
+  animation: xTabExit 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  will-change: opacity;
 }
 
 /* Tab geri */
@@ -817,52 +803,50 @@ body.app-ready { background: var(--bg); }
   /* Katman: tüm ekran içeriğinin üzerinde, sheet'lerin altında */
   z-index: 10;
 
-  /* ── v75 GPU İzolasyon Katmanı ─────────────────────────────────────────
-     .bnav kendi GPU bileşik katmanına alınıyor.
-     translateZ(0) + backface-visibility:hidden → tarayıcı bu elemanı
-     ayrı bir texture olarak GPU'ya yükler; üst .screen'in scale/opacity
-     animasyonlarından bağımsız render edilir. Reflow tetiklenmez.
+  /* ── v76 Render İzolasyonu ─────────────────────────────────────────────
+     contain: layout style → tarayıcıya: "bu kutunun içi dışarıyı etkilemez"
+     guarantee'si. Üst ekranın herhangi bir değişikliği .bnav'ı reflow'a
+     sokmaz. GPU compositor bu kutuyu bağımsız bir layer olarak tutar.
+     NOT: contain:paint KULLANMA — backdrop-filter'ı kırar.
   ──────────────────────────────────────────────────────────────────────── */
+  contain: layout style;
+
+  /* GPU kompozisyon katmanı — reflow tetiklenmez */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
-/* ── v75 Counter-Scale: Tab geçişi sırasında .bnav'ı dondur ─────────────
-   .screen.tab-enter  → scale(0.96→1.0) animasyonu yapar.
-   .screen.tab-exit   → scale(1.0→1.04) animasyonu yapar.
-   .bnav bu .screen'in içinde olduğu için o da ölçeklenir ve titrer.
-
-   ÇÖZÜM: Tab geçişi sırasında .bnav'a ters scale uygulayarak
-   ebeveyn scale'ini nötralize ediyoruz. Görsel sonuç: .bnav
-   sabit durur, sadece ekran içeriği animasyon yapar.
-
-   tabSpatialEnter: from=scale(0.96) to=scale(1.0)
-     → bnav counter: from=scale(1/0.96≈1.0417) to=scale(1.0)
-   tabSpatialExit: from=scale(1.0) to=scale(1.04)
-     → bnav counter: from=scale(1.0) to=scale(1/1.04≈0.9615)
-
-   timing/easing: ebeveyn animasyonuyla birebir eşleşiyor (350ms, aynı bezier)
-   → böylece çarpma efekti sıfırlanır, .bnav sanki hiç hareket etmemiş gibi görünür.
+/* ── v75 Counter-Scale: Artık gerek yok — xTabExit'te scale YOK ─────────
+   v76'da tab geçişi scale içermiyor (X-style cross-fade).
+   Bu keyframe'ler korunuyor ama .screen.tab-enter/exit .bnav kuralları
+   artık tetiklenmez — bnav ebeveyn scale'ine maruz kalmıyor.
+   Gelecekte Spatial Depth geri gelirse yeniden aktive edilebilir.
 ─────────────────────────────────────────────────────────────────────── */
 @keyframes bnavCounterEnter {
-  from { -webkit-transform: scale(1.0417) translateZ(0); transform: scale(1.0417) translateZ(0); }
-  to   { -webkit-transform: scale(1.0)    translateZ(0); transform: scale(1.0)    translateZ(0); }
+  from { -webkit-transform: translateZ(0); transform: translateZ(0); }
+  to   { -webkit-transform: translateZ(0); transform: translateZ(0); }
 }
 @keyframes bnavCounterExit {
-  from { -webkit-transform: scale(1.0)    translateZ(0); transform: scale(1.0)    translateZ(0); }
-  to   { -webkit-transform: scale(0.9615) translateZ(0); transform: scale(0.9615) translateZ(0); }
+  from { -webkit-transform: translateZ(0); transform: translateZ(0); }
+  to   { -webkit-transform: translateZ(0); transform: translateZ(0); }
 }
+/* Counter-scale kuralları: v76'da devre dışı (no-op animasyon) */
+.screen.tab-enter .bnav { animation: none; }
+.screen.tab-exit  .bnav { animation: none; }
 
-.screen.tab-enter .bnav {
-  -webkit-animation: bnavCounterEnter 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
-  animation:         bnavCounterEnter 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
-  /* opacity: ebeveynden miras alır; counter-scale sadece geometriyi düzeltir */
-}
-.screen.tab-exit .bnav {
-  -webkit-animation: bnavCounterExit 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
-  animation:         bnavCounterExit 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+/* ── v76 X-Style İkon Spring Pop ─────────────────────────────────────────
+   Sadece tıklanan ikon için: scale(1) → scale(1.2) → scale(1.0)
+   150ms, cubic-bezier(.36,1.4,.64,1) — hafif overshoot = "native" his.
+   KURAL: Bu animasyon SADECE JS tarafından .bnav-icon-popping sınıfı ile
+   tetiklenir. CSS genel kuralı yoktur — diğer ikonlar asla etkilenmez.
+   Reflow yasak: sadece transform (compositor-only property).
+─────────────────────────────────────────────────────────────────────── */
+@keyframes xIconPop {
+  0%   { transform: translateZ(0) scale(1.0); }
+  45%  { transform: translateZ(0) scale(1.2); }
+  100% { transform: translateZ(0) scale(1.0); }
 }
 
 /* ── Sekme butonu ── */
@@ -876,10 +860,10 @@ body.app-ready { background: var(--bg); }
   -webkit-tap-highlight-color: transparent;
   user-select: none; -webkit-user-select: none;
   position: relative;
-  /* transition: ALL kaldırıldı (v75) — hiçbir özellik animasyonlu değil */
+  /* transition: ALL kaldırıldı (v75/v76) — hiçbir özellik animasyonlu değil */
   transition: none;
   will-change: auto;
-  /* GPU katmanı: layout değişimleri compositing thread'de kalır */
+  /* GPU katmanı */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
@@ -887,12 +871,15 @@ body.app-ready { background: var(--bg); }
 }
 .bnav-item.active { color: var(--green-mid); }
 
-/* 44×44pt dokunma alanı */
+/* ── 44×44pt Hit Target — sabit, koşulsuz ── */
+/* v76: top/bottom/left/right değerleri bnav padding'ini karşılayacak şekilde
+   hesaplanmıştır. Herhangi bir font/padding değişikliğinden bağımsız,
+   dokunma alanı her zaman minimum 44×44pt olarak korunur. */
 .bnav-item::before {
   content: '';
   position: absolute;
-  top: -4px; bottom: -8px;
-  left: -8px; right: -8px;
+  top: -4px; bottom: -28px; /* padding-bottom:28px'i aşıyor — tam 44pt garantisi */
+  left: 0; right: 0;        /* yatayda tüm flex alanı — yan ikon "çalma" yok */
 }
 
 /* ── Pill: transition YOK — anlık konumlanma ── */
@@ -924,37 +911,49 @@ body.app-ready { background: var(--bg); }
   background: transparent;
   flex-shrink: 0;
   z-index: 1;
-  /* GPU katmanı: ikon grubu ayrı composite layer */
+  /* GPU compositor katmanı: ikon animasyonu üst layout'u etkilemez */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
-/* ── SVG: tamamen hareketsiz ── */
+/* ── SVG: varsayılan sabit, sadece .popping sınıfıyla animasyonlu ── */
 .bnav-item svg {
   flex-shrink: 0;
   width: 22px; height: 22px;
-  /* transition: ALL kaldırıldı (v75) — SVG asla animasyonlu olmamalı */
+  /* transition: ALL kaldırıldı (v76) — SVG asla genel animasyonlu olmaz */
   transition: none;
-  will-change: auto;
-  /* transform: none yerine translateZ(0) — GPU katmanı korur, layout değiştirmez */
+  /* will-change: transform — compositor tarayıcıya ikon GPU'da olacak der */
+  will-change: transform;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
+
+/* ── ic-outline / ic-filled: opacity swap — REFLOW YOK ── */
+/* Sadece opacity değişiyor: compositor-only, layout hesaplaması sıfır */
 .bnav-item svg .ic-outline { opacity: 1; }
 .bnav-item svg .ic-filled  { opacity: 0; }
 .bnav-item.active svg .ic-outline { opacity: 0; }
 .bnav-item.active svg .ic-filled  { opacity: 1; }
+
+/* ── Spring Pop: sadece tıklanan ikon, JS tarafından eklenir ── */
+/* .bnav-icon-popping sınıfı: touchstart anında SADECE ilgili svg'ye eklenir.
+   Diğer 3 ikon: tamamen dokunulmaz, z-index/transform/opacity değişmez.
+   animationend'de JS bu sınıfı kaldırır — bellek temiz. */
+.bnav-item svg.bnav-icon-popping {
+  -webkit-animation: xIconPop 150ms cubic-bezier(.36,1.4,.64,1) both;
+  animation:         xIconPop 150ms cubic-bezier(.36,1.4,.64,1) both;
+}
 
 /* ── Etiket: tamamen hareketsiz ── */
 .bnav-lbl {
   font-size: 10px; font-weight: 500;
   letter-spacing: .1px; line-height: 1; white-space: nowrap;
   opacity: 0.55;
-  /* transition: ALL kaldırıldı (v75) — etiket anlık renk/ağırlık değiştirir */
+  /* transition: ALL kaldırıldı (v76) — etiket anlık renk/ağırlık değiştirir */
   transition: none;
   will-change: auto;
   position: relative; z-index: 1;
@@ -964,7 +963,7 @@ body.app-ready { background: var(--bg); }
   opacity: 1;
 }
 
-/* Press animasyonu: kaldırıldı — ikonlar tamamen tepkisiz */
+/* Press animasyonu (genel): kaldırıldı — sadece xIconPop JS'den tetiklenir */
 
 /* ══════════════════════════════════════════════════════════════
    FAB — Orta Aksiyon Butonu (v66)
@@ -7702,6 +7701,26 @@ function setupBnav() {
 
     btn.addEventListener('touchstart', function() {
       touchMoved = false;
+
+      // ── v76 X-Style Spring Pop ────────────────────────────────────────
+      // SADECE bu ikon animasyonlu — diğer 3 ikon'a DOKUNULMAZ.
+      // svg'ye .bnav-icon-popping eklenir → xIconPop keyframe tetiklenir.
+      // animationend'de sınıf kaldırılır → temiz durum.
+      // Reflow: sıfır. Sadece transform (compositor-only).
+      var svgEl = btn.querySelector('svg');
+      if (svgEl) {
+        // Önceki animasyonu iptal et (çift-tap durumu)
+        svgEl.classList.remove('bnav-icon-popping');
+        // Bir sonraki frame'de yeniden ekle — browser animasyonu sıfırlar
+        requestAnimationFrame(function() {
+          svgEl.classList.add('bnav-icon-popping');
+          svgEl.addEventListener('animationend', function _pop() {
+            svgEl.classList.remove('bnav-icon-popping');
+            svgEl.removeEventListener('animationend', _pop);
+          });
+        });
+      }
+      // ─────────────────────────────────────────────────────────────────
     }, { passive: true });
 
     btn.addEventListener('touchmove', function() {
@@ -7953,7 +7972,7 @@ function navTo(id) {
         exitEl.classList.add('tab-exit');
 
         // Animasyon bitince ekranı tamamen gizle + temizle
-        const exitDur = 350;
+        const exitDur = 150; // v76: xTabExit süresiyle eşleşiyor (150ms)
         setTimeout(() => {
           exitEl.classList.remove('tab-exit');
           exitEl.style.visibility = 'hidden';
