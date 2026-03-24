@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v71                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v72                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v71                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v72                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -759,7 +759,7 @@ body.app-ready { background: var(--bg); }
   transform: translateZ(0);
 }
 
-/* ── Sekme butonu — tüm sekme alanı 44pt hit target ── */
+/* ── Sekme butonu ── */
 .bnav-item {
   flex: 1;
   display: flex; flex-direction: column; align-items: center;
@@ -770,55 +770,26 @@ body.app-ready { background: var(--bg); }
   -webkit-tap-highlight-color: transparent;
   user-select: none; -webkit-user-select: none;
   position: relative;
-
-  /* ── v70 Animation Isolation — Kesin Kural ────────────────────────
-     BASE .bnav-item: transition YOK, will-change YOK.
-     Pasif (deaktive olan) sekmeler anında pasif duruma geçer.
-     Hiçbir animasyon hesaplaması yapılmaz.
-  ──────────────────────────────────────────────────────────────── */
   transition: none;
   will-change: auto;
-
-  /* Sub-pixel titreme önleme */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
+.bnav-item.active { color: var(--green-mid); }
 
-/* ── AKTİF sekme: animasyon SADECE buraya izole ── */
-.bnav-item.active {
-  color: var(--green-mid);
-  transition: color .2s cubic-bezier(.4,0,.2,1);
-}
-
-/* ── PASİF sekme: transition YOK — anında snap ──────────────────
-   v69'daki hata: :not(.active) üzerinde transition tanımlanmıştı.
-   B aktifken C'ye tıklayınca B, :not(.active) kuralını alır ve
-   transition ile pasif duruma GERİ DÖNER = B'nin ikonu zıplar.
-   Çözüm: :not(.active) üzerinde kesinlikle transition tanımlama.
-── */
-/* (Kural yok — base .bnav-item transition:none yeterli) */
-
-/* 44×44pt görünmez dokunma alanı genişletici */
+/* 44×44pt dokunma alanı */
 .bnav-item::before {
   content: '';
   position: absolute;
   top: -4px; bottom: -8px;
   left: -8px; right: -8px;
-  /* pointer-events bu pseudo'ya geçer — görünmez ama dokunulabilir */
 }
 
-/* ── Pill arka planı: MORPHING — JS ile translate3d kayar ── */
-/* Pill DOM'a bnav içine eklenir (setupBnav tarafından) */
+/* ── Pill ── */
 .bnav-pill {
   position: absolute;
   top: 8px;
   height: 30px;
-  /* Squircle: iOS pill tam köşe yarıçapı */
   border-radius: 15px;
   background: rgba(34,127,131,0.13);
-  /* translate3d → GPU, spring physics → doğal his */
   transition:
     transform .38s cubic-bezier(.34,1.22,.64,1),
     width     .38s cubic-bezier(.34,1.22,.64,1),
@@ -826,12 +797,11 @@ body.app-ready { background: var(--bg); }
   will-change: transform, width;
   pointer-events: none;
   z-index: 0;
-  /* İlk render'da gizli — ilk syncBnav açar */
   opacity: 0;
 }
 .bnav-pill.ready { opacity: 1; }
 
-/* ── İkon wrapper: pill ile aynı boyut ── */
+/* ── İkon wrapper ── */
 .bnav-icon-wrap {
   position: relative;
   width: 48px; height: 30px;
@@ -840,99 +810,43 @@ body.app-ready { background: var(--bg); }
   background: transparent;
   flex-shrink: 0;
   z-index: 1;
-  /* Sub-pixel titreme önleme */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 
-/* (ghost kural kaldırıldı — yukarıdaki .bnav-item.active geçerli) */
-
-/* ── SVG ikonlar ── */
+/* ── SVG: tamamen hareketsiz ── */
 .bnav-item svg {
   flex-shrink: 0;
   width: 22px; height: 22px;
-  /* Base: transition YOK, will-change YOK */
   transition: none;
   will-change: auto;
-  -webkit-transform: translateZ(0) scale(1);
-  transform: translateZ(0) scale(1);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  transform: none;
 }
-
-/* Outline ↔ Filled crossfade — opacity ANINDA değişir, transition YOK
-   Opacity transition da pasif sekmeleri tetikler — kaldırıldı.
-   Aktif sekme için opacity geçişi aşağıda .active svg içinde tanımlı. */
 .bnav-item svg .ic-outline { opacity: 1; }
 .bnav-item svg .ic-filled  { opacity: 0; }
 .bnav-item.active svg .ic-outline { opacity: 0; }
 .bnav-item.active svg .ic-filled  { opacity: 1; }
 
-/* ── Aktif ikon: scale + opacity geçişi SADECE buraya izole ── */
-.bnav-item.active svg {
-  -webkit-transform: translateZ(0) scale(1.05) translateY(-1px);
-  transform: translateZ(0) scale(1.05) translateY(-1px);
-  /* Transition SADECE .active svg'de — pasif svg'ler sıfır hesaplama */
-  transition: transform .28s cubic-bezier(.34,1.28,.64,1);
-  will-change: transform;
-}
-
-/* ── Pasif svg: transition YOK — anında scale(1)'e snap ────────
-   v69 hatası: :not(.active) svg'de transition vardı → deaktive olan
-   sekmenin ikonu scale(1.05)→scale(1) animasyonuyla GÖZLE GÖRÜLÜR dönerdi.
-   Çözüm: hiç transition tanımlama. Base .bnav-item svg transition:none yeterli.
-── */
-
-/* ── Etiket ── */
+/* ── Etiket: tamamen hareketsiz ── */
 .bnav-lbl {
   font-size: 10px; font-weight: 500;
   letter-spacing: .1px; line-height: 1; white-space: nowrap;
-  /* Pasif durum: sabit değerler — transition YOK, will-change YOK */
   opacity: 0.55;
-  transform: scale(.93) translateY(1px);
-  transform-origin: center bottom;
   transition: none;
   will-change: auto;
   position: relative; z-index: 1;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
-
-/* ── Aktif etiket: animasyon SADECE buraya izole ── */
 .bnav-item.active .bnav-lbl {
   font-weight: 700;
   opacity: 1;
-  transform: scale(1) translateY(0);
-  will-change: transform, opacity;
-  transition:
-    transform .28s cubic-bezier(.34,1.28,.64,1),
-    opacity   .18s cubic-bezier(.4,0,.2,1);
 }
 
-/* ── Pasif etiket: transition YOK — anında snap ─────────────────
-   v69 hatası: :not(.active) .bnav-lbl'de transition vardı.
-   Deaktive olan sekmenin label'ı opacity:1→0.55 ve
-   scale(1)→scale(.93) ile animasyonla dönerdi = zıplama.
-   Çözüm: hiç kural tanımlama. Base .bnav-lbl transition:none yeterli.
-── */
-
-/* ── Press animasyonu: rAF'tan tetiklenir, CSS kancası ──────────
-   .bnav-pressing sınıfı SADECE tıklanan sekmeye eklenir (JS).
-   Diğer sekmeler bu animasyonu hiçbir zaman almaz.
-   backface-visibility + translateZ(0) = sıfır titreme.
-── */
+/* ── Press: sadece tıklanan sekmenin ikonu ── */
 @keyframes bnavPress {
-  0%   { transform: translateZ(0) scale(1)   translateY(0);   }
-  28%  { transform: translateZ(0) scale(.80) translateY(2px); }
-  60%  { transform: translateZ(0) scale(1.05) translateY(-1px); }
-  100% { transform: translateZ(0) scale(1)   translateY(0);   }
+  0%   { transform: scale(1);    }
+  40%  { transform: scale(0.88); }
+  100% { transform: scale(1);    }
 }
 .bnav-item.bnav-pressing svg {
-  animation: bnavPress .34s cubic-bezier(.34,1.56,.64,1) both;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  animation: bnavPress .22s cubic-bezier(.34,1.56,.64,1) both;
 }
 
 /* ══════════════════════════════════════════════════════════════
