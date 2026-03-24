@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v68                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v69                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v68                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v69                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -773,11 +773,36 @@ body.app-ready { background: var(--bg); }
   -webkit-tap-highlight-color: transparent;
   user-select: none; -webkit-user-select: none;
   position: relative;
-  /* Renk geçişi spring eğrisiyle */
-  transition: color .3s cubic-bezier(.16,1,.3,1);
-  /* GPU katmanı */
+
+  /* ── v69 Animation Isolation ──────────────────────────────────────
+     SORUN: .bnav-item üzerindeki `transition: color` tüm sekmeleri
+     etkiler. Bir sekme aktif olunca renk tokenı değişir → browser
+     tüm .bnav-item elemanlarında color transition tetikler = toplu zıplama.
+
+     ÇÖZÜM: .bnav-item üzerinde transition YOK.
+     Renk geçişi sadece .bnav-item.active sınıfına özel tanımlanır.
+     Pasif sekmeler hiçbir zaman transition hesaplamaz.
+  ──────────────────────────────────────────────────────────────── */
+  transition: none;
+
+  /* GPU katmanı: sub-pixel titreme önleme */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Aktif sekme: renk geçişi SADECE buraya izole */
+.bnav-item.active {
+  color: var(--green-mid);
+  /* Renk değişimi yalnızca bu elemanı etkiler */
+  transition: color .22s cubic-bezier(.16,1,.3,1);
+}
+
+/* Pasif → aktif geçiş sırasında renk geri dönüşü de izole */
+.bnav-item:not(.active) {
+  color: var(--text3);
+  transition: color .18s cubic-bezier(.4,0,1,1);
 }
 
 /* 44×44pt görünmez dokunma alanı genişletici */
@@ -817,34 +842,68 @@ body.app-ready { background: var(--bg); }
   width: 48px; height: 30px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 15px;
-  /* Arka plan artık pill'den geliyor — burada sadece z-index */
   background: transparent;
   flex-shrink: 0;
   z-index: 1;
+  /* Sub-pixel titreme önleme */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* Aktif renk — renk geçişi renk tokenı üzerinden */
 .bnav-item.active { color: var(--green-mid); }
 
-/* ── SVG ikonlar: outline ↔ filled crossfade + scale spring ── */
+/* ── SVG ikonlar ── */
 .bnav-item svg {
   flex-shrink: 0;
   width: 22px; height: 22px;
-  transition:
-    transform .38s cubic-bezier(.34,1.4,.64,1),
-    opacity   .22s cubic-bezier(.16,1,.3,1);
-  will-change: transform, opacity;
-  /* GPU katmanı */
-  -webkit-transform: translateZ(0) scale(1) translateY(0);
-  transform: translateZ(0) scale(1) translateY(0);
+
+  /* ── v69 Isolation: transform transition KALDIRILDI ──────────────
+     Global `transition: transform` tüm sekmelerin SVG'lerini
+     aynı anda hesaplar = toplu zıplama. Sadece opacity gerekli:
+     outlined ↔ filled crossfade pasif sekmede de çalışmalı.
+     Scale animasyonu: sadece .active.svg'e özel tanımlanır (aşağıda).
+  ──────────────────────────────────────────────────────────────── */
+  transition: none;
+
+  /* Sabit başlangıç durumu: GPU katmanı, sub-pixel titremeye karşı */
+  -webkit-transform: translateZ(0) scale(1);
+  transform: translateZ(0) scale(1);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: auto; /* animasyon olmadığında GPU rezervasyonu serbest */
 }
-.bnav-item svg .ic-outline { opacity: 1; transition: opacity .2s cubic-bezier(.16,1,.3,1); }
-.bnav-item svg .ic-filled  { opacity: 0; transition: opacity .2s cubic-bezier(.16,1,.3,1); }
+
+/* Outline ↔ Filled crossfade — tüm sekmeler için, sadece opacity */
+.bnav-item svg .ic-outline {
+  opacity: 1;
+  transition: opacity .18s cubic-bezier(.4,0,.2,1);
+}
+.bnav-item svg .ic-filled  {
+  opacity: 0;
+  transition: opacity .18s cubic-bezier(.4,0,.2,1);
+}
 .bnav-item.active svg .ic-outline { opacity: 0; }
 .bnav-item.active svg .ic-filled  { opacity: 1; }
+
+/* ── Aktif ikon: scale SADECE tıklanan sekmeye izole ── */
 .bnav-item.active svg {
-  -webkit-transform: translateZ(0) scale(1.08) translateY(-1px);
-  transform: translateZ(0) scale(1.08) translateY(-1px);
+  /* scale(1.05): hafif, premium — 1.08'den düşürüldü */
+  -webkit-transform: translateZ(0) scale(1.05) translateY(-1px);
+  transform: translateZ(0) scale(1.05) translateY(-1px);
+  /* Transition SADECE .active svg'de tanımlı → pasif svg'ler hesaplamaz */
+  transition: transform .32s cubic-bezier(.34,1.28,.64,1);
+  will-change: transform;
+}
+
+/* Aktiften pasife geçiş: scale(1)'e yumuşak dönüş */
+.bnav-item:not(.active) svg {
+  -webkit-transform: translateZ(0) scale(1);
+  transform: translateZ(0) scale(1);
+  transition: transform .2s cubic-bezier(.4,0,1,1);
+  will-change: auto;
 }
 
 /* ── Etiket ── */
@@ -852,29 +911,51 @@ body.app-ready { background: var(--bg); }
   font-size: 10px; font-weight: 500;
   letter-spacing: .1px; line-height: 1; white-space: nowrap;
   opacity: 0.55;
+  /* Pasif durum: scale(.93) sabit — hiçbir transition yok */
   transform: scale(.93) translateY(1px);
   transform-origin: center bottom;
-  will-change: transform, opacity;
-  transition:
-    color     .3s  cubic-bezier(.16,1,.3,1),
-    transform .35s cubic-bezier(.34,1.3,.64,1),
-    opacity   .25s cubic-bezier(.16,1,.3,1);
+  /* v69: will-change YOK pasif durumda — GPU'yu gereksiz meşgul etmez */
+  will-change: auto;
+  /* v69: transition YOK — toplu animasyon kaynağı buydu */
+  transition: none;
   position: relative; z-index: 1;
-}
-.bnav-item.active .bnav-lbl {
-  font-weight: 700; opacity: 1;
-  transform: scale(1) translateY(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
-/* ── Press animasyonu: rAF'tan tetiklenir, CSS kancası ── */
+/* Aktif etiket: scale + opacity SADECE burada tanımlı */
+.bnav-item.active .bnav-lbl {
+  font-weight: 700;
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  will-change: transform, opacity;
+  transition:
+    transform .32s cubic-bezier(.34,1.28,.64,1),
+    opacity   .2s  cubic-bezier(.4,0,.2,1);
+}
+
+/* Aktiften pasife: yumuşak geri dönüş */
+.bnav-item:not(.active) .bnav-lbl {
+  transition:
+    transform .2s cubic-bezier(.4,0,1,1),
+    opacity   .16s cubic-bezier(.4,0,1,1);
+}
+
+/* ── Press animasyonu: rAF'tan tetiklenir, CSS kancası ──────────
+   .bnav-pressing sınıfı SADECE tıklanan sekmeye eklenir (JS).
+   Diğer sekmeler bu animasyonu hiçbir zaman almaz.
+   backface-visibility + translateZ(0) = sıfır titreme.
+── */
 @keyframes bnavPress {
-  0%   { transform: translateZ(0) scale(1)    translateY(0); }
-  30%  { transform: translateZ(0) scale(.78)  translateY(2px); }
-  62%  { transform: translateZ(0) scale(1.07) translateY(-2px); }
-  100% { transform: translateZ(0) scale(1)    translateY(0); }
+  0%   { transform: translateZ(0) scale(1)   translateY(0);   }
+  28%  { transform: translateZ(0) scale(.80) translateY(2px); }
+  60%  { transform: translateZ(0) scale(1.05) translateY(-1px); }
+  100% { transform: translateZ(0) scale(1)   translateY(0);   }
 }
 .bnav-item.bnav-pressing svg {
-  animation: bnavPress .38s cubic-bezier(.34,1.56,.64,1) both;
+  animation: bnavPress .34s cubic-bezier(.34,1.56,.64,1) both;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* ══════════════════════════════════════════════════════════════
