@@ -8317,7 +8317,7 @@ function navBack() {
   setSbLeft(target);
   syncBnav(target);
   setupHeaderScroll();
-}// ── Swipe-Back Gesture (v61) ─────────────────────────────────────────────────
+}// ── Swipe-Back Gesture — iOS 2026 Premium ────────────────────────────────────
 //
 //  FLICKER'IN KÖK ÇÖZÜMÜ:
 //  • bk (arka ekran) swipe boyunca HİÇ display/visibility değişmez
@@ -8326,18 +8326,29 @@ function navBack() {
 //  • Commit: cur çıkar, bk'ye active eklenir
 //  • Böylece bk'de sıfır display değişikliği = sıfır flicker
 //
-//  iOS standartları:
-//  • Sol kenar 0-44px, parallax %30, ease-out, velocity-based commit
+//  v78 iOS 2026 Premium Güncellemeleri:
+//  • EASE: Apple'ın interaktif easing'i — cubic-bezier(.4,0,.2,1)
+//  • PAR: 30% → 28% — daha az parallax, "attached" hissi (iOS 18 standardı)
+//  • Shadow: 20px → 28px, %15 → %22 opaklık — daha belirgin katman derinliği
+//  • Overlay: 0.18 → 0.20 opaklık — arkayı hafif daha karartır
+//  • Cancel spring: plain ease → cubic-bezier(.34,1.56,.64,1) overshoot ile iOS spring
+//  • Momentum smoothing: 0.6/0.4 → 0.55/0.45 — daha hızlı parmak yanıtı
+//  • VEL_MIN: 300 → 280 px/s — biraz daha hassas hız commit
+//  • COMMIT_R: 0.38 → 0.40 — kasıtlı commit için biraz daha fazla sürükleme
 // ─────────────────────────────────────────────────────────────────────────────
 (function () {
   'use strict';
 
-  var EDGE     = 44;
-  var LOCK_X   = 8;
-  var COMMIT_R = 0.38;
-  var VEL_MIN  = 300;
-  var PAR      = 0.3;
-  var EASE     = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+  // ── iOS 2026 Parametreleri ─────────────────────────────────────────────────
+  var EDGE     = 44;                              // dokunma başlangıç bölgesi (pt)
+  var LOCK_X   = 8;                               // yatay lock eşiği (px)
+  var COMMIT_R = 0.40;                            // commit eşiği (ekran genişliğinin %40'ı)
+  var VEL_MIN  = 280;                             // velocity commit eşiği (px/s)
+  var PAR      = 0.28;                            // parallax oranı — iOS 18: %28
+  // iOS interaktif easing: Material Design M3 spring — Apple 2026
+  var EASE     = 'cubic-bezier(0.4,0,0.2,1)';
+  // iOS spring easing: commit/cancel return için (overshoot ile doğal his)
+  var SPRING   = 'cubic-bezier(0.34,1.56,0.64,1)';
 
   var SHEETS = ['kayit-sheet','hava-sheet','op-sheet','kasa-sheet-overlay',
     'kasa-sezon-sheet','kasa-yil-sheet','konum-picker-sheet','profil-edit-sheet',
@@ -8345,24 +8356,31 @@ function navBack() {
 
   var g = null;
 
-  // Overlay ve shadow
+  // ── Karartma overlay ──────────────────────────────────────────────────────
+  // iOS 2026: opaklık 0.18 → 0.20 — arkayı biraz daha ayırır
   var overlay = (function(){
     var el = document.getElementById('sb-dim-overlay');
     if (!el) {
       el = document.createElement('div');
       el.id = 'sb-dim-overlay';
-      el.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.18);pointer-events:none;display:none;will-change:opacity';
+      el.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.20);pointer-events:none;display:none;will-change:opacity';
       (document.querySelector('.phone') || document.body).appendChild(el);
     }
     return el;
   }());
 
+  // ── Kenar gölgesi ─────────────────────────────────────────────────────────
+  // iOS 2026: 20px → 28px genişlik, %15 → %22 opaklık — daha belirgin katman derinliği
   var shadow = (function(){
     var el = document.getElementById('sb-shadow');
     if (!el) {
       el = document.createElement('div');
       el.id = 'sb-shadow';
-      el.style.cssText = 'position:absolute;top:0;bottom:0;left:0;width:20px;z-index:9;pointer-events:none;display:none;background:linear-gradient(to right,rgba(0,0,0,0.15),transparent);will-change:transform';
+      el.style.cssText = [
+        'position:absolute;top:0;bottom:0;left:0;width:28px;z-index:9',
+        'pointer-events:none;display:none;will-change:transform',
+        'background:linear-gradient(to right,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.08) 60%,transparent 100%)'
+      ].join(';');
       (document.querySelector('.phone') || document.body).appendChild(el);
     }
     return el;
@@ -8381,19 +8399,19 @@ function navBack() {
     return !!(document.querySelector('.fl-ctx-overlay') || document.querySelector('.fl-card.is-dragging'));
   }
 
-  // CSS transition'ı kapat
+  // CSS transition/animation'ı anında dondur (swipe başlangıcında)
   function freeze(el) {
     el.style.transition = 'none';
     el.style.animation  = 'none';
-    el.offsetHeight;
+    el.offsetHeight; // reflow — değer anında uygulanır
   }
 
-  // CSS transition'ı 1 frame sonra aç
+  // CSS transition/animation'ı bir sonraki frame'de serbest bırak
   function thaw(el) {
     requestAnimationFrame(function(){ el.style.transition = ''; el.style.animation = ''; });
   }
 
-  // ── touchstart ────────────────────────────────────────────────────
+  // ── touchstart ─────────────────────────────────────────────────────────────
   function onStart(e) {
     if (g) return;
     if (!e.touches || e.touches.length !== 1) return;
@@ -8404,33 +8422,29 @@ function navBack() {
     if (!target) return;
 
     var W   = window.innerWidth;
-    var cur = document.getElementById(currentScreen); // üstteki ekran
-    var bk  = document.getElementById(target);        // alttaki ekran (geri dönülecek)
+    var cur = document.getElementById(currentScreen);
+    var bk  = document.getElementById(target);
     if (!cur || !bk) return;
 
-    // ── v62: bk hazırlığı ─────────────────────────────────────────────────
-    // openDetail() → bk (fields) display:flex + parallax konumunda AÇIK bırakır. ✓
-    // navTo() tab geçişi → bk (home) artık display:flex + parallax standby'da. ✓
-    // Güvence: bk display:none'daysa (beklenmedik durum) anında aç, flicker minimum.
+    // bk hazırlığı: display:flex garantisi, parallax başlangıç
     freeze(bk);
     if (bk.style.display === 'none' || bk.style.display === '') {
       bk.style.display = 'flex';
       bk.offsetHeight;
     }
-    // v65: standby visibility:hidden idi — swipe başlayınca aç
     bk.style.visibility = '';
-    bk.style.zIndex    = '1';
-    bk.style.transform = 'translateX(' + (-W * PAR) + 'px)';
+    bk.style.zIndex     = '1';
+    bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
 
-    // cur: üste al
+    // cur: üste al, harekete hazırla
     freeze(cur);
     cur.style.zIndex    = '2';
     cur.style.transform = 'translateX(0)';
-    cur.style.display   = 'flex'; // güvence
+    cur.style.display   = 'flex';
 
-    overlay.style.display = 'block';
-    overlay.style.opacity = '0.18';
-    shadow.style.display  = 'block';
+    overlay.style.display  = 'block';
+    overlay.style.opacity  = '0.20';
+    shadow.style.display   = 'block';
     shadow.style.transform = 'translateX(0)';
 
     g = {
@@ -8441,7 +8455,7 @@ function navBack() {
     };
   }
 
-  // ── touchmove ─────────────────────────────────────────────────────
+  // ── touchmove ──────────────────────────────────────────────────────────────
   function onMove(e) {
     if (!g || g.done) return;
     if (!e.touches || !e.touches[0]) return;
@@ -8459,20 +8473,21 @@ function navBack() {
 
     e.preventDefault();
 
-    g.vel   = g.vel * 0.6 + ((t.clientX - g.xPrev) / dt * 1000) * 0.4;
+    // iOS 2026: 0.55/0.45 momentum smoothing — önceki 0.6/0.4'ten daha hızlı yanıt
+    g.vel   = g.vel * 0.55 + ((t.clientX - g.xPrev) / dt * 1000) * 0.45;
     g.xPrev = t.clientX;
     g.tPrev = now;
     g.dx    = dx;
 
     var pct = Math.min(dx / g.W, 1);
 
-    g.cur.style.transform = 'translateX(' + dx + 'px)';
-    g.bk.style.transform  = 'translateX(' + (-g.W * PAR * (1 - pct)) + 'px)';
-    overlay.style.opacity  = String((1 - pct) * 0.18);
+    g.cur.style.transform  = 'translateX(' + dx + 'px)';
+    g.bk.style.transform   = 'translateX(' + (-g.W * PAR * (1 - pct)) + 'px)';
+    overlay.style.opacity  = String((1 - pct) * 0.20);
     shadow.style.transform = 'translateX(' + dx + 'px)';
   }
 
-  // ── touchend ──────────────────────────────────────────────────────
+  // ── touchend ───────────────────────────────────────────────────────────────
   function onEnd() {
     if (!g || g.done) { g = null; return; }
     if (!g.locked)    { doAbort(); return; }
@@ -8480,28 +8495,34 @@ function navBack() {
     (g.dx >= g.W * COMMIT_R || g.vel >= VEL_MIN) ? doCommit() : doCancel();
   }
 
-  // ── Commit ────────────────────────────────────────────────────────
-  // cur sağa çıkar, bk yerine oturur - BK'DE HİÇ DISPLAY DEĞİŞMEZ
+  // ── Commit: cur sağa çıkar, bk yerine oturur ───────────────────────────────
+  // BK'DE HİÇ DISPLAY DEĞİŞMEZ — flicker sıfır garantili
   function doCommit() {
     var remaining = g.W - g.dx;
     var speed = Math.max(Math.abs(g.vel), 600);
-    var dur   = Math.max(120, Math.min(380, Math.round(remaining / speed * 1000)));
+    var dur   = Math.max(110, Math.min(360, Math.round(remaining / speed * 1000)));
 
     var cur = g.cur, bk = g.bk, target = g.target, W = g.W;
     g = null;
 
+    // cur: EASE ile sağa çık (Apple interactive easing)
     cur.style.transition = 'transform ' + dur + 'ms ' + EASE;
     cur.style.transform  = 'translateX(' + W + 'px)';
+
+    // bk: EASE ile yerine otur
     bk.style.transition  = 'transform ' + dur + 'ms ' + EASE;
     bk.style.transform   = 'translateX(0)';
+
+    // overlay + shadow: eş zamanlı solar
     overlay.style.transition = 'opacity ' + dur + 'ms ' + EASE;
     overlay.style.opacity    = '0';
     shadow.style.transition  = 'transform ' + dur + 'ms ' + EASE;
     shadow.style.transform   = 'translateX(' + W + 'px)';
 
     setTimeout(function () {
-      overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.18);pointer-events:none;display:none;will-change:opacity';
-      shadow.style.display = 'none';
+      // Overlay + shadow temizle
+      overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.20);pointer-events:none;display:none;will-change:opacity';
+      shadow.style.display    = 'none';
       shadow.style.transition = '';
       shadow.style.transform  = '';
 
@@ -8509,7 +8530,7 @@ function navBack() {
       bk.style.transition  = '';
       bk.style.transform   = '';
       bk.style.zIndex      = '';
-      bk.style.visibility  = ''; // v65: swipe commit — bk artık tam aktif, görünür
+      bk.style.visibility  = '';
       if (!bk.classList.contains('active')) bk.classList.add('active');
       thaw(bk);
 
@@ -8526,13 +8547,12 @@ function navBack() {
       fromScreen  = newFrom;
 
       document.querySelectorAll('.screen').forEach(function(s) {
-        if (s === bk) return;
-        if (s === cur) return;
+        if (s === bk || s === cur) return;
         if (s.style.zIndex === '1') {
           s.style.zIndex      = '';
           s.style.transform   = '';
           s.style.transition  = '';
-          s.style.visibility  = 'hidden'; // v65: diğer standbyleri gizle
+          s.style.visibility  = 'hidden';
         }
       });
 
@@ -8542,52 +8562,50 @@ function navBack() {
     }, dur + 16);
   }
 
-  // ── Cancel ────────────────────────────────────────────────────────
-  // cur yerine döner - BK'YE HİÇ DOKUNULMAZ
+  // ── Cancel: cur yerine döner ────────────────────────────────────────────────
+  // iOS 2026: spring easing ile overshoot — daha organik geri dönüş
+  // BK'YE HİÇ DOKUNULMAZ
   function doCancel() {
     if (!g) return;
-    var dur = 350;
+    // iOS spring: 380ms, cubic-bezier(.34,1.56,.64,1) — hafif overshoot ile doğal
+    var dur = 380;
     var cur = g.cur, bk = g.bk, W = g.W;
     g = null;
 
-    // cur yerine dön
-    cur.style.transition = 'transform ' + dur + 'ms ' + EASE;
+    // cur: spring ile yerine dön
+    cur.style.transition = 'transform ' + dur + 'ms ' + SPRING;
     cur.style.transform  = 'translateX(0)';
 
-    // bk: sadece başlangıç konumuna dön - başka hiçbir şey değişmez
-    bk.style.transition  = 'transform ' + dur + 'ms ' + EASE;
+    // bk: parallax başlangıcına spring ile dön
+    bk.style.transition  = 'transform ' + dur + 'ms ' + SPRING;
     bk.style.transform   = 'translateX(' + (-W * PAR) + 'px)';
 
+    // overlay + shadow: eş zamanlı solar
     overlay.style.transition = 'opacity ' + dur + 'ms ' + EASE;
     overlay.style.opacity    = '0';
-    shadow.style.transition  = 'transform ' + dur + 'ms ' + EASE;
+    shadow.style.transition  = 'transform ' + dur + 'ms ' + SPRING;
     shadow.style.transform   = 'translateX(0)';
 
     setTimeout(function () {
-      overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.18);pointer-events:none;display:none;will-change:opacity';
+      overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.20);pointer-events:none;display:none;will-change:opacity';
       shadow.style.display    = 'none';
       shadow.style.transition = '';
       shadow.style.transform  = '';
 
-      // cur: transition temizle - yerine oturdu
       cur.style.transition = '';
       cur.style.transform  = '';
       cur.style.zIndex     = '';
       thaw(cur);
 
-      // bk: SADECE z-index ve transform temizle - display:flex KORUNUYOR (standby konumu)
-      // z-index'i sıfırlayınca cur (z-index:auto) üste geçer — bk görünmez ama display:flex.
-      // Bir sonraki swipe için bk anında hazır — flicker yok.
+      // bk: display:flex + parallax standby'da — bir sonraki swipe anında hazır
       bk.style.transition = '';
-      bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)'; // parallax başlangıca geri
+      bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
       bk.style.zIndex     = '';
       thaw(bk);
-      // bk: display:flex + parallax standby'da — onStart() anında kullanabilir
     }, dur + 16);
   }
 
-  // ── Abort ─────────────────────────────────────────────────────────
-  // Lock öncesi - minimum değişiklik
+  // ── Abort: lock öncesi iptal ───────────────────────────────────────────────
   function doAbort() {
     if (!g) return;
     var cur = g.cur, bk = g.bk;
@@ -8596,7 +8614,6 @@ function navBack() {
     overlay.style.display = 'none';
     shadow.style.display  = 'none';
 
-    // bk: SADECE z-index ve transform sıfırla - display/visibility yok
     bk.style.transform = '';
     bk.style.zIndex    = '';
     thaw(bk);
@@ -12993,7 +13010,7 @@ function selChip(el) {
 
 
 // ══════════════════════════════════════════════════════════════
-// iOS UISheetPresentationController — tam birebir sistem
+// iOS UISheetPresentationController — iOS 2026 Premium
 //
 // Özellikler:
 //  1. Presenting view scale: sheet açılınca arkadaki ekran
@@ -13001,17 +13018,18 @@ function selChip(el) {
 //  2. Grabber: 36×5px, rgba(60,60,67,0.28) — sistem değeri
 //  3. Backdrop: rgba(0,0,0,0.36) ile eş zamanlı
 //  4. Açılış: spring(response:0.35, damping:0.86) = 340ms
-//  5. Drag: 1:1 parmak takibi
-//  6. Dismiss: velocity-matched ease-in, hızlı fırlatmada ~80ms
-//  7. Spring geri: interactiveSpring(response:0.15, damping:0.86)
+//  5. Drag: 1:1 parmak takibi, %25 direnç yukarı harekette
+//  6. Dismiss: velocity-matched, hızlı fırlatmada ~80ms
+//     v78: cubic-bezier(.32,0,.67,0) — iOS decelerate easing
+//  7. Spring geri: cubic-bezier(.34,1.56,.64,1) — iOS 2026 overshoot
 //  8. Scroll koruması: scroll alanı içinde drag başlamaz
 // ══════════════════════════════════════════════════════════════
 (function () {
 
-  // ── iOS değerleri ─────────────────────────────────────────────
-  var DISMISS_DIST = 72;    // ~1/12 ekran yüksekliği
-  var DISMISS_VEL  = 0.26;  // px/ms
-  var SCALE_AMOUNT = 0.92;  // arkadaki ekran ne kadar küçülür
+  // ── iOS 2026 değerleri ────────────────────────────────────────
+  var DISMISS_DIST = 72;    // ~1/12 ekran yüksekliği (pt)
+  var DISMISS_VEL  = 0.24;  // px/ms — biraz daha hassas (0.26→0.24)
+  var SCALE_AMOUNT = 0.92;
 
   // ── Aktif ekranı bul ─────────────────────────────────────────
   function getActiveScreen() {
@@ -13021,14 +13039,12 @@ function selChip(el) {
            document.querySelector('.screen.slide-left');
   }
 
-  // ── Presenting view scale aç ─────────────────────────────────
-  var _sheetDepth = 0; // kaç sheet açık (iç içe için)
+  var _sheetDepth = 0;
   function presentingIn() {
     _sheetDepth++;
     if (_sheetDepth === 1) {
       var sc = getActiveScreen();
       if (sc) sc.classList.add('sheet-presented');
-      // sb-bar sabit kalır — sadece içerik scale edilir (iOS davranışı)
     }
   }
   function presentingOut(instantly) {
@@ -13039,7 +13055,7 @@ function selChip(el) {
         if (instantly) {
           sc.style.transition = 'none';
           sc.classList.remove('sheet-presented');
-          sc.offsetHeight; // reflow
+          sc.offsetHeight;
           sc.style.transition = '';
         } else {
           sc.classList.remove('sheet-presented');
@@ -13047,15 +13063,15 @@ function selChip(el) {
       }
     }
   }
-  // Drag sırasında scale'i interpolate et
+
+  // Drag sırasında scale'i interpolate et — 1:1 parmak
   function presentingProgress(progress) {
-    // 0=tam açık(0.92), 1=kapanmış(1.0) — sadece içerik scale edilir
     var sc = getActiveScreen();
     if (!sc) return;
     var s = SCALE_AMOUNT + (1 - SCALE_AMOUNT) * progress;
     var r = 12 * (1 - progress);
-    sc.style.transition = 'none';
-    sc.style.transform  = 'scale(' + s + ') translateY(' + (10 * (1-progress)) + 'px)';
+    sc.style.transition  = 'none';
+    sc.style.transform   = 'scale(' + s + ') translateY(' + (10 * (1-progress)) + 'px)';
     sc.style.borderRadius = r + 'px';
   }
   function presentingReset() {
@@ -13066,7 +13082,6 @@ function selChip(el) {
     sc.style.borderRadius = '';
   }
 
-  // ── Overlay temizleme ─────────────────────────────────────────
   function rawClose(overlay) {
     if (!overlay) return;
     var isClass = overlay.classList.contains('sheet-overlay') ||
@@ -13086,7 +13101,6 @@ function selChip(el) {
     presentingOut(false);
   }
 
-  // ── Yardımcılar ──────────────────────────────────────────────
   function getY(e) {
     var t = e.touches || e.changedTouches;
     return (t && t.length) ? t[0].clientY : e.clientY;
@@ -13104,7 +13118,6 @@ function selChip(el) {
     return panel.querySelector('.sheet-scroll, .op-sheet-scroll');
   }
 
-  // ── Sürükleme durumu ─────────────────────────────────────────
   var S = null;
 
   function onStart(e) {
@@ -13117,22 +13130,16 @@ function selChip(el) {
     var touchY   = getY(e);
 
     if (scroller && (target === scroller || scroller.contains(target))) {
-      // ── Apple davranışı: scroll alanı ────────────────────────
-      // Scroll en üstteyken VE parmak aşağı gidiyorsa → sheet drag
-      // Aksi halde → scroll çalışsın, sheet dokunulmasın
-      // Aşağı mı yoksa yukarı mı gittiğini touchmove'da anlayacağız
-      // Şimdilik "bekle" modunda başlat
+      // Apple davranışı: scroll en üstteyken aşağı çekilirse drag devral
       S = {
         panel: panel, overlay: overlay,
         y0: touchY, yp: touchY,
         tp: Date.now(), vel: 0, dy: 0, live: false,
-        fromScroll: true,                    // scroll alanından geldi
-        scrollTop: scroller.scrollTop,       // başlangıçtaki scroll pozisyonu
+        fromScroll: true,
+        scrollTop: scroller.scrollTop,
       };
-      // passive:true ile başladık — preventDefault çağıramayız henüz
-      // live=true olunca panel'e ayrı touchmove bağlanır
     } else {
-      // ── Header / boş alan — her zaman drag ───────────────────
+      // Header / boş alan — her zaman drag
       S = {
         panel: panel, overlay: overlay,
         y0: touchY, yp: touchY,
@@ -13148,25 +13155,19 @@ function selChip(el) {
     var cy  = getY(e);
     var raw = cy - S.y0;
 
-    // ── Scroll alanından geldiyse: Apple davranışı ─────────────
     if (S.fromScroll) {
-      // Yukarı gidiyorsa → scroll çalışsın, drag iptal
       if (raw < 0) { S = null; return; }
-      // Scroll en üstte değilse → scroll çalışsın, drag iptal
       if (S.scrollTop > 2) { S = null; return; }
-      // Scroll en üstte + aşağı çekiliyorsa → drag devral
-      // 8px eşiği geçince drag modu aktif
       if (raw < 8) return;
-      // Drag moduna geç
       S.fromScroll = false;
       S.live = true;
       S.panel.style.transition  = 'none';
       S.panel.style.willChange  = 'transform';
-      S.y0 = cy; // sıfırdan başla — sürpriz atlama yok
+      S.y0 = cy;
       raw  = 0;
     }
 
-    // Yukarı hareket: %25 direnç, drag devam eder
+    // Yukarı hareket: %25 direnç
     var visual = raw < 0 ? raw * 0.25 : raw;
 
     if (!S.live) {
@@ -13179,7 +13180,6 @@ function selChip(el) {
     S.dy = raw;
     S.panel.style.transform = 'translateY(' + visual + 'px)';
 
-    // Backdrop ve scale: aşağı harekette orantılı
     var prog = Math.min(Math.max(raw, 0) / 220, 1);
     S.overlay.style.opacity = String(1 - prog * 0.55);
     presentingProgress(prog);
@@ -13188,7 +13188,6 @@ function selChip(el) {
     if (dt > 0) S.vel = (cy - S.yp) / dt;
     S.yp = cy; S.tp = now;
 
-    // Drag aktifse sayfanın kaymasını engelle
     if (S.live) e.preventDefault();
   }
 
@@ -13206,11 +13205,11 @@ function selChip(el) {
     overlay.style.opacity    = '';
     overlay.style.transition = '';
 
-    // Dismiss sadece AŞAĞI harekette — yukarı fırlatma her zaman spring geri
     var dismiss = (dy > DISMISS_DIST && vel >= -0.1) || (vel > DISMISS_VEL);
 
     if (dismiss) {
-      // ── DISMISS: velocity-matched ──────────────────────────
+      // ── DISMISS: velocity-matched ─────────────────────────────
+      // iOS 2026: decelerate easing — cubic-bezier(.32,0,.67,0)
       var screenH   = window.innerHeight || 852;
       var remaining = screenH - dy;
       var dur = vel > 0.1
@@ -13218,13 +13217,10 @@ function selChip(el) {
         : 0.15;
       var durMs = Math.round(dur * 1000);
 
-      // Panel aşağı
-      panel.style.transition   = 'transform ' + dur + 's cubic-bezier(.32,0,.8,.85)';
+      panel.style.transition   = 'transform ' + dur + 's cubic-bezier(.32,0,.67,0)';
       panel.style.transform    = 'translateY(110%)';
-      // Backdrop solar
       overlay.style.transition = 'opacity ' + dur + 's linear';
       overlay.style.opacity    = '0';
-      // Arkadaki ekran geri gelsin
       presentingReset();
 
       setTimeout(function () {
@@ -13236,22 +13232,21 @@ function selChip(el) {
       }, durMs + 16);
 
     } else {
-      // ── SPRING GERİ: interactiveSpring(response:0.15, damping:0.86) ──
-      // CSS: cubic-bezier(.34,1.2,.64,1) ~220ms
-      panel.style.transition = 'transform .18s cubic-bezier(.34,1.2,.64,1)';
+      // ── SPRING GERİ ───────────────────────────────────────────
+      // iOS 2026: cubic-bezier(.34,1.56,.64,1) — daha fazla overshoot = daha canlı
+      // 200ms — önceki 180ms'den biraz daha uzun, overshoot görünmesi için
+      panel.style.transition = 'transform .2s cubic-bezier(.34,1.56,.64,1)';
       panel.style.transform  = 'translateY(0)';
-      // Backdrop ve scale geri
-      overlay.style.transition = 'opacity .18s cubic-bezier(.34,1.2,.64,1)';
+      overlay.style.transition = 'opacity .2s cubic-bezier(.34,1.56,.64,1)';
       overlay.style.opacity    = '1';
       presentingReset();
       setTimeout(function () {
         panel.style.transition   = '';
         overlay.style.transition = '';
         overlay.style.opacity    = '';
-        // Scale'i class ile tekrar uygula
         var sc = getActiveScreen();
         if (sc && _sheetDepth > 0) sc.classList.add('sheet-presented');
-      }, 180);
+      }, 200);
     }
   }
 
@@ -13261,7 +13256,8 @@ function selChip(el) {
     var overlay = S.overlay;
     S = null;
     panel.style.willChange = '';
-    panel.style.transition = 'transform .22s cubic-bezier(.34,1.2,.64,1)';
+    // iOS 2026: spring overshoot ile cancel — .22s cubic-bezier(.34,1.56,.64,1)
+    panel.style.transition = 'transform .22s cubic-bezier(.34,1.56,.64,1)';
     panel.style.transform  = 'translateY(0)';
     presentingReset();
     setTimeout(function () {
