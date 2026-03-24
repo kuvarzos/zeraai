@@ -41,16 +41,24 @@
 ║  Fontlar     : Fraunces (başlık), Inter (gövde), Outfit (sayı) ║
 ║  Veri        : localStorage — FIELDS, KAYITLAR, USER_PREFS     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  BOTTOM TAB BAR — v73 MEVCUT DURUM                              ║
+║  BOTTOM TAB BAR — v75 MEVCUT DURUM                              ║
 ║  • 4 sekme: Ana Sayfa / Tarlalarım / Kayıtlarım / Kasa         ║
 ║  • Ortada FAB — sadece openKayit() tetikler, nav YOK           ║
 ║  • Glassmorphism: rgba(226,220,208,0.96) + blur(25px)          ║
 ║  • Separatör: border-top 0.5px rgba(255,255,255,0.72)          ║
 ║  • Morphing pill: .bnav-pill, JS translate3d, transition:none  ║
 ║  • İKON ANİMASYONU TAMAMEN KAPALI:                              ║
-║      transition:none, transform:none, will-change:auto         ║
+║      transition:none, will-change:auto                         ║
 ║      bnavPress keyframe: SİLİNDİ                               ║
 ║      bnav-pressing JS mantığı: SİLİNDİ                         ║
+║  • v75 FLİCKER FİX: GPU İzolasyon + Counter-Scale              ║
+║      .bnav → backface-visibility:hidden + translateZ(0)        ║
+║      .bnav-item/.bnav-icon-wrap/.bnav-item svg →               ║
+║        translateZ(0) + backface-visibility:hidden              ║
+║      transition:all → tamamen kaldırıldı (transition:none)     ║
+║      bnavCounterEnter/Exit keyframes → tab geçişi sırasında    ║
+║        .screen'in scale(0.96/1.04) efektini nötralize eder     ║
+║        .bnav görsel olarak sabit kalır, titreme sıfır          ║
 ║  • Aktif sekme: renk teal + filled ikon + bold label — ANLIK   ║
 ║  • Pasif sekme: renk gri + outline ikon + soluk label — ANLIK  ║
 ║  !! MİMARİ KISIT: .bnav her .screen içinde yaşıyor (6 kopya).  ║
@@ -810,23 +818,51 @@ body.app-ready { background: var(--bg); }
   z-index: 10;
 
   /* ── v75 GPU İzolasyon Katmanı ─────────────────────────────────────────
-     .screen üzerinde tab-enter/tab-exit scale() animasyonu oynarken
-     .bnav aynı compositor thread'inde yeniden rasterize ediliyor = titreme.
-
-     translateZ(0) → .bnav'ı bağımsız bir GPU katmanına (compositing layer)
-     taşır. Böylece .screen scale animasyonundan izole edilir; compositor
-     .bnav'ı ayrı texture olarak saklar ve yalnızca combine eder — repaint
-     sıfır, titreme sıfır.
-
-     backface-visibility:hidden → GPU katmanının arka yüzünü gizler;
-     webkit'in bazı versiyonlarında sub-pixel rendering artifacts'i önler.
-     isolation:isolate → yeni stacking context — z-index çakışması engeli.
+     .bnav kendi GPU bileşik katmanına alınıyor.
+     translateZ(0) + backface-visibility:hidden → tarayıcı bu elemanı
+     ayrı bir texture olarak GPU'ya yükler; üst .screen'in scale/opacity
+     animasyonlarından bağımsız render edilir. Reflow tetiklenmez.
   ──────────────────────────────────────────────────────────────────────── */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  isolation: isolate;
+}
+
+/* ── v75 Counter-Scale: Tab geçişi sırasında .bnav'ı dondur ─────────────
+   .screen.tab-enter  → scale(0.96→1.0) animasyonu yapar.
+   .screen.tab-exit   → scale(1.0→1.04) animasyonu yapar.
+   .bnav bu .screen'in içinde olduğu için o da ölçeklenir ve titrer.
+
+   ÇÖZÜM: Tab geçişi sırasında .bnav'a ters scale uygulayarak
+   ebeveyn scale'ini nötralize ediyoruz. Görsel sonuç: .bnav
+   sabit durur, sadece ekran içeriği animasyon yapar.
+
+   tabSpatialEnter: from=scale(0.96) to=scale(1.0)
+     → bnav counter: from=scale(1/0.96≈1.0417) to=scale(1.0)
+   tabSpatialExit: from=scale(1.0) to=scale(1.04)
+     → bnav counter: from=scale(1.0) to=scale(1/1.04≈0.9615)
+
+   timing/easing: ebeveyn animasyonuyla birebir eşleşiyor (350ms, aynı bezier)
+   → böylece çarpma efekti sıfırlanır, .bnav sanki hiç hareket etmemiş gibi görünür.
+─────────────────────────────────────────────────────────────────────── */
+@keyframes bnavCounterEnter {
+  from { -webkit-transform: scale(1.0417) translateZ(0); transform: scale(1.0417) translateZ(0); }
+  to   { -webkit-transform: scale(1.0)    translateZ(0); transform: scale(1.0)    translateZ(0); }
+}
+@keyframes bnavCounterExit {
+  from { -webkit-transform: scale(1.0)    translateZ(0); transform: scale(1.0)    translateZ(0); }
+  to   { -webkit-transform: scale(0.9615) translateZ(0); transform: scale(0.9615) translateZ(0); }
+}
+
+.screen.tab-enter .bnav {
+  -webkit-animation: bnavCounterEnter 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation:         bnavCounterEnter 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  /* opacity: ebeveynden miras alır; counter-scale sadece geometriyi düzeltir */
+}
+.screen.tab-exit .bnav {
+  -webkit-animation: bnavCounterExit 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation:         bnavCounterExit 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 /* ── Sekme butonu ── */
@@ -840,12 +876,10 @@ body.app-ready { background: var(--bg); }
   -webkit-tap-highlight-color: transparent;
   user-select: none; -webkit-user-select: none;
   position: relative;
-  /* ── v75: transition:none — hiçbir özellik animasyonlu değil ──────
-     "transition: all" kalıntısı yoktu ama explicit none ile garanti
-     altına alıyoruz. Pasif ikonlar taş gibi sabit durmalı.        */
+  /* transition: ALL kaldırıldı (v75) — hiçbir özellik animasyonlu değil */
   transition: none;
   will-change: auto;
-  /* GPU katmanına al — scale animasyonu layout'u itmez            */
+  /* GPU katmanı: layout değişimleri compositing thread'de kalır */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
@@ -873,6 +907,11 @@ body.app-ready { background: var(--bg); }
   pointer-events: none;
   z-index: 0;
   opacity: 0;
+  /* GPU katmanı */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .bnav-pill.ready { opacity: 1; }
 
@@ -885,9 +924,7 @@ body.app-ready { background: var(--bg); }
   background: transparent;
   flex-shrink: 0;
   z-index: 1;
-  /* ── v75: Bağımsız GPU katmanı ──────────────────────────────────
-     .bnav-item üzerinde herhangi bir scale/transform olsa bile
-     ikon wrapper ayrı compositor layer — sub-pixel jitter sıfır. */
+  /* GPU katmanı: ikon grubu ayrı composite layer */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
@@ -898,12 +935,10 @@ body.app-ready { background: var(--bg); }
 .bnav-item svg {
   flex-shrink: 0;
   width: 22px; height: 22px;
-  /* ── v75: transition:none kesin — "transition:all" kalıntısına izin yok ── */
+  /* transition: ALL kaldırıldı (v75) — SVG asla animasyonlu olmamalı */
   transition: none;
   will-change: auto;
-  /* translateZ(0): SVG'yi GPU'ya taşı — scale veya opacity değişimi
-     yanındaki ikonlara layout baskısı yaratmaz (transform tabanlı).
-     width/padding ASLA değiştirilmez — layout flow bozulmaz.      */
+  /* transform: none yerine translateZ(0) — GPU katmanı korur, layout değiştirmez */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
@@ -919,15 +954,10 @@ body.app-ready { background: var(--bg); }
   font-size: 10px; font-weight: 500;
   letter-spacing: .1px; line-height: 1; white-space: nowrap;
   opacity: 0.55;
-  /* ── v75: transition:none kesin — pasif etiketler sabit ── */
+  /* transition: ALL kaldırıldı (v75) — etiket anlık renk/ağırlık değiştirir */
   transition: none;
   will-change: auto;
   position: relative; z-index: 1;
-  /* GPU katmanı — font-weight değişimi yanındaki öğeleri itmez   */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 .bnav-item.active .bnav-lbl {
   font-weight: 700;
