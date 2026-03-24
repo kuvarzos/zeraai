@@ -701,6 +701,22 @@ body.app-ready { background: var(--bg); }
   from { opacity: .55; transform: translateX(-28%); }
   to   { opacity: 1;   transform: translateX(0);    }
 }
+/* v78: Detail geri butonu çıkış animasyonu ─────────────────────────────────
+   Geri butonuna basıldığında detail ekranı sola kayarak çıkar.
+   fields (bk) zaten parallax konumunda bekliyor — transform temizleme ile
+   anında görünür, detail bu animasyonla arka planda çıkar.
+   Süre: iosSlideBack ile eşleşiyor (.38s). */
+@keyframes iosDetailExit {
+  from { opacity: 1;   transform: translateX(0);    }
+  to   { opacity: .55; transform: translateX(100%); }
+}
+.screen.detail-exit {
+  display: flex;
+  z-index: 2;           /* fields (z:auto/active) üzerinde — cross-over yok */
+  pointer-events: none;
+  animation: iosDetailExit .38s cubic-bezier(.4,0,.2,1) both;
+  will-change: opacity, transform;
+}
 .screen.slide-in {
   display: flex;
   z-index: 2;
@@ -5890,6 +5906,15 @@ body.app-ready { background: var(--bg); }
 let currentScreen = 'splash';
 let fromScreen    = 'home';
 
+// ── v78 Global Parallax Sabiti ─────────────────────────────────────────────
+// Swipe-back sistemi, openDetail, navBack ve navTo'nun tamamı bu değeri kullanır.
+// SORUN: Önceki versiyonlarda openDetail/navBack 0.3 hardcoded kullanırken
+// swipe sistemi PAR=0.28 kullanıyordu. onStart()'ta bk.transform 0.3→0.28
+// değişimi 8px anlık sıçrama (kıpma) yaratıyordu.
+// ÇÖZÜMü: Tek kaynak — swipe IIFE içindeki PAR ile senkronize.
+// DEĞİŞTİRMEK İSTERSEN: sadece bu satırı güncelle, her yer otomatik izler.
+var _PAR = 0.28;
+
 // ── HAVA DETAY SHEET ──
 // Kaynak: MGM Tarımsal Meteoroloji, tarimsalistatistik.com, Tarım Bakanlığı rehberleri
 // Eşikler: İlaçlama rüzgar sınırı <15 km/s, sıcaklık 5-28°C, nem %40-90
@@ -8042,7 +8067,7 @@ function navTo(id) {
         standbyEl.style.visibility = ''; // tab-exit JS'i yönetecek
       } else {
         // Detay geçişi: mevcut parallax sistemi
-        standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+        standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * _PAR) + 'px)';
         standbyEl.style.visibility = 'hidden'; // v65: tab geçişinde görünmez — flicker önleme
       }
     }
@@ -8175,7 +8200,7 @@ function openDetail(key) {
     prevEl.style.display    = 'flex';
     prevEl.style.zIndex     = '1';
     prevEl.style.transition = 'none';
-    prevEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+    prevEl.style.transform  = 'translateX(-' + (window.innerWidth * _PAR) + 'px)';
   }
 
   currentScreen = 'detail';
@@ -8212,25 +8237,10 @@ function navBack() {
 
   // ── KRİTİK YOL: detail'den geri ─────────────────────────────────────────
   // openDetail() → bk: display:flex + zIndex:1 + parallax transform AÇIK BIRAKTI
-  // Bu yolda bk'ye dokunmadan sadece cur'ı (detail) kapat, bk'yi öne çıkar.
   if (currentScreen === 'detail') {
     const curEl = document.getElementById('detail');
 
-    // 1. cur (detail) animasyonunu durdur ve tüm stil kalıntılarını temizle
-    if (curEl) {
-      curEl.style.transition = 'none';
-      curEl.style.animation  = 'none';
-      curEl.offsetHeight; // reflow: animasyonu anında durdur
-      curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter','tab-exit', 'sb-restore', 'sb-behind');
-      curEl.style.zIndex     = '';
-      curEl.style.transform  = '';
-      curEl.style.display    = ''; // display:none → .screen default devreye girer
-      curEl.style.visibility = '';
-      curEl.style.transition = '';
-      curEl.style.animation  = '';
-    }
-
-    // 2. Diğer tüm ekranları temizle (cur ve target hariç)
+    // 1. Diğer tüm ekranları temizle (cur ve target hariç)
     document.querySelectorAll('.screen').forEach(s => {
       if (s === curEl || s === targetEl) return;
       s.classList.remove('active', 'back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter','tab-exit', 'sb-restore');
@@ -8242,22 +8252,51 @@ function navBack() {
       s.style.animation  = '';
     });
 
-    // 3. bk (targetEl): openDetail() onu display:flex + parallax transform konumunda bıraktı.
-    //    Sadece transform sıfırla (parallax offset kaldır) ve sb-restore sınıfı ekle.
-    //    display değişmez — browser layout yeniden hesaplamaz = FLICKER YOK.
-    targetEl.style.transition = 'none'; // geçiş animasyonu olmasın
-    targetEl.offsetHeight;              // reflow: transition yokluğunu uygula
-    targetEl.style.transform  = '';     // parallax offset temizle, yerine otur
-    targetEl.style.zIndex     = '';     // z-index serbest bırak
+    // 2. bk (fields/targetEl): parallax temizle, anında aktif et — display DOKUNMAZ
+    //    openDetail() onu display:flex + parallax konumunda bıraktı.
+    //    transition:none + reflow → parallax anında temizlenir (flash yok).
+    targetEl.style.transition = 'none';
+    targetEl.offsetHeight;              // reflow
+    targetEl.style.transform  = '';     // parallax offset temizle
+    targetEl.style.zIndex     = '1';    // detail (z:2) altında kalsın animasyon boyunca
     targetEl.classList.remove('back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter','tab-exit', 'sb-restore');
-    targetEl.classList.add('active');   // artık tam görünür ve aktif
+    targetEl.classList.add('active');
+    requestAnimationFrame(() => { targetEl.style.transition = ''; });
 
-    // 4. 1 frame sonra transition'ı eski haline döndür (scroll etkileşimleri için)
-    requestAnimationFrame(() => {
-      targetEl.style.transition = '';
-    });
+    // 3. cur (detail): anında gizlemek yerine iosDetailExit ile sola kayarak çıkar.
+    //    iOS standardı: geri butonunda detail sola doğru kayar — kullanıcı nereye
+    //    döndüğünü anlıyor. fields zaten açıkta (z:1 aktif), detail z:2'de animasyonla çıkar.
+    //    v78 FIX: Önceki versiyon detail'i anında gizliyordu → 1 frame flash.
+    if (curEl) {
+      // Önce mevcut animasyonları durdur
+      curEl.style.transition = 'none';
+      curEl.style.animation  = 'none';
+      curEl.offsetHeight;
+      curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter','tab-exit', 'sb-restore', 'sb-behind');
+      // detail-exit animasyonu ekle — 380ms boyunca sağa kayarak çıkar
+      // (iosDetailExit: translateX(0→100%) + opacity(1→0.55))
+      requestAnimationFrame(() => {
+        curEl.style.transition = '';
+        curEl.style.animation  = '';
+        curEl.classList.add('detail-exit');
+      });
+      // Animasyon bittikten sonra temizle
+      const SLIDE_DUR = 380 + 16;
+      setTimeout(() => {
+        curEl.classList.remove('detail-exit');
+        curEl.style.display    = '';
+        curEl.style.visibility = '';
+        curEl.style.zIndex     = '';
+        curEl.style.transform  = '';
+        curEl.style.transition = '';
+        curEl.style.animation  = '';
+        curEl.style.willChange = '';
+        // targetEl z-index'ini de serbest bırak
+        targetEl.style.zIndex = '';
+      }, SLIDE_DUR);
+    }
 
-    // 5. State güncelle
+    // 4. State güncelle
     currentScreen = target;
     const newFromDetail = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
     fromScreen = newFromDetail;
@@ -8268,9 +8307,9 @@ function navBack() {
       if (standbyEl) {
         standbyEl.style.display    = 'flex';
         standbyEl.style.zIndex     = '1';
-        standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+        standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * _PAR) + 'px)';
         standbyEl.style.transition = 'none';
-        standbyEl.style.visibility = 'hidden'; // v65: görünmez — sadece swipe'ta açılır
+        standbyEl.style.visibility = 'hidden';
       }
     }
 
@@ -8308,7 +8347,7 @@ function navBack() {
     if (standbyEl) {
       standbyEl.style.display    = 'flex';
       standbyEl.style.zIndex     = '1';
-      standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+      standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * _PAR) + 'px)';
       standbyEl.style.transition = 'none';
       standbyEl.style.visibility = 'hidden'; // v65: görünmez — sadece swipe'ta açılır
     }
