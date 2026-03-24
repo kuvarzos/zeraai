@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v76                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v77                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v76                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v77                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -38,37 +38,42 @@
 ║                exit:opacity fade 150ms, slayt YOK              ║
 ║  Detail geç. : iosSlideIn/iosSlideBack (.38s)                   ║
 ║  z-index     : aktif ekran=2, standby=1, sheet=80+, modal=200  ║
+║                #global-fab-wrap=15 (tüm nav üzerinde, sabit)   ║
 ║  Fontlar     : Fraunces (başlık), Inter (gövde), Outfit (sayı) ║
 ║  Veri        : localStorage — FIELDS, KAYITLAR, USER_PREFS     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  BOTTOM TAB BAR — v76 MEVCUT DURUM                              ║
+║  BOTTOM TAB BAR — v77 MEVCUT DURUM                              ║
 ║  • 4 sekme: Ana Sayfa / Tarlalarım / Kayıtlarım / Kasa         ║
 ║  • Ortada FAB — sadece openKayit() tetikler, nav YOK           ║
 ║  • Glassmorphism: rgba(226,220,208,0.96) + blur(25px)          ║
 ║  • Separatör: border-top 0.5px rgba(255,255,255,0.72)          ║
 ║  • Morphing pill: .bnav-pill, JS translate3d, transition:none  ║
-║  • v76 X-STYLE ZERİF MİMARİ:                                   ║
-║      .bnav → contain:layout style (render izolasyonu)          ║
-║      transition:all → TAMAMEN SİLİNDİ (transition:none)        ║
-║      İkon: sadece tıklanan SVG → .bnav-icon-popping sınıfı     ║
-║        xIconPop: scale(1→1.2→1) 150ms spring, diğerleri sabit  ║
-║      ic-outline/ic-filled swap: sadece opacity (reflow:0)      ║
-║      will-change:transform → SVG GPU compositor katmanı        ║
-║      Hit target: 44×44pt sabit (::before, left/right:0)        ║
-║  • v76 GEÇİŞ: X-Style Cross-Fade (Spatial Depth kaldırıldı)   ║
-║      xTabEnter: opacity+scale(0.98→1) 200ms                    ║
-║      xTabExit: opacity fade 150ms, scale YOK → titreme imkansız║
+║  • v77 DÖRT FİX — ZERO-FLICKER MİMARİSİ:                       ║
+║    [1] Layout Consistency: transform-origin 50% 29px → 50% 50% ║
+║        xTabEnter scale(0.98) artık ekran ortasından yayılır,   ║
+║        header sabit kalırken içerik kayması matematiksek sıfır ║
+║    [2] Global FAB: #global-fab-wrap → .phone doğrudan çocuğu   ║
+║        z-index:15, position:absolute, tek DOM elemanı          ║
+║        6 screen'deki .fab-wrap → .bnav-fab-spacer (görünmez)   ║
+║        Tab geçişleri FAB'ı ASLA yeniden render etmez           ║
+║        syncFabVisibility(): splash/onboarding'de gizler        ║
+║    [3] Skeleton Screens: kayitlarim/fields ilk geçişte         ║
+║        @keyframes skelShimmer — CSS-only, rAF loop yok         ║
+║        Veri gelince innerHTML replace, layout shift sıfır      ║
+║    [4] will-change: tab-exit → sadece opacity (transform yok)  ║
+║        Gereksiz compositor bellek kullanımı temizlendi         ║
+║  • v76 X-STYLE MİMARİ (korundu):                               ║
+║      contain:layout style, transition:none, xIconPop 150ms     ║
+║      ic-opacity swap (reflow:0), hit-target 44×44pt            ║
 ║  • Aktif sekme: renk teal + filled ikon + bold label — ANLIK   ║
 ║  • Pasif sekme: renk gri + outline ikon + soluk label — ANLIK  ║
-║  !! MİMARİ KISIT: .bnav her .screen içinde yaşıyor (6 kopya).  ║
-║     Gerçek iOS'ta tab bar ayrı katman. Bu prototype'ta her     ║
-║     screen kendi .bnav'ını taşıyor — refactor açık konu.       ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
 ║  → Bildirim toggle'ları şu an mockup — API gelince aktif       ║
 ║  → Onboarding görsel içerik (ikon/punto/spacing) polish        ║
 ║  → Tab bar mimari refactor: .bnav'ı .screen dışına taşı        ║
+║     (Global FAB v77 ile kısmi çözüm yapıldı)                   ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  DİL & TON — "SEN" TONU, TOPRAKTAN OTORİTE                     ║
 ║  Temel: Saygın Usta sıcaklığı. Ne SaaS, ne aşırı samimi.      ║
@@ -540,7 +545,12 @@ body.app-ready { background: var(--bg); }
   background: var(--bg);
   padding-top: 58px; /* v54: kompakt header 58px */
   will-change: transform, opacity;
-  transform-origin: 50% 29px; /* v54: header 58px, orta = 29px */
+  /* v77: 50% 29px → 50% 50% — xTabEnter scale(0.98) artık ekranın tam
+     ortasından yayılıyor. Önceki değer (header ortası=29px) scale sırasında
+     header'ı sabit bırakıp içeriği aşağı itiyordu → boşluk/kayma hissi.
+     sheet-presented: scale(0.92)+translateY(10px) — translateY zaten dikey
+     ofseti yönetiyor, origin değişikliği onu bozmaz. */
+  transform-origin: 50% 50%;
   transition: transform .32s cubic-bezier(.22,.68,0,1.05),
               border-radius .32s cubic-bezier(.22,.68,0,1.05);
 }
@@ -1027,6 +1037,128 @@ body.app-ready { background: var(--bg); }
   font-size: 10px; font-weight: 700;
   color: var(--text3); letter-spacing: .15px; line-height: 1;
 }
+
+/* ── v77 Global FAB — Tüm navigasyonun üzerinde, sabit katman ────────────
+   SORUN: Her .screen kendi .fab-wrap'ını içeriyordu. Tab geçişinde
+   yeni ekranın .bnav'ı display:none→flex olduğunda FAB yeniden
+   kompozite ediliyordu → box-shadow, ripple::after sıfırdan render.
+   Kullanıcı bunu "shimmer/glint yeniden başlıyor" olarak algılıyordu.
+
+   ÇÖZÜM: Tek global #global-fab-wrap → .phone'un doğrudan çocuğu,
+   position:fixed yerine position:absolute (phone container'a göre).
+   z-index:15 → tüm .screen (z:2-3) ve .bnav (z:10) üzerinde.
+   Tab geçişleri, animasyonlar, display değişimleri bu elemanı
+   hiçbir şekilde etkilemez — DOM'da tek, sabit, asla yeniden render olmaz.
+
+   Her .bnav içindeki .fab-wrap → .bnav-fab-spacer (görünmez flex:1 yer tutucu)
+   ile değiştirildi. Spacer FAB'ın layout genişliğini korur, hiçbir görsel
+   eleman render etmez.
+────────────────────────────────────────────────────────────────────────── */
+#global-fab-wrap {
+  position: absolute;
+  /* Konum: .bnav yüksekliği yaklaşık 80px (padding-bottom:28px + ikon alanı)
+     FAB merkezi: bnav üst kenarından -26px yukarıda (fab-slot: margin-top:-26px)
+     Hesap: bottom = 80px - (-26px offset) = bnav tabanından 54px yukarı */
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%) translateZ(0);
+  z-index: 15; /* bnav(10) + screen(2-3) üzerinde */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none; -webkit-user-select: none;
+  /* GPU katmanı: hiçbir ebeveyn animasyonundan etkilenmez */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+  /* splash/onboarding'de gizli — JS syncFabVisibility() ile yönetilir */
+  visibility: hidden;
+  pointer-events: none;
+}
+#global-fab-wrap.fab-visible {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Yer tutucu: her bnav'da FAB'ın kapladığı flex alanını korur */
+.bnav-fab-spacer {
+  flex: 1;
+  pointer-events: none;
+}
+
+/* ── v77 Skeleton Screen — Veri gelene kadar içerik taslağı ─────────────
+   SORUN: navTo() sırasında kayitlarim/kasa'ya geçince veriler
+   requestAnimationFrame ile render ediliyor. İlk frame'de scroll container
+   boş → içerik "patlayarak" beliriyor (blink).
+
+   ÇÖZÜM: renderKayitlar/renderTarlaSirasi çağrılmadan önce scroll
+   container'a skeleton HTML yazılıyor. Skeleton geçiş animasyonuyla
+   eş zamanlı görünüyor (200ms xTabEnter içinde zaten var),
+   gerçek veri gelince .skel-fade-out class'ı ile yumuşakça kayboluyor.
+
+   MİMARİ KURAL:
+   • Skeleton sadece CSS shimmer — JS animasyon loop'u YOK (rAF kirliliği önlendi).
+   • @keyframes skelShimmer: background-position kaydırma → GPU'da, reflow sıfır.
+   • .skel-fade-out: opacity 0 + pointer-events:none — layout değişmez, shift yok.
+   • Gerçek içerik skeleton'ın arkasında değil, onun yerini alıyor
+     (innerHTML replace) → çift render yok.
+────────────────────────────────────────────────────────────────────────── */
+@keyframes skelShimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position:  300px 0; }
+}
+
+.skel-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+.skel-item.skel-fade-out { opacity: 0; pointer-events: none; }
+
+/* Shimmer baz rengi ve animasyonu */
+.skel-line {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--bg2) 0px,
+    rgba(255,255,255,0.55) 80px,
+    var(--bg2) 160px
+  );
+  background-size: 300px 100%;
+  animation: skelShimmer 1.4s infinite linear;
+  flex-shrink: 0;
+}
+
+/* Kayıt skeleton — ikon + metin satırları */
+.skel-ic   { width: 36px; height: 36px; border-radius: 10px; }
+.skel-body { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.skel-t1   { height: 12px; width: 55%; }
+.skel-t2   { height: 10px; width: 38%; opacity: .65; }
+.skel-amt  { width: 52px; height: 14px; border-radius: 6px; }
+
+/* Tarla (fl-card) skeleton */
+.skel-fl-card {
+  margin: 0 18px 10px;
+  height: 82px;
+  border-radius: 14px;
+  background: linear-gradient(
+    90deg,
+    var(--bg2) 0px,
+    rgba(255,255,255,0.55) 80px,
+    var(--bg2) 160px
+  );
+  background-size: 300px 100%;
+  animation: skelShimmer 1.4s infinite linear;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+.skel-fl-card.skel-fade-out { opacity: 0; pointer-events: none; }
 
 /* SHARED */
 .page-hdr { display:none; } /* v54: sb-bar tüm sekmelerde header görevi gördüğü için kaldırıldı */
@@ -3740,6 +3872,25 @@ body.app-ready { background: var(--bg); }
     <div class="ob-progress-bar-fill" id="ob-progress-fill" style="width:33%;"></div>
   </div>
 
+  <!-- ═══════ GLOBAL FAB — v77 ═══════════════════════════════════════════
+       Tüm .screen'lerin ve .bnav'ların üzerinde, .phone'un doğrudan çocuğu.
+       position:absolute → .phone container'a göre konumlandırılır.
+       z-index:15 → screen(2-3) ve bnav(10) üzerinde.
+       Tab geçişleri, xTabEnter/Exit animasyonları, display değişimleri
+       bu elemanı ASLA etkilemez — DOM'da tek, sabit kopya.
+       JS: syncFabVisibility() ile splash/onboarding'de gizlenir.
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="global-fab-wrap">
+    <div class="fab-slot">
+      <div class="fab" id="global-fab">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="fab-lbl">Kayıt Gir</div>
+  </div>
+
   <!-- ═══════ ANA SAYFA ═══════ -->
   <div class="screen" id="home">
     <div class="scroll" style="padding-top:0">
@@ -3937,7 +4088,7 @@ body.app-ready { background: var(--bg); }
     <div class="bnav">
       <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
       <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
-      <div class="fab-wrap"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
+      <div class="bnav-fab-spacer"></div>
       <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
@@ -4127,7 +4278,7 @@ body.app-ready { background: var(--bg); }
     <div class="bnav">
       <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
       <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
-      <div class="fab-wrap"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
+      <div class="bnav-fab-spacer"></div>
       <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
@@ -4197,7 +4348,7 @@ body.app-ready { background: var(--bg); }
     <div class="bnav">
       <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
       <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
-      <div class="fab-wrap"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
+      <div class="bnav-fab-spacer"></div>
       <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
@@ -4690,7 +4841,7 @@ body.app-ready { background: var(--bg); }
     <div class="bnav">
       <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
       <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
-      <div class="fab-wrap"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
+      <div class="bnav-fab-spacer"></div>
       <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
@@ -5000,7 +5151,7 @@ body.app-ready { background: var(--bg); }
     <div class="bnav">
       <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
       <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
-      <div class="fab-wrap"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
+      <div class="bnav-fab-spacer"></div>
       <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
@@ -5089,7 +5240,7 @@ body.app-ready { background: var(--bg); }
     <div class="bnav">
       <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
       <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
-      <div class="fab-wrap"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
+      <div class="bnav-fab-spacer"></div>
       <div class="bnav-item" data-nav="kayitlarim"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
       <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
@@ -7749,12 +7900,17 @@ function setupBnav() {
     });
   });
 
-  // ── 3. FAB: rAF tabanlı press — NAVİGASYON YOK ──────────────────
-  document.querySelectorAll('.fab-wrap').forEach(function(wrap) {
-    // onclick'i temizle — JS ile yönetiyoruz
+  // ── 3. Global FAB: tek eleman, tüm navigasyonun üzerinde ────────────
+  // v77: .fab-wrap döngüsü kaldırıldı. Artık #global-fab-wrap tek kopya.
+  // Tüm screen'lerdeki .fab-wrap → .bnav-fab-spacer ile değiştirildi (HTML).
+  // Bu blok yalnızca #global-fab-wrap'ı bağlar — 1 kez çalışır, yeterli.
+  (function bindGlobalFab() {
+    var wrap  = document.getElementById('global-fab-wrap');
+    var fabEl = document.getElementById('global-fab');
+    if (!wrap || !fabEl) return;
+
     wrap.removeAttribute('onclick');
 
-    var fabEl     = wrap.querySelector('.fab');
     var fabMoved  = false;
     var fabRaf    = null;
     var fabRelRaf = null;
@@ -7763,19 +7919,16 @@ function setupBnav() {
       fabMoved = false;
       if (fabRaf) cancelAnimationFrame(fabRaf);
       fabRaf = requestAnimationFrame(function() {
-        if (fabEl) fabEl.classList.add('fab-pressed');
+        fabEl.classList.add('fab-pressed');
       });
     }
 
     function fabPressEnd(shouldOpen) {
-      if (fabRaf) cancelAnimationFrame(fabRaf);
+      if (fabRaf)    cancelAnimationFrame(fabRaf);
       if (fabRelRaf) cancelAnimationFrame(fabRelRaf);
-
-      // Spring geri: pressed kaldır → CSS transition devralır
       fabRelRaf = requestAnimationFrame(function() {
-        if (fabEl) fabEl.classList.remove('fab-pressed');
+        fabEl.classList.remove('fab-pressed');
         if (shouldOpen && !fabMoved) {
-          // Sheet'i bir sonraki frame'de aç — visual press tamamlansın
           requestAnimationFrame(function() {
             if (typeof openKayit === 'function') openKayit();
           });
@@ -7784,40 +7937,16 @@ function setupBnav() {
     }
 
     // Touch
-    wrap.addEventListener('touchstart', function() {
-      fabPressStart();
-    }, { passive: true });
+    wrap.addEventListener('touchstart',  function()  { fabPressStart(); },             { passive: true });
+    wrap.addEventListener('touchmove',   function()  { fabMoved = true; cancelAnimationFrame(fabRaf); fabEl.classList.remove('fab-pressed'); }, { passive: true });
+    wrap.addEventListener('touchend',    function()  { fabPressEnd(true);  },           { passive: true });
+    wrap.addEventListener('touchcancel', function()  { fabMoved = true; fabPressEnd(false); }, { passive: true });
 
-    wrap.addEventListener('touchmove', function() {
-      fabMoved = true;
-      if (fabRaf) cancelAnimationFrame(fabRaf);
-      if (fabEl) fabEl.classList.remove('fab-pressed');
-    }, { passive: true });
-
-    wrap.addEventListener('touchend', function() {
-      fabPressEnd(true);
-    }, { passive: true });
-
-    wrap.addEventListener('touchcancel', function() {
-      fabMoved = true;
-      fabPressEnd(false);
-    }, { passive: true });
-
-    // Mouse fallback (desktop preview)
-    wrap.addEventListener('mousedown', function() {
-      if ('ontouchstart' in window) return;
-      fabPressStart();
-    });
-    wrap.addEventListener('mouseup', function() {
-      if ('ontouchstart' in window) return;
-      fabPressEnd(true);
-    });
-    wrap.addEventListener('mouseleave', function() {
-      if ('ontouchstart' in window) return;
-      fabMoved = true;
-      fabPressEnd(false);
-    });
-  });
+    // Desktop mouse fallback
+    wrap.addEventListener('mousedown',  function() { if ('ontouchstart' in window) return; fabPressStart(); });
+    wrap.addEventListener('mouseup',    function() { if ('ontouchstart' in window) return; fabPressEnd(true); });
+    wrap.addEventListener('mouseleave', function() { if ('ontouchstart' in window) return; fabMoved = true; fabPressEnd(false); });
+  }());
 
   // ── 4. İlk pill konumunu yerleştir ──────────────────────────────
   requestAnimationFrame(function() {
@@ -7825,6 +7954,18 @@ function setupBnav() {
       _movePillToActive(bnav);
     });
   });
+}
+
+// ── syncFabVisibility: splash/onboarding'de FAB gizle, diğerlerinde göster ─
+// Global FAB varsayılan olarak visibility:hidden başlar (CSS).
+// navTo() her çağrıldığında bu fonksiyon ekran kimliğine göre karar verir.
+// KISIT: pointer-events:none korunur — görünmez ekranlarda tıklama engellenir.
+var FAB_HIDDEN_SCREENS = ['splash', 'onboarding'];
+function syncFabVisibility(screenId) {
+  var wrap = document.getElementById('global-fab-wrap');
+  if (!wrap) return;
+  var hide = FAB_HIDDEN_SCREENS.indexOf(screenId) !== -1;
+  wrap.classList.toggle('fab-visible', !hide);
 }
 
 // Kurulum: DOMContentLoaded veya hemen
@@ -7881,6 +8022,7 @@ function navTo(id) {
     fromScreen    = 'onboarding';
     setSbLeft('onboarding');
     syncBnav('onboarding');
+    syncFabVisibility('onboarding'); // v77: onboarding'de FAB gizli
     return;
   }
   // ─────────────────────────────────────────────────────
@@ -7999,8 +8141,23 @@ function navTo(id) {
   // requestAnimationFrame ile render'ı bir sonraki çerçeveye ertele:
   // ekran DOM'a eklensin, sonra veri yazılsın → layout thrash ve flicker önlenir.
 
-  // kayitlarim ekranına geçince listeyi render et (aktif filtreyi koru)
+  // ── v77 Skeleton + Render ─────────────────────────────────────────────
+  // kayitlarim: önce skeleton göster, rAF'ta gerçek veri render et
   if (id === 'kayitlarim') {
+    // Skeleton: geçiş animasyonuyla (200ms) eş zamanlı görünür
+    const scrollEl = document.getElementById('kayit-liste-scroll');
+    if (scrollEl) {
+      // 5 satır skeleton — tipik liste yüksekliğini karşılar, CLS yok
+      scrollEl.innerHTML = Array(5).fill(0).map(() => `
+        <div class="skel-item">
+          <div class="skel-line skel-ic"></div>
+          <div class="skel-body">
+            <div class="skel-line skel-t1"></div>
+            <div class="skel-line skel-t2"></div>
+          </div>
+          <div class="skel-line skel-amt"></div>
+        </div>`).join('');
+    }
     requestAnimationFrame(() => {
       renderKayitlar(aktifFiltre);
       document.querySelectorAll('.filtre-chip').forEach(c => {
@@ -8016,9 +8173,23 @@ function navTo(id) {
       if (v) renderKasaEkrani(aktifYil, v);
     });
   }
+  // fields: tarlalar için skeleton
+  if (id === 'fields') {
+    const flList = document.querySelector('#fields .fl-list');
+    if (flList && flList.children.length === 0) {
+      // Sadece ilk yüklemede skeleton — drag-sort durumunu bozmaz
+      flList.innerHTML = Array(3).fill(0).map(() =>
+        '<div class="skel-fl-card"></div>').join('');
+      requestAnimationFrame(() => {
+        if (typeof renderFieldsProgress === 'function') renderFieldsProgress();
+        if (typeof renderTarlaSirasi    === 'function') renderTarlaSirasi();
+      });
+    }
+  }
 
   setSbLeft(id);
   syncBnav(id);
+  syncFabVisibility(id);   // v77: Global FAB görünürlüğünü güncelle
   setupHeaderScroll(); // scroll→.scrolled class bağlantısını güncelle
 }
 
