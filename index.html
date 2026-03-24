@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v72                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v73                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v72                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v73                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -783,18 +783,15 @@ body.app-ready { background: var(--bg); }
   left: -8px; right: -8px;
 }
 
-/* ── Pill ── */
+/* ── Pill: transition YOK — anlık konumlanma ── */
 .bnav-pill {
   position: absolute;
   top: 8px;
   height: 30px;
   border-radius: 15px;
   background: rgba(34,127,131,0.13);
-  transition:
-    transform .38s cubic-bezier(.34,1.22,.64,1),
-    width     .38s cubic-bezier(.34,1.22,.64,1),
-    opacity   .22s ease;
-  will-change: transform, width;
+  transition: none;
+  will-change: auto;
   pointer-events: none;
   z-index: 0;
   opacity: 0;
@@ -839,15 +836,7 @@ body.app-ready { background: var(--bg); }
   opacity: 1;
 }
 
-/* ── Press: sadece tıklanan sekmenin ikonu ── */
-@keyframes bnavPress {
-  0%   { transform: scale(1);    }
-  40%  { transform: scale(0.88); }
-  100% { transform: scale(1);    }
-}
-.bnav-item.bnav-pressing svg {
-  animation: bnavPress .22s cubic-bezier(.34,1.56,.64,1) both;
-}
+/* Press animasyonu: kaldırıldı — ikonlar tamamen tepkisiz */
 
 /* ══════════════════════════════════════════════════════════════
    FAB — Orta Aksiyon Butonu (v66)
@@ -7582,46 +7571,26 @@ function setupBnav() {
     btn.removeAttribute('onclick');
 
     var touchMoved = false;
-    var pressRaf   = null;
-    var pressTimer = null;
 
-    // touchstart: rAF içinde anında press başlat — input lag = 0
     btn.addEventListener('touchstart', function() {
       touchMoved = false;
-      if (pressRaf) cancelAnimationFrame(pressRaf);
-      pressRaf = requestAnimationFrame(function() {
-        btn.classList.add('bnav-pressing');
-        pressTimer = setTimeout(function() {
-          btn.classList.remove('bnav-pressing');
-        }, 420);
-      });
     }, { passive: true });
 
     btn.addEventListener('touchmove', function() {
       touchMoved = true;
-      if (pressRaf) cancelAnimationFrame(pressRaf);
-      if (pressTimer) clearTimeout(pressTimer);
-      btn.classList.remove('bnav-pressing');
     }, { passive: true });
 
     btn.addEventListener('touchend', function() {
-      if (pressTimer) clearTimeout(pressTimer);
-      if (pressRaf) cancelAnimationFrame(pressRaf);
-
-      if (touchMoved) { btn.classList.remove('bnav-pressing'); return; }
-
+      if (touchMoved) return;
       _haptic('light');
-
       // Zaten bu tab'taysa → scroll to top
       if (currentScreen === targetId || SCREEN_NAV[currentScreen] === targetId) {
         var scrollEl = document.querySelector(
           '#' + currentScreen + ' .scroll, #' + currentScreen + ' .kasa-inner-scroll'
         );
         if (scrollEl) scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
-        btn.classList.remove('bnav-pressing');
         return;
       }
-
       navTo(targetId);
     }, { passive: true });
 
