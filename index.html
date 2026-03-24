@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v69                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v70                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v69                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v70                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -774,36 +774,34 @@ body.app-ready { background: var(--bg); }
   user-select: none; -webkit-user-select: none;
   position: relative;
 
-  /* ── v69 Animation Isolation ──────────────────────────────────────
-     SORUN: .bnav-item üzerindeki `transition: color` tüm sekmeleri
-     etkiler. Bir sekme aktif olunca renk tokenı değişir → browser
-     tüm .bnav-item elemanlarında color transition tetikler = toplu zıplama.
-
-     ÇÖZÜM: .bnav-item üzerinde transition YOK.
-     Renk geçişi sadece .bnav-item.active sınıfına özel tanımlanır.
-     Pasif sekmeler hiçbir zaman transition hesaplamaz.
+  /* ── v70 Animation Isolation — Kesin Kural ────────────────────────
+     BASE .bnav-item: transition YOK, will-change YOK.
+     Pasif (deaktive olan) sekmeler anında pasif duruma geçer.
+     Hiçbir animasyon hesaplaması yapılmaz.
   ──────────────────────────────────────────────────────────────── */
   transition: none;
+  will-change: auto;
 
-  /* GPU katmanı: sub-pixel titreme önleme */
+  /* Sub-pixel titreme önleme */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
-/* Aktif sekme: renk geçişi SADECE buraya izole */
+/* ── AKTİF sekme: animasyon SADECE buraya izole ── */
 .bnav-item.active {
   color: var(--green-mid);
-  /* Renk değişimi yalnızca bu elemanı etkiler */
-  transition: color .22s cubic-bezier(.16,1,.3,1);
+  transition: color .2s cubic-bezier(.4,0,.2,1);
 }
 
-/* Pasif → aktif geçiş sırasında renk geri dönüşü de izole */
-.bnav-item:not(.active) {
-  color: var(--text3);
-  transition: color .18s cubic-bezier(.4,0,1,1);
-}
+/* ── PASİF sekme: transition YOK — anında snap ──────────────────
+   v69'daki hata: :not(.active) üzerinde transition tanımlanmıştı.
+   B aktifken C'ye tıklayınca B, :not(.active) kuralını alır ve
+   transition ile pasif duruma GERİ DÖNER = B'nin ikonu zıplar.
+   Çözüm: :not(.active) üzerinde kesinlikle transition tanımlama.
+── */
+/* (Kural yok — base .bnav-item transition:none yeterli) */
 
 /* 44×44pt görünmez dokunma alanı genişletici */
 .bnav-item::before {
@@ -852,94 +850,76 @@ body.app-ready { background: var(--bg); }
   backface-visibility: hidden;
 }
 
-/* Aktif renk — renk geçişi renk tokenı üzerinden */
-.bnav-item.active { color: var(--green-mid); }
+/* (ghost kural kaldırıldı — yukarıdaki .bnav-item.active geçerli) */
 
 /* ── SVG ikonlar ── */
 .bnav-item svg {
   flex-shrink: 0;
   width: 22px; height: 22px;
-
-  /* ── v69 Isolation: transform transition KALDIRILDI ──────────────
-     Global `transition: transform` tüm sekmelerin SVG'lerini
-     aynı anda hesaplar = toplu zıplama. Sadece opacity gerekli:
-     outlined ↔ filled crossfade pasif sekmede de çalışmalı.
-     Scale animasyonu: sadece .active.svg'e özel tanımlanır (aşağıda).
-  ──────────────────────────────────────────────────────────────── */
+  /* Base: transition YOK, will-change YOK */
   transition: none;
-
-  /* Sabit başlangıç durumu: GPU katmanı, sub-pixel titremeye karşı */
+  will-change: auto;
   -webkit-transform: translateZ(0) scale(1);
   transform: translateZ(0) scale(1);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  will-change: auto; /* animasyon olmadığında GPU rezervasyonu serbest */
 }
 
-/* Outline ↔ Filled crossfade — tüm sekmeler için, sadece opacity */
-.bnav-item svg .ic-outline {
-  opacity: 1;
-  transition: opacity .18s cubic-bezier(.4,0,.2,1);
-}
-.bnav-item svg .ic-filled  {
-  opacity: 0;
-  transition: opacity .18s cubic-bezier(.4,0,.2,1);
-}
+/* Outline ↔ Filled crossfade — opacity ANINDA değişir, transition YOK
+   Opacity transition da pasif sekmeleri tetikler — kaldırıldı.
+   Aktif sekme için opacity geçişi aşağıda .active svg içinde tanımlı. */
+.bnav-item svg .ic-outline { opacity: 1; }
+.bnav-item svg .ic-filled  { opacity: 0; }
 .bnav-item.active svg .ic-outline { opacity: 0; }
 .bnav-item.active svg .ic-filled  { opacity: 1; }
 
-/* ── Aktif ikon: scale SADECE tıklanan sekmeye izole ── */
+/* ── Aktif ikon: scale + opacity geçişi SADECE buraya izole ── */
 .bnav-item.active svg {
-  /* scale(1.05): hafif, premium — 1.08'den düşürüldü */
   -webkit-transform: translateZ(0) scale(1.05) translateY(-1px);
   transform: translateZ(0) scale(1.05) translateY(-1px);
-  /* Transition SADECE .active svg'de tanımlı → pasif svg'ler hesaplamaz */
-  transition: transform .32s cubic-bezier(.34,1.28,.64,1);
+  /* Transition SADECE .active svg'de — pasif svg'ler sıfır hesaplama */
+  transition: transform .28s cubic-bezier(.34,1.28,.64,1);
   will-change: transform;
 }
 
-/* Aktiften pasife geçiş: scale(1)'e yumuşak dönüş */
-.bnav-item:not(.active) svg {
-  -webkit-transform: translateZ(0) scale(1);
-  transform: translateZ(0) scale(1);
-  transition: transform .2s cubic-bezier(.4,0,1,1);
-  will-change: auto;
-}
+/* ── Pasif svg: transition YOK — anında scale(1)'e snap ────────
+   v69 hatası: :not(.active) svg'de transition vardı → deaktive olan
+   sekmenin ikonu scale(1.05)→scale(1) animasyonuyla GÖZLE GÖRÜLÜR dönerdi.
+   Çözüm: hiç transition tanımlama. Base .bnav-item svg transition:none yeterli.
+── */
 
 /* ── Etiket ── */
 .bnav-lbl {
   font-size: 10px; font-weight: 500;
   letter-spacing: .1px; line-height: 1; white-space: nowrap;
+  /* Pasif durum: sabit değerler — transition YOK, will-change YOK */
   opacity: 0.55;
-  /* Pasif durum: scale(.93) sabit — hiçbir transition yok */
   transform: scale(.93) translateY(1px);
   transform-origin: center bottom;
-  /* v69: will-change YOK pasif durumda — GPU'yu gereksiz meşgul etmez */
-  will-change: auto;
-  /* v69: transition YOK — toplu animasyon kaynağı buydu */
   transition: none;
+  will-change: auto;
   position: relative; z-index: 1;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
-/* Aktif etiket: scale + opacity SADECE burada tanımlı */
+/* ── Aktif etiket: animasyon SADECE buraya izole ── */
 .bnav-item.active .bnav-lbl {
   font-weight: 700;
   opacity: 1;
   transform: scale(1) translateY(0);
   will-change: transform, opacity;
   transition:
-    transform .32s cubic-bezier(.34,1.28,.64,1),
-    opacity   .2s  cubic-bezier(.4,0,.2,1);
+    transform .28s cubic-bezier(.34,1.28,.64,1),
+    opacity   .18s cubic-bezier(.4,0,.2,1);
 }
 
-/* Aktiften pasife: yumuşak geri dönüş */
-.bnav-item:not(.active) .bnav-lbl {
-  transition:
-    transform .2s cubic-bezier(.4,0,1,1),
-    opacity   .16s cubic-bezier(.4,0,1,1);
-}
+/* ── Pasif etiket: transition YOK — anında snap ─────────────────
+   v69 hatası: :not(.active) .bnav-lbl'de transition vardı.
+   Deaktive olan sekmenin label'ı opacity:1→0.55 ve
+   scale(1)→scale(.93) ile animasyonla dönerdi = zıplama.
+   Çözüm: hiç kural tanımlama. Base .bnav-lbl transition:none yeterli.
+── */
 
 /* ── Press animasyonu: rAF'tan tetiklenir, CSS kancası ──────────
    .bnav-pressing sınıfı SADECE tıklanan sekmeye eklenir (JS).
