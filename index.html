@@ -655,7 +655,9 @@ body.app-ready { background: var(--bg); }
   animation: obExitAnim 300ms cubic-bezier(0.4,0,1,1) both;
   pointer-events: none;
 }
-/* Home giriş — hafif aşağıdan yükselir, onboardingden bağımsız */
+/* Home giriş — hafif aşağıdan yükselir, onboardingden bağımsız
+   v77 FIX: .screen.home-entering .bnav → bnavCounterHomeEnter ile
+   scale+translateY counter uygulanıyor → .bnav sabit kalır */
 @keyframes homeEnterAnim {
   from { opacity: 0; transform: scale(0.97) translateY(10px); }
   to   { opacity: 1; transform: scale(1)    translateY(0);    }
@@ -828,23 +830,68 @@ body.app-ready { background: var(--bg); }
   backface-visibility: hidden;
 }
 
-/* ── v75 Counter-Scale: Artık gerek yok — xTabExit'te scale YOK ─────────
-   v76'da tab geçişi scale içermiyor (X-style cross-fade).
-   Bu keyframe'ler korunuyor ama .screen.tab-enter/exit .bnav kuralları
-   artık tetiklenmez — bnav ebeveyn scale'ine maruz kalmıyor.
-   Gelecekte Spatial Depth geri gelirse yeniden aktive edilebilir.
+/* ── v77 FIX: Counter-Scale — xTabEnter + homeEnterAnim titremesi ────────
+   TANI:
+   • xTabEnter: scale(0.98→1) uygular. v76'da "scale yok" notuydu YANLIŞ —
+     xTabEnter'da scale(0.98) HALA mevcut. .bnav bu .screen içinde olduğu
+     için 200ms boyunca scale(0.98)'den başlıyor → titreme kaynağı #1.
+   • homeEnterAnim: scale(0.97)+translateY(10px→0) uygular. .bnav hem
+     scale hem Y kaymasından etkileniyor → titreme kaynağı #2.
+
+   ÇÖZÜM: Her animasyona ters (counter) transform uygula.
+   Matematik:
+     xTabEnter from=scale(0.98) → bnav counter from=1/0.98≈1.0204
+     homeEnterAnim from=scale(0.97) translateY(10px) →
+       bnav counter: scale(1/0.97≈1.0309) translateY(-10px)
+   Timing + easing: ebeveyn animasyonuyla birebir eşleşiyor →
+   net görsel hareket sıfır, .bnav sanki ekrandan bağımsız duruyor.
+
+   xTabExit: scale YOK (sadece opacity) → counter gereksiz, no-op.
 ─────────────────────────────────────────────────────────────────────── */
+
+/* xTabEnter counter: scale(0.98→1) nötralize */
 @keyframes bnavCounterEnter {
-  from { -webkit-transform: translateZ(0); transform: translateZ(0); }
-  to   { -webkit-transform: translateZ(0); transform: translateZ(0); }
+  from {
+    -webkit-transform: scale(1.0204) translateZ(0);
+    transform:         scale(1.0204) translateZ(0);
+  }
+  to {
+    -webkit-transform: scale(1.0) translateZ(0);
+    transform:         scale(1.0) translateZ(0);
+  }
 }
+/* xTabExit counter: scale yok → no-op, sadece GPU katmanı koru */
 @keyframes bnavCounterExit {
   from { -webkit-transform: translateZ(0); transform: translateZ(0); }
   to   { -webkit-transform: translateZ(0); transform: translateZ(0); }
 }
-/* Counter-scale kuralları: v76'da devre dışı (no-op animasyon) */
-.screen.tab-enter .bnav { animation: none; }
-.screen.tab-exit  .bnav { animation: none; }
+
+/* tab-enter: counter aktif (200ms, aynı easing) */
+.screen.tab-enter .bnav {
+  -webkit-animation: bnavCounterEnter 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation:         bnavCounterEnter 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+/* tab-exit: no-op — scale yok, counter gereksiz */
+.screen.tab-exit .bnav { animation: none; }
+
+/* homeEnterAnim counter: scale(0.97)+translateY(10px→0) nötralize
+   from: ters scale(1.0309) + ters translateY(-10px) → net: sabit
+   to:   scale(1.0) translateY(0) → normal
+   380ms, aynı bezier — onboarding→home geçişinde .bnav titremez */
+@keyframes bnavCounterHomeEnter {
+  from {
+    -webkit-transform: scale(1.0309) translateY(-10px) translateZ(0);
+    transform:         scale(1.0309) translateY(-10px) translateZ(0);
+  }
+  to {
+    -webkit-transform: scale(1.0) translateY(0) translateZ(0);
+    transform:         scale(1.0) translateY(0) translateZ(0);
+  }
+}
+.screen.home-entering .bnav {
+  -webkit-animation: bnavCounterHomeEnter 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation:         bnavCounterHomeEnter 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
 
 /* ── v76 X-Style İkon Spring Pop ─────────────────────────────────────────
    Sadece tıklanan ikon için: scale(1) → scale(1.2) → scale(1.0)
