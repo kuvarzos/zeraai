@@ -758,16 +758,15 @@ body.app-ready { background: var(--bg); }
 /* Ekranı görünür kıl — animasyon yok */
 .screen.active {
   display: flex;
-  z-index: 2; /* v64: standby ekranın (z-index:1) üstünde kalmasını garantile */
+  z-index: 2;
 }
-/* Tab geçiş animasyonu — active'den AYRI sınıf */
+/* Tab geçiş — iOS native davranışı: anlık, opacity/scale animasyonu YOK */
 .screen.tab-enter {
-  animation: tabFadeIn .22s cubic-bezier(.25,.46,.45,.94) both;
+  /* Kasıtlı boş — gerçek iOS tab geçişi instantaneous */
 }
 /* Tab geri */
 .screen.back {
   display: flex;
-  animation: tabFadeIn .22s cubic-bezier(.25,.46,.45,.94) both;
 }
 /* Detay geçişi — sağdan slayt (ileri) */
 .screen.slide-in {
@@ -782,17 +781,7 @@ body.app-ready { background: var(--bg); }
   animation: iosSlideBack .38s cubic-bezier(.4,0,.2,1) both;
 }
 
-/* Cross-fade + hafif scale — Instagram/X tab geçişi */
-@keyframes tabFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(.97);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+/* tabFadeIn keyframe kaldırıldı — v65: tab geçişi anlık, opacity/scale animasyonu yok */
 
 /* Detay ekranı sağdan gelme */
 @keyframes iosSlideIn {
@@ -7682,17 +7671,18 @@ function navTo(id) {
     s.style.animation  = '';
   });
 
-  // Standby ekranını swipe için hazır konuma getir (parallax başlangıcı)
-  // display:flex zaten açık (ya da açıksa korunuyor), sadece z-index + transform
+  // Standby ekranı: display:flex kalır (swipe hazırlığı) ama
+  // visibility:hidden ile görsel olarak gizlenir — flicker sıfır.
+  // Swipe gesture başlayınca onStart() içinde visibility açılır.
   if (standbyId && standbyId !== id) {
     const standbyEl = document.getElementById(standbyId);
     if (standbyEl) {
       standbyEl.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
-      standbyEl.style.display    = 'flex';           // display:flex garantili — flicker önler
-      standbyEl.style.zIndex     = '1';              // cur'ın (yeni ekranın) altında
-      standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)'; // parallax başlangıç
-      standbyEl.style.transition = 'none';           // ilk frame'de animasyon yok
-      standbyEl.style.visibility = '';
+      standbyEl.style.display    = 'flex';
+      standbyEl.style.zIndex     = '1';
+      standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+      standbyEl.style.transition = 'none';
+      standbyEl.style.visibility = 'hidden'; // v65: tab geçişinde görünmez — flicker önleme
     }
   }
 
@@ -7847,7 +7837,7 @@ function navBack() {
     const newFromDetail = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
     fromScreen = newFromDetail;
 
-    // v62: yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
+    // v62+v65: yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
     if (newFromDetail && newFromDetail !== target) {
       const standbyEl = document.getElementById(newFromDetail);
       if (standbyEl) {
@@ -7855,6 +7845,7 @@ function navBack() {
         standbyEl.style.zIndex     = '1';
         standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
         standbyEl.style.transition = 'none';
+        standbyEl.style.visibility = 'hidden'; // v65: görünmez — sadece swipe'ta açılır
       }
     }
 
@@ -7886,7 +7877,7 @@ function navBack() {
   const newFromNormal = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
   fromScreen = newFromNormal;
 
-  // v62: yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
+  // v62+v65: yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
   if (newFromNormal && newFromNormal !== target) {
     const standbyEl = document.getElementById(newFromNormal);
     if (standbyEl) {
@@ -7894,6 +7885,7 @@ function navBack() {
       standbyEl.style.zIndex     = '1';
       standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
       standbyEl.style.transition = 'none';
+      standbyEl.style.visibility = 'hidden'; // v65: görünmez — sadece swipe'ta açılır
     }
   }
 
@@ -7997,11 +7989,11 @@ function navBack() {
     // Güvence: bk display:none'daysa (beklenmedik durum) anında aç, flicker minimum.
     freeze(bk);
     if (bk.style.display === 'none' || bk.style.display === '') {
-      // Fallback: bk henüz standby'a alınmamış (eski navTo çağrısı kalıntısı)
-      // display:flex ver + 1 reflow ile GPU'ya bildir
       bk.style.display = 'flex';
-      bk.offsetHeight; // reflow — browser'ın layout'u tanıması için
+      bk.offsetHeight;
     }
+    // v65: standby visibility:hidden idi — swipe başlayınca aç
+    bk.style.visibility = '';
     bk.style.zIndex    = '1';
     bk.style.transform = 'translateX(' + (-W * PAR) + 'px)';
 
@@ -8089,36 +8081,33 @@ function navBack() {
       shadow.style.transform  = '';
 
       // bk: ÖNCE aktif et — display:flex garantili, görünür
-      bk.style.transition = '';
-      bk.style.transform  = '';
-      bk.style.zIndex     = '';
+      bk.style.transition  = '';
+      bk.style.transform   = '';
+      bk.style.zIndex      = '';
+      bk.style.visibility  = ''; // v65: swipe commit — bk artık tam aktif, görünür
       if (!bk.classList.contains('active')) bk.classList.add('active');
       thaw(bk);
 
       // cur: bk aktif olduktan SONRA gizle — aralarında boşluk olmaz
       cur.style.transition = '';
-      cur.style.transform  = 'translateX(' + W + 'px)'; // ekran dışında tut
+      cur.style.transform  = 'translateX(' + W + 'px)';
       cur.style.zIndex     = '';
       cur.classList.remove('active','slide-in','slide-left','back','tab-enter');
-      cur.style.transform  = ''; // şimdi temizle — display:none devreye girer
+      cur.style.transform  = '';
       thaw(cur);
 
       currentScreen = target;
-      // v62: fromScreen güncelle + yeni standby'ı hazırla
       var newFrom = ['fields','kayitlarim','kasa'].includes(target) ? 'home' : target;
       fromScreen  = newFrom;
 
-      // Eski cur (artık kapalı) dışındaki standby ekranları temizle
-      // Yeni fromScreen (newFrom) standby'a alınacak — navTo bunu halleder
-      // Burada sadece eski cur'ı temizliyoruz, geri kalanı navTo yönetir
       document.querySelectorAll('.screen').forEach(function(s) {
-        if (s === bk) return; // aktif ekran — dokunma
-        if (s === cur) return; // zaten temizlendi
-        // Diğer standby ekranlar: z-index ve transform sıfırla, display'i koru
+        if (s === bk) return;
+        if (s === cur) return;
         if (s.style.zIndex === '1') {
-          s.style.zIndex    = '';
-          s.style.transform = '';
-          s.style.transition = '';
+          s.style.zIndex      = '';
+          s.style.transform   = '';
+          s.style.transition  = '';
+          s.style.visibility  = 'hidden'; // v65: diğer standbyleri gizle
         }
       });
 
