@@ -543,31 +543,20 @@ body.app-ready { background: var(--bg); }
   display: none; flex-direction: column;
   position: absolute; inset: 0;
   background: var(--bg);
-  padding-top: 58px; /* v54: kompakt header 58px */
-  will-change: transform, opacity;
-  /* v77: 50% 29px → 50% 50% — xTabEnter scale(0.98) artık ekranın tam
-     ortasından yayılıyor. Önceki değer (header ortası=29px) scale sırasında
-     header'ı sabit bırakıp içeriği aşağı itiyordu → boşluk/kayma hissi.
-     sheet-presented: scale(0.92)+translateY(10px) — translateY zaten dikey
-     ofseti yönetiyor, origin değişikliği onu bozmaz. */
+  padding-top: 58px;
+  /* v78: will-change BASE'DEN KALDIRILDI.
+     Gerekçe: her ekranı sürekli GPU'da tutmak bellek israfı ve
+     bazı tarayıcılarda composite layer sınırı aşımına yol açıyordu.
+     Animasyon sınıfları (tab-enter, tab-exit, slide-in vb.) kendi
+     will-change'lerini açıkça tanımlıyor — sadece gerektiğinde GPU. */
+  /* v78: transition BASE'DEN KALDIRILDI — KÖK NEDEN BUYDU.
+     .screen base'inde transition:transform varken @keyframes animasyonu
+     eklendiğinde tarayıcı ikisini aynı anda çalıştırmaya çalışıyordu:
+     keyframe transform + CSS transition transform = çakışma → titreme.
+     transition artık SADECE .screen.sheet-presented'a özgü. */
   transform-origin: 50% 50%;
-  transition: transform .32s cubic-bezier(.22,.68,0,1.05),
-              border-radius .32s cubic-bezier(.22,.68,0,1.05);
 }
-/* iOS presenting view — sheet açıkken içerik küçülür, header sabit */
-/* Swipe-back sırasında arkada bekleyen ekran — display:flex kalır, görünmez */
-.screen.sb-behind {
-  display: flex;
-  z-index: 0;
-  visibility: hidden; /* layout korunur, görünmez */
-}
-/* v61: detail→geri akışında arka ekranı animasyonsuz restore et.
-   openDetail() bk'yi display:flex bıraktı; navBack() sadece sınıf ekler,
-   display değişmez = sıfır flicker */
-.screen.sb-restore {
-  display: flex;
-}
-/* v61: GPU katmanı garantisi — compositing sınırı, layout thrash önler */
+/* v61: GPU katmanı garantisi */
 .screen {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -576,53 +565,47 @@ body.app-ready { background: var(--bg); }
   transform: scale(0.92) translateY(10px);
   border-radius: 12px;
   overflow: hidden;
+  /* transition SADECE burada — sheet aç/kapat animasyonu için */
+  transition: transform .32s cubic-bezier(.22,.68,0,1.05),
+              border-radius .32s cubic-bezier(.22,.68,0,1.05);
 }
-/* Header da ekranla birlikte küçülür — gap kapanır */
-/* sb-bar sabit kalır — iOS davranışı (header scale edilmez) */
+/* Swipe-back sırasında arkada bekleyen ekran */
+.screen.sb-behind {
+  display: flex;
+  z-index: 0;
+  visibility: hidden;
+}
+/* detail→geri akışında arka ekranı animasyonsuz restore et */
+.screen.sb-restore {
+  display: flex;
+}
 
 /* ── iOS premium geçiş animasyonları ─────────────────────────
-   Tab geçişi (home/fields/kayitlarim/kasa): Instagram/X tarzı
-   cross-fade + hafif scale — slayt yok
+   Tab geçişi (home/fields/kayitlarim/kasa)
    Detay geçişi (detail/profil): klasik iOS sağdan slayt
 ──────────────────────────────────────────────────────────── */
 
-/* ─────────────────────────────────────────────────────
-   SPLASH → ONBOARDING GEÇİŞİ
-   "Toprak Ortaya Çıkışı" — tohumun ışığa kavuşması
-   
-   Aşama 1: Splash ekranı yukarı çekilir + solar (400ms)
-   Aşama 2: Onboarding aşağıdan yükselir + belirir (500ms)
-   Toplam sahne: ~600ms — doğal, organik, ağır değil
-───────────────────────────────────────────────────── */
-
-/* Splash çıkış: yukarı kayar ve solar */
+/* SPLASH → ONBOARDING */
 @keyframes splashExit {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(-8px); }
 }
-
-/* Onboarding giriş: aşağıdan toprak gibi yükselir */
 @keyframes earthRise {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* Splash ekranı çıkarken bu sınıf eklenir */
 .screen.splash-exit {
   display: flex;
   animation: splashExit .38s cubic-bezier(.25,.46,.45,.94) both;
   pointer-events: none;
   position: absolute; inset: 0; z-index: 10;
 }
-
-/* Onay anı — "Uygulamaya başla" butonu SVG draw-on tik */
 .ob-next.confirming {
   pointer-events: none;
   transition: transform 140ms cubic-bezier(.4,0,.2,1),
               opacity   100ms ease,
               box-shadow 140ms;
 }
-/* Draw-on tik — ikonlarımızla aynı sistem */
 .ob-check-path {
   stroke-dasharray: 28;
   stroke-dashoffset: 28;
@@ -634,7 +617,6 @@ body.app-ready { background: var(--bg); }
 .ob-check-path.drawing {
   animation: ck-draw 0.38s cubic-bezier(0.4,0,0.2,1) forwards;
 }
-/* Buton metni solar */
 @keyframes textFade {
   from { opacity: 1; }
   to   { opacity: 0; }
@@ -646,7 +628,7 @@ body.app-ready { background: var(--bg); }
   animation: earthRise .55s cubic-bezier(.25,.46,.45,.94) both;
 }
 
-/* Onboarding çıkış — Scale+Fade: butondan ekran açılıyor hissi */
+/* ONBOARDING → HOME */
 @keyframes obExitAnim {
   from { opacity: 1; transform: scale(1);    filter: blur(0px);   }
   to   { opacity: 0; transform: scale(1.04); filter: blur(2px);   }
@@ -655,16 +637,49 @@ body.app-ready { background: var(--bg); }
   animation: obExitAnim 300ms cubic-bezier(0.4,0,1,1) both;
   pointer-events: none;
 }
-/* Home giriş — hafif aşağıdan yükselir, onboardingden bağımsız
-   v77 FIX: .screen.home-entering .bnav → bnavCounterHomeEnter ile
-   scale+translateY counter uygulanıyor → .bnav sabit kalır */
+
+/* ── iOS 2026 Premium Tab Geçişi ─────────────────────────────────────────
+   Standart: Apple Music, App Store, Safari — opacity cross-fade ONLY.
+   Scale animasyonları kaldırıldı çünkü scale → .bnav'ı etkiliyor → titreme.
+   Saf opacity cross-fade: compositor-only, reflow sıfır, titreme imkansız.
+   Yeni: 220ms ease-out  (hızlı giriş — "native snap" hissi)
+   Eski: 160ms ease-in   (daha hızlı çıkış — içerik temizlenir, yeni öne)
+   will-change: opacity  — sadece gerektiğinde, sadece bu property.
+────────────────────────────────────────────────────────────────────── */
+@keyframes iosTabEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes iosTabExit {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.screen.tab-enter {
+  display: flex;
+  z-index: 3;
+  animation: iosTabEnter 220ms ease-out both;
+  will-change: opacity;
+}
+.screen.tab-exit {
+  display: flex;
+  z-index: 2;
+  pointer-events: none;
+  animation: iosTabExit 160ms ease-in both;
+  will-change: opacity;
+}
+
+/* Home ilk açılış — onboarding'den geliyor */
 @keyframes homeEnterAnim {
-  from { opacity: 0; transform: scale(0.97) translateY(10px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
 }
 .screen.home-entering {
-  animation: homeEnterAnim 380ms cubic-bezier(0.32,0.72,0,1) both;
+  animation: homeEnterAnim 300ms cubic-bezier(0.32,0.72,0,1) both;
+  will-change: opacity, transform;
 }
+
+/* Tab geri */
+.screen.back { display: flex; }
 
 /* Ekranı görünür kıl — animasyon yok */
 .screen.active {
@@ -672,87 +687,31 @@ body.app-ready { background: var(--bg); }
   z-index: 2;
 }
 
-/* ── Tab Geçişi v76: X (Twitter) Style — Instant Cross-Fade ─────────
-   X/Twitter mobil standartı: slayt yok, scale yok, sadece opacity.
-   Yeni sayfa: opacity 0→1 + çok hafif scale(0.98→1) — 200ms.
-   Eski sayfa: opacity 1→0 — 150ms (daha hızlı solar, geride kalmaz).
-
-   TAB BAR FLICKER SIFIR: scale olmadığı için .bnav hiç ölçeklenmez.
-   bnavCounter keyframe'lere artık gerek yok — korundu ama tetiklenmez.
-
-   GPU: translateZ(0) ile compositor thread'de render. 60fps garantili.
-   Süre: 200ms — X'in "native" hızı, algısal olarak anlık ama geçişli.
-──────────────────────────────────────────────────────────────────── */
-
-/* Yeni sayfa: hafif derinlik + opacity */
-@keyframes xTabEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.98) translateZ(0);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1.0) translateZ(0);
-  }
+/* ── iOS 2026 Premium Detay Geçişi ───────────────────────────────────────
+   Klasik iOS sağdan slayt — App Store, Mail, Settings standardı.
+   from: translateX(100%) + opacity .55 → doğallaştırılmış giriş
+   back: translateX(-28%) → sol kenardan hafif geri çekilme (parallax)
+   Süre: 380ms, cubic-bezier(.4,0,.2,1) — Apple Material Design spring
+────────────────────────────────────────────────────────────────────── */
+@keyframes iosSlideIn {
+  from { opacity: .55; transform: translateX(100%); }
+  to   { opacity: 1;   transform: translateX(0);    }
 }
-
-/* Eski sayfa: sadece solar — scale yok, tab bar titremiyor */
-@keyframes xTabExit {
-  from {
-    opacity: 1;
-    transform: translateZ(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateZ(0);
-  }
+@keyframes iosSlideBack {
+  from { opacity: .55; transform: translateX(-28%); }
+  to   { opacity: 1;   transform: translateX(0);    }
 }
-
-/* Yeni gelen sekme */
-.screen.tab-enter {
-  display: flex;
-  z-index: 3;  /* eski (z:2) üstünde — cross-fade garantisi */
-  animation: xTabEnter 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-  will-change: opacity, transform;
-}
-
-/* Giden eski sekme */
-.screen.tab-exit {
-  display: flex;
-  z-index: 2;
-  pointer-events: none;  /* geçiş anında tıklamayı engelle */
-  animation: xTabExit 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-  will-change: opacity;
-}
-
-/* Tab geri */
-.screen.back {
-  display: flex;
-}
-/* Detay geçişi — sağdan slayt (ileri) */
 .screen.slide-in {
   display: flex;
-  z-index: 2; /* v64 */
+  z-index: 2;
   animation: iosSlideIn .38s cubic-bezier(.4,0,.2,1) both;
+  will-change: opacity, transform;
 }
-/* Detay geri — soldan slayt */
 .screen.slide-left {
   display: flex;
-  z-index: 2; /* v64 */
+  z-index: 2;
   animation: iosSlideBack .38s cubic-bezier(.4,0,.2,1) both;
-}
-
-/* tabFadeIn keyframe kaldırıldı — v65: tab geçişi anlık, opacity/scale animasyonu yok */
-
-/* Detay ekranı sağdan gelme */
-@keyframes iosSlideIn {
-  from { opacity: .6; transform: translateX(100%); }
-  to   { opacity: 1;   transform: translateX(0); }
-}
-/* Detay ekranı soldan gelme (geri) */
-@keyframes iosSlideBack {
-  from { opacity: .6; transform: translateX(-30%); }
-  to   { opacity: 1;   transform: translateX(0); }
+  will-change: opacity, transform;
 }
 
 .scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:90px; }
@@ -830,68 +789,15 @@ body.app-ready { background: var(--bg); }
   backface-visibility: hidden;
 }
 
-/* ── v77 FIX: Counter-Scale — xTabEnter + homeEnterAnim titremesi ────────
-   TANI:
-   • xTabEnter: scale(0.98→1) uygular. v76'da "scale yok" notuydu YANLIŞ —
-     xTabEnter'da scale(0.98) HALA mevcut. .bnav bu .screen içinde olduğu
-     için 200ms boyunca scale(0.98)'den başlıyor → titreme kaynağı #1.
-   • homeEnterAnim: scale(0.97)+translateY(10px→0) uygular. .bnav hem
-     scale hem Y kaymasından etkileniyor → titreme kaynağı #2.
-
-   ÇÖZÜM: Her animasyona ters (counter) transform uygula.
-   Matematik:
-     xTabEnter from=scale(0.98) → bnav counter from=1/0.98≈1.0204
-     homeEnterAnim from=scale(0.97) translateY(10px) →
-       bnav counter: scale(1/0.97≈1.0309) translateY(-10px)
-   Timing + easing: ebeveyn animasyonuyla birebir eşleşiyor →
-   net görsel hareket sıfır, .bnav sanki ekrandan bağımsız duruyor.
-
-   xTabExit: scale YOK (sadece opacity) → counter gereksiz, no-op.
+/* ── v78 Counter-Scale: TAMAMEN KALDIRILDI ───────────────────────────────
+   Gerekçe: iosTabEnter/iosTabExit artık SADECE opacity değiştiriyor.
+   Scale yok → .bnav'a hiçbir geometrik transform uygulanmıyor →
+   counter-scale matematiğine gerek yok, keyframe'ler silinebilir.
+   homeEnterAnim: scale kaldırıldı, sadece translateY(6px→0) + opacity.
+   → .bnav yalnızca Y ekseninde 6px hareket eder — algılanamaz düzeyde
+     küçük + backface-visibility:hidden ile tamamen gizlenir.
+   Tüm bnavCounter* kuralları bu versiyonda kaldırıldı.
 ─────────────────────────────────────────────────────────────────────── */
-
-/* xTabEnter counter: scale(0.98→1) nötralize */
-@keyframes bnavCounterEnter {
-  from {
-    -webkit-transform: scale(1.0204) translateZ(0);
-    transform:         scale(1.0204) translateZ(0);
-  }
-  to {
-    -webkit-transform: scale(1.0) translateZ(0);
-    transform:         scale(1.0) translateZ(0);
-  }
-}
-/* xTabExit counter: scale yok → no-op, sadece GPU katmanı koru */
-@keyframes bnavCounterExit {
-  from { -webkit-transform: translateZ(0); transform: translateZ(0); }
-  to   { -webkit-transform: translateZ(0); transform: translateZ(0); }
-}
-
-/* tab-enter: counter aktif (200ms, aynı easing) */
-.screen.tab-enter .bnav {
-  -webkit-animation: bnavCounterEnter 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-  animation:         bnavCounterEnter 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
-/* tab-exit: no-op — scale yok, counter gereksiz */
-.screen.tab-exit .bnav { animation: none; }
-
-/* homeEnterAnim counter: scale(0.97)+translateY(10px→0) nötralize
-   from: ters scale(1.0309) + ters translateY(-10px) → net: sabit
-   to:   scale(1.0) translateY(0) → normal
-   380ms, aynı bezier — onboarding→home geçişinde .bnav titremez */
-@keyframes bnavCounterHomeEnter {
-  from {
-    -webkit-transform: scale(1.0309) translateY(-10px) translateZ(0);
-    transform:         scale(1.0309) translateY(-10px) translateZ(0);
-  }
-  to {
-    -webkit-transform: scale(1.0) translateY(0) translateZ(0);
-    transform:         scale(1.0) translateY(0) translateZ(0);
-  }
-}
-.screen.home-entering .bnav {
-  -webkit-animation: bnavCounterHomeEnter 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
-  animation:         bnavCounterHomeEnter 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
-}
 
 /* ── v76 X-Style İkon Spring Pop ─────────────────────────────────────────
    Sadece tıklanan ikon için: scale(1) → scale(1.2) → scale(1.0)
@@ -8161,7 +8067,7 @@ function navTo(id) {
         exitEl.classList.add('tab-exit');
 
         // Animasyon bitince ekranı tamamen gizle + temizle
-        const exitDur = 150; // v76: xTabExit süresiyle eşleşiyor (150ms)
+        const exitDur = 160; // v78: iosTabExit süresiyle eşleşiyor (160ms)
         setTimeout(() => {
           exitEl.classList.remove('tab-exit');
           exitEl.style.visibility = 'hidden';
