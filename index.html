@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v74                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v75                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v74                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v75                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -809,9 +809,24 @@ body.app-ready { background: var(--bg); }
   /* Katman: tüm ekran içeriğinin üzerinde, sheet'lerin altında */
   z-index: 10;
 
-  /* GPU kompozisyon katmanı — reflow tetiklenmez */
+  /* ── v75 GPU İzolasyon Katmanı ─────────────────────────────────────────
+     .screen üzerinde tab-enter/tab-exit scale() animasyonu oynarken
+     .bnav aynı compositor thread'inde yeniden rasterize ediliyor = titreme.
+
+     translateZ(0) → .bnav'ı bağımsız bir GPU katmanına (compositing layer)
+     taşır. Böylece .screen scale animasyonundan izole edilir; compositor
+     .bnav'ı ayrı texture olarak saklar ve yalnızca combine eder — repaint
+     sıfır, titreme sıfır.
+
+     backface-visibility:hidden → GPU katmanının arka yüzünü gizler;
+     webkit'in bazı versiyonlarında sub-pixel rendering artifacts'i önler.
+     isolation:isolate → yeni stacking context — z-index çakışması engeli.
+  ──────────────────────────────────────────────────────────────────────── */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
 }
 
 /* ── Sekme butonu ── */
@@ -825,8 +840,16 @@ body.app-ready { background: var(--bg); }
   -webkit-tap-highlight-color: transparent;
   user-select: none; -webkit-user-select: none;
   position: relative;
+  /* ── v75: transition:none — hiçbir özellik animasyonlu değil ──────
+     "transition: all" kalıntısı yoktu ama explicit none ile garanti
+     altına alıyoruz. Pasif ikonlar taş gibi sabit durmalı.        */
   transition: none;
   will-change: auto;
+  /* GPU katmanına al — scale animasyonu layout'u itmez            */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .bnav-item.active { color: var(--green-mid); }
 
@@ -862,15 +885,29 @@ body.app-ready { background: var(--bg); }
   background: transparent;
   flex-shrink: 0;
   z-index: 1;
+  /* ── v75: Bağımsız GPU katmanı ──────────────────────────────────
+     .bnav-item üzerinde herhangi bir scale/transform olsa bile
+     ikon wrapper ayrı compositor layer — sub-pixel jitter sıfır. */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* ── SVG: tamamen hareketsiz ── */
 .bnav-item svg {
   flex-shrink: 0;
   width: 22px; height: 22px;
+  /* ── v75: transition:none kesin — "transition:all" kalıntısına izin yok ── */
   transition: none;
   will-change: auto;
-  transform: none;
+  /* translateZ(0): SVG'yi GPU'ya taşı — scale veya opacity değişimi
+     yanındaki ikonlara layout baskısı yaratmaz (transform tabanlı).
+     width/padding ASLA değiştirilmez — layout flow bozulmaz.      */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .bnav-item svg .ic-outline { opacity: 1; }
 .bnav-item svg .ic-filled  { opacity: 0; }
@@ -882,9 +919,15 @@ body.app-ready { background: var(--bg); }
   font-size: 10px; font-weight: 500;
   letter-spacing: .1px; line-height: 1; white-space: nowrap;
   opacity: 0.55;
+  /* ── v75: transition:none kesin — pasif etiketler sabit ── */
   transition: none;
   will-change: auto;
   position: relative; z-index: 1;
+  /* GPU katmanı — font-weight değişimi yanındaki öğeleri itmez   */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .bnav-item.active .bnav-lbl {
   font-weight: 700;
