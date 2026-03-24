@@ -4,7 +4,7 @@
 ║  Bu bloğu yeni konuşma başında dosyayla birlikte upload et.     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  UYGULAMA ADI   : Zeraai (Hasat)                                ║
-║  VERSİYON       : v64                                           ║
+║  VERSİYON       : v65                                           ║
 ║  PLATFORM       : iOS-benzeri mobil prototype (393×852px)       ║
 ║  YAPI           : Tek HTML dosyası — CSS + JS içinde            ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -61,7 +61,14 @@
 ║     • GPS reddedilirse otomatik il/ilçe'ye yönlendirir          ║
 ║     • Konum alındıktan sonra hava bandı güncellenir             ║
 ║     • Konum picker'dan kayıt sonrası da hava bandı güncellenir  ║
-║  ✅ v64: Tarlalarım yarım ekran hatası düzeltildi               ║
+║  ✅ v65: Premium Bottom Tab Bar (Apple 2026 standartları)       ║
+║     • Frosted glass arka plan (backdrop-filter: blur+saturate)  ║
+║     • Pill highlight — aktif ikonda teal arka plan              ║
+║     • Filled/Outline SVG çifti — aktife geçince filled açılır  ║
+║     • Spring bounce animasyonu (bnavPress keyframe)             ║
+║     • Label fade+scale — pasif %55 opak, aktif tam belirgin    ║
+║     • Haptic: vibrate(6) light tap — sekme geçişinde           ║
+║     • FAB butonu dokunulmadı, tam orijinal haliyle korundu     ║
 ║     • .screen.active / .slide-in / .slide-left → z-index:2     ║
 ║     • Standby ekran (home, z-index:1) artık aktif ekranın       ║
 ║       üstüne taşmıyor                                           ║
@@ -805,67 +812,116 @@ body.app-ready { background: var(--bg); }
 .scroll-outer { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 .scroll::-webkit-scrollbar { display:none; }
 
-/* BOTTOM NAV */
+/* ══════════════════════════════════════════════════
+   BOTTOM NAV — v65 Premium (Apple 2026 standartları)
+   Frosted glass bar, pill highlight, spring bounce,
+   filled/outline icon swap, label fade-scale
+══════════════════════════════════════════════════ */
 .bnav {
-  position:absolute; bottom:0; left:0; right:0;
-  background:var(--bg-header); border-top:1px solid var(--border);
-  padding:0 0 28px;
-  display:flex; align-items:flex-end;
-  z-index:10;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(249,246,238,0.82);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+  border-top: 1px solid rgba(0,0,0,0.07);
+  padding: 0 4px 28px;
+  display: flex; align-items: flex-end;
+  z-index: 10;
 }
-/* Her item eşit genişlik — 5 eleman, ortadaki FAB dahil */
 .bnav-item {
-  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
-  gap:4px; padding:10px 0 0; cursor:pointer;
-  color:var(--text3);
-  transition:color .25s cubic-bezier(.16,1,.3,1), transform .2s cubic-bezier(.34,1.56,.64,1);
-  min-width:0;
-  /* iOS HIG: min 44x44pt touch target */
-  min-height:44px;
-  touch-action: manipulation;   /* tap gecikmesini kaldır */
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 8px 0 0;
+  cursor: pointer; color: var(--text3);
+  min-width: 0; min-height: 44px;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-  /* Pseudo-element ile görünmez touch alanı genişlet */
+  user-select: none; -webkit-user-select: none;
   position: relative;
+  transition: color .3s cubic-bezier(.16,1,.3,1);
 }
-/* Görünmez dokunma alanı — her yönde +8px */
 .bnav-item::before {
-  content: '';
-  position: absolute;
-  inset: -8px -4px;
+  content: ''; position: absolute; inset: -6px -2px;
 }
-.bnav-item:active { transform:scale(.84); }
-.bnav-item.active { color:var(--green-mid); } /* v51: green→green-mid 5.7:1 */
-.bnav-item svg { flex-shrink:0; }
-.bnav-lbl { font-size:10px; font-weight:700; letter-spacing:.15px; line-height:1; white-space:nowrap; }
-
-/* FAB alanı — flex:1 + negatif margin yukarı */
+/* İkon pill wrapper */
+.bnav-icon-wrap {
+  position: relative;
+  width: 48px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 15px;
+  background: transparent;
+  transition: background .28s cubic-bezier(.16,1,.3,1);
+  flex-shrink: 0;
+}
+.bnav-item.active .bnav-icon-wrap {
+  background: rgba(34,127,131,0.12);
+}
+/* SVG — 22×22 optik eşit boyut, spring geçiş */
+.bnav-item svg {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  transition:
+    transform .4s cubic-bezier(.34,1.4,.64,1),
+    opacity   .25s cubic-bezier(.16,1,.3,1);
+  will-change: transform;
+}
+.bnav-item svg .ic-outline { opacity: 1; transition: opacity .2s; }
+.bnav-item svg .ic-filled  { opacity: 0; transition: opacity .2s; }
+.bnav-item.active svg .ic-outline { opacity: 0; }
+.bnav-item.active svg .ic-filled  { opacity: 1; }
+.bnav-item.active svg {
+  transform: scale(1.08) translateY(-1px);
+}
+/* Etiket — aktifken belirginleşir */
+.bnav-lbl {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: .1px; line-height: 1; white-space: nowrap;
+  opacity: 0.55;
+  transform: scale(.93) translateY(1px);
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+  transition:
+    color     .3s  cubic-bezier(.16,1,.3,1),
+    transform .35s cubic-bezier(.34,1.3,.64,1),
+    opacity   .25s cubic-bezier(.16,1,.3,1);
+}
+.bnav-item.active .bnav-lbl {
+  font-weight: 700; opacity: 1;
+  transform: scale(1) translateY(0);
+}
+.bnav-item.active { color: var(--green-mid); }
+/* Press spring animasyonu */
+@keyframes bnavPress {
+  0%   { transform: scale(1)    translateY(0); }
+  35%  { transform: scale(.80)  translateY(2px); }
+  65%  { transform: scale(1.06) translateY(-2px); }
+  100% { transform: scale(1)    translateY(0); }
+}
+.bnav-item.bnav-pressing svg {
+  animation: bnavPress .38s cubic-bezier(.34,1.56,.64,1) both;
+}
+/* FAB — dokunulmadı */
 .fab-wrap {
-  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
-  gap:4px; cursor:pointer; padding-bottom:0;
-  margin-bottom:-2px;          /* label hizası */
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  gap: 4px; cursor: pointer; padding-bottom: 0; margin-bottom: -2px;
 }
-.fab-slot {
-  margin-top:-26px;            /* FAB yukarı çıkıyor */
-}
+.fab-slot { margin-top: -26px; }
 .fab {
-  width:54px; height:54px;
-  background:var(--green); border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 4px 18px rgba(34,127,131,.40), 0 2px 6px rgba(34,127,131,.18);
-  border:3px solid var(--bg);
-  transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
-  position:relative; overflow:hidden;
+  width: 54px; height: 54px;
+  background: var(--green); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(34,127,131,.40), 0 2px 6px rgba(34,127,131,.18);
+  border: 3px solid var(--bg);
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  position: relative; overflow: hidden;
 }
-.fab:active { transform:scale(.89); box-shadow:0 2px 8px rgba(34,127,131,.28); }
+.fab:active { transform: scale(.89); box-shadow: 0 2px 8px rgba(34,127,131,.28); }
 .fab::after {
-  content:''; position:absolute; inset:0; border-radius:50%;
-  background:white; opacity:0; transform:scale(0);
-  transition:transform .4s ease-out, opacity .4s ease-out;
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: white; opacity: 0; transform: scale(0);
+  transition: transform .4s ease-out, opacity .4s ease-out;
 }
-.fab:active::after { transform:scale(2.4); opacity:.16; transition:none; }
-.fab-lbl { font-size:10px; font-weight:700; color:var(--text3); letter-spacing:.15px; line-height:1; }
+.fab:active::after { transform: scale(2.4); opacity: .16; transition: none; }
+.fab-lbl { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: .15px; line-height: 1; }
 
 /* SHARED */
 .page-hdr { display:none; } /* v54: sb-bar tüm sekmelerde header görevi gördüğü için kaldırıldı */
@@ -3774,11 +3830,11 @@ body.app-ready { background: var(--bg); }
     </div>
 
     <div class="bnav">
-      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><div class="bnav-lbl">Ana Sayfa</div></div>
-      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></svg><div class="bnav-lbl">Tarlalarım</div></div>
+      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
+      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
       <div class="fab-wrap" onclick="openKayit()"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
-      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg><div class="bnav-lbl">Kayıtlarım</div></div>
-      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
+      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
+      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- KAYIT DETAY SHEET (ana sayfa) -->
     <div id="home-kayit-sheet" onclick="closeKayitSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
@@ -3964,11 +4020,11 @@ body.app-ready { background: var(--bg); }
       </div>
     </div>
     <div class="bnav">
-      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><div class="bnav-lbl">Ana Sayfa</div></div>
-      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></svg><div class="bnav-lbl">Tarlalarım</div></div>
+      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
+      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
       <div class="fab-wrap" onclick="openKayit()"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
-      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg><div class="bnav-lbl">Kayıtlarım</div></div>
-      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
+      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
+      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
   </div>
 
@@ -4034,11 +4090,11 @@ body.app-ready { background: var(--bg); }
     </div>
 
     <div class="bnav">
-      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><div class="bnav-lbl">Ana Sayfa</div></div>
-      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></svg><div class="bnav-lbl">Tarlalarım</div></div>
+      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
+      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
       <div class="fab-wrap" onclick="openKayit()"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
-      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg><div class="bnav-lbl">Kayıtlarım</div></div>
-      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
+      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
+      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- İŞLEM DETAY SHEET -->
     <div id="op-sheet" onclick="opSheetOverlay(event)">
@@ -4527,11 +4583,11 @@ body.app-ready { background: var(--bg); }
     </div>
 
     <div class="bnav">
-      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><div class="bnav-lbl">Ana Sayfa</div></div>
-      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></svg><div class="bnav-lbl">Tarlalarım</div></div>
+      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
+      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
       <div class="fab-wrap" onclick="openKayit()"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
-      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg><div class="bnav-lbl">Kayıtlarım</div></div>
-      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
+      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
+      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- SEZON ÖZET SHEET -->
     <div id="sezon-sheet" onclick="closeSezonSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
@@ -4837,11 +4893,11 @@ body.app-ready { background: var(--bg); }
     </div>
 
     <div class="bnav">
-      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><div class="bnav-lbl">Ana Sayfa</div></div>
-      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></svg><div class="bnav-lbl">Tarlalarım</div></div>
+      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
+      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
       <div class="fab-wrap" onclick="openKayit()"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
-      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg><div class="bnav-lbl">Kayıtlarım</div></div>
-      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
+      <div class="bnav-item" data-nav="kayitlarim" onclick="navTo('kayitlarim')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
+      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- SEZON SEÇİCİ SHEET (Kasa) -->
     <div id="kasa-sezon-sheet" onclick="closeKasaSezonSec(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
@@ -4926,11 +4982,11 @@ body.app-ready { background: var(--bg); }
     </div>
 
     <div class="bnav">
-      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><div class="bnav-lbl">Ana Sayfa</div></div>
-      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></svg><div class="bnav-lbl">Tarlalarım</div></div>
+      <div class="bnav-item" data-nav="home" onclick="navTo('home')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g><g class="ic-filled"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 20v-6h6v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg></div><div class="bnav-lbl">Ana Sayfa</div></div>
+      <div class="bnav-item" data-nav="fields" onclick="navTo('fields')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".4"/></g><g class="ic-filled"><path d="M3 17Q7 10 11 14Q15 7 19 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M3 12Q6.5 7 10 10Q14 4 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g></svg></div><div class="bnav-lbl">Tarlalarım</div></div>
       <div class="fab-wrap" onclick="openKayit()"><div class="fab-slot"><div class="fab"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/></svg></div></div><div class="fab-lbl">Kayıt Gir</div></div>
-      <div class="bnav-item" data-nav="kayitlarim"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg><div class="bnav-lbl">Kayıtlarım</div></div>
-      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></svg><div class="bnav-lbl">Kasa</div></div>
+      <div class="bnav-item" data-nav="kayitlarim"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></g><g class="ic-filled"><rect x="3" y="3" width="16" height="16" rx="3" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 1v4M14 1v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 14h3M7 17h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g></svg></div><div class="bnav-lbl">Kayıtlarım</div></div>
+      <div class="bnav-item" data-nav="kasa" onclick="navTo('kasa')"><div class="bnav-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><g class="ic-outline"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="15" r="1.5" fill="currentColor" opacity=".7"/></g><g class="ic-filled"><rect x="2" y="6" width="18" height="13" rx="2.5" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 6V5a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="15" r="2" fill="currentColor"/></g></svg></div><div class="bnav-lbl">Kasa</div></div>
     </div>
     <!-- KAYIT DETAY SHEET -->
     <div id="kayit-sheet-overlay" onclick="closeKayitSheet(event)" style="position:absolute;inset:0;background:rgba(0,0,0,0.36);z-index:80;display:none;align-items:flex-end;backdrop-filter:blur(4px);">
@@ -7463,49 +7519,61 @@ function syncBnav(screenId) {
 // onclick ~300ms gecikmeli — touchstart ile sıfır gecikme
 function setupBnav() {
   document.querySelectorAll('.bnav-item[data-nav]').forEach(function(btn) {
-    // onclick'i kaldır — touchstart ile değiştireceğiz (daha hızlı)
     var targetId = btn.dataset.nav;
-    var originalOnclick = btn.getAttribute('onclick');
     btn.removeAttribute('onclick');
 
     var touchMoved = false;
+    var pressTimer = null;
 
+    // ── Haptic feedback — iOS Taptic Engine ──────────────────────────
+    function haptic(type) {
+      // Web Vibration API (Android + bazı tarayıcılar)
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(type === 'light' ? 6 : 10);
+      }
+      // iOS: AudioContext ile sessiz titreşim simülasyonu (PWA modunda çalışır)
+      // Gerçek Taptic Engine: WKWebView içinde UIImpactFeedbackGenerator
+      // kullanılır — native wrapper gerektirir.
+      // Web standartlarında önerilen: navigator.vibrate([6]) = "light"
+      // Impact feedback API henüz tarayıcılarda desteklenmiyor (2026 Q1)
+    }
+
+    // ── touchstart: anında spring press başlat ────────────────────────
     btn.addEventListener('touchstart', function(e) {
       touchMoved = false;
-      // Anında görsel geri bildirim
-      btn.style.transform = 'scale(0.84)';
+      // Spring press animasyonu — .bnav-pressing sınıfı ile
+      btn.classList.add('bnav-pressing');
+      pressTimer = setTimeout(function() {
+        btn.classList.remove('bnav-pressing');
+      }, 400);
     }, { passive: true });
 
     btn.addEventListener('touchmove', function() {
       touchMoved = true;
-      btn.style.transform = '';
+      btn.classList.remove('bnav-pressing');
+      if (pressTimer) clearTimeout(pressTimer);
     }, { passive: true });
 
     btn.addEventListener('touchend', function(e) {
-      btn.style.transform = '';
-      if (touchMoved) return; // kaydırma — iptal
+      if (pressTimer) clearTimeout(pressTimer);
+      if (touchMoved) { btn.classList.remove('bnav-pressing'); return; }
 
-      // Haptic feedback (iOS Taptic Engine)
-      if (window.navigator && window.navigator.vibrate) {
-        window.navigator.vibrate(8);
-      }
+      // Light haptic — sekme değişimi
+      haptic('light');
 
       // Zaten bu tab'taysa → scroll to top
       if (currentScreen === targetId || (SCREEN_NAV[currentScreen] === targetId)) {
         var scrollEl = document.querySelector('#' + currentScreen + ' .scroll, #' + currentScreen + ' .kasa-inner-scroll');
-        if (scrollEl) {
-          scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        if (scrollEl) scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+        btn.classList.remove('bnav-pressing');
         return;
       }
 
-      // navTo çağır
       navTo(targetId);
     }, { passive: true });
 
     // Fallback: mouse click (desktop/preview)
     btn.addEventListener('click', function(e) {
-      // touchend zaten işlediyse çift tetikleme olmasın
       if ('ontouchstart' in window) return;
       if (currentScreen === targetId) return;
       navTo(targetId);
