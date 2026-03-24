@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v67                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v68                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v67                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v68                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -721,19 +721,45 @@ body.app-ready { background: var(--bg); }
 /* ── Zemin: Glassmorphism ── */
 .bnav {
   position: absolute; bottom: 0; left: 0; right: 0;
-  /* Glassmorphism: bulanık yarı saydam katman */
-  background: rgba(226, 220, 208, 0.82);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  backdrop-filter: blur(20px) saturate(1.6);
-  border-top: 1px solid rgba(255,255,255,0.55);
-  box-shadow: 0 -1px 0 rgba(180,170,155,0.18);
+
+  /* ── Glassmorphism v68 — Mühendislik Notu ─────────────────────────────────
+     SORUN: .bnav her .screen'in içinde bulunuyor. .screen'in transform/
+     will-change özellikleri yeni bir stacking context yaratır. Bu yüzden
+     backdrop-filter, telefonun arka planını değil, O EKRANIN İÇERİĞİNİ
+     blurlar. Tarlalarım'daki renkli kartlar farklı görünüyordu.
+
+     ÇÖZÜM (iOS UITabBar mantığıyla aynı):
+     1. KALИН OPAK TABAN: %96 opaklık → içerikteki hiçbir renk transparan
+        tabandan geçemez. Tüm sekmelerde görsel = sabit.
+     2. HAFIF BLUR: Blur yalnızca .phone zeminine (koyu) uygulanır,
+        artık ekran içeriğini göremez. Sadece depth hissi verir.
+     3. SATURATE DÜŞÜK: İçerik kanamaması olmadığı için saturate gereksiz.
+     4. !important YOK: Doğru mimari → override ihtiyacı yok.
+  ──────────────────────────────────────────────────────────────────────── */
+
+  /* Taban: --bg-header rengi, %96 opak → içerik kanamaması sıfır */
+  background: rgba(226, 220, 208, 0.96);
+  /* Hafif blur: phone duvarına karşı depth hissi */
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+
+  /* Separatör: 0.5px, çok hafif — iOS Home Indicator hizasında */
+  border-top: 0.5px solid rgba(255, 255, 255, 0.72);
+  /* İkinci gölge katmanı: separatörün altına ince bir tonlama */
+  box-shadow:
+    0 -0.5px 0 rgba(180, 170, 155, 0.30),
+    0 -1px  8px rgba(140, 130, 115, 0.06);
+
+  /* iOS Home Indicator alanı: 28px sabit padding-bottom (prototip) */
   padding: 0 4px 28px;
   display: flex; align-items: flex-end;
+
+  /* Katman: tüm ekran içeriğinin üzerinde, sheet'lerin altında */
   z-index: 10;
-  /* GPU katmanı: compositing sınırı */
+
+  /* GPU kompozisyon katmanı — reflow tetiklenmez */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
-  will-change: transform;
 }
 
 /* ── Sekme butonu — tüm sekme alanı 44pt hit target ── */
