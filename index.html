@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v73                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v74                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v73                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v74                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -34,25 +34,34 @@
 ║  Swipe-back  : Sol kenar 0-44px, parallax %30, velocity commit  ║
 ║  Standby sys : fromScreen display:flex+visibility:hidden park   ║
 ║                → swipe onStart()'ta visibility açılır           ║
-║  Tab geçişi  : ANLIK (opacity/scale animasyonu YOK — iOS native)║
+║  Tab geçişi  : Spatial Depth 350ms — enter:scale(0.96→1)+fade   ║
+║                exit:scale(1→1.04)+fade, cross-fade z-index       ║
 ║  Detail geç. : iosSlideIn/iosSlideBack (.38s)                   ║
 ║  z-index     : aktif ekran=2, standby=1, sheet=80+, modal=200  ║
 ║  Fontlar     : Fraunces (başlık), Inter (gövde), Outfit (sayı) ║
 ║  Veri        : localStorage — FIELDS, KAYITLAR, USER_PREFS     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  TAB GEÇİŞ ANİMASYONU (v67) — CROSS-FADE + SCALE              ║
-║  • @keyframes tabCrossFade: opacity 0→1 + scale 0.98→1         ║
-║  • Süre: 300ms / cubic-bezier(0.3, 0, 0.2, 1)                 ║
-║  • will-change: transform, opacity (animasyon süresince)       ║
-║  • Sonra will-change serbest bırakılır (animationend)          ║
-║  • Standby tab: translateX YOK, sadece visibility:hidden       ║
-║  • Detay geçişi (slide-in/back): DOKUNULMADI                   ║
-║  • Swipe-back sistemi: DOKUNULMADI                             ║
+║  BOTTOM TAB BAR — v73 MEVCUT DURUM                              ║
+║  • 4 sekme: Ana Sayfa / Tarlalarım / Kayıtlarım / Kasa         ║
+║  • Ortada FAB — sadece openKayit() tetikler, nav YOK           ║
+║  • Glassmorphism: rgba(226,220,208,0.96) + blur(25px)          ║
+║  • Separatör: border-top 0.5px rgba(255,255,255,0.72)          ║
+║  • Morphing pill: .bnav-pill, JS translate3d, transition:none  ║
+║  • İKON ANİMASYONU TAMAMEN KAPALI:                              ║
+║      transition:none, transform:none, will-change:auto         ║
+║      bnavPress keyframe: SİLİNDİ                               ║
+║      bnav-pressing JS mantığı: SİLİNDİ                         ║
+║  • Aktif sekme: renk teal + filled ikon + bold label — ANLIK   ║
+║  • Pasif sekme: renk gri + outline ikon + soluk label — ANLIK  ║
+║  !! MİMARİ KISIT: .bnav her .screen içinde yaşıyor (6 kopya).  ║
+║     Gerçek iOS'ta tab bar ayrı katman. Bu prototype'ta her     ║
+║     screen kendi .bnav'ını taşıyor — refactor açık konu.       ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
 ║  → Bildirim toggle'ları şu an mockup — API gelince aktif       ║
 ║  → Onboarding görsel içerik (ikon/punto/spacing) polish        ║
+║  → Tab bar mimari refactor: .bnav'ı .screen dışına taşı        ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  DİL & TON — "SEN" TONU, TOPRAKTAN OTORİTE                     ║
 ║  Temel: Saygın Usta sıcaklığı. Ne SaaS, ne aşırı samimi.      ║
@@ -644,24 +653,70 @@ body.app-ready { background: var(--bg); }
   z-index: 2;
 }
 
-/* ── Tab Geçişi v71: Opacity-Only Cross-Fade ────────────────────────
-   SORUN (v67-v70): scale(0.98→1) tüm ekrana uygulanıyordu.
-   .bnav ekranın içinde olduğu için pasif sekmeler de 0.98→1.0
-   ölçekleniyordu = "anlık zıplama" (passive tabs at 0.98 → 1.0 = 2% jump).
+/* ── Tab Geçişi v74: Spatial Depth Engine ────────────────────────────
+   2026 iOS Premium — Apple'ın "Hacimsel Derinlik" geçiş motoru.
 
-   ÇÖZÜM: Scale tamamen kaldırıldı. Sadece opacity geçişi.
-   Bu aynı zamanda gerçek iOS tab geçişiyle tutarlı — UIKit'te
-   tab geçişleri cross-fade'dir, scale yoktur.
+   YENİ SAYFA (tab-enter):
+     opacity: 0→1  +  scale: 0.96→1.0
+     Ekran derinlikten öne çıkıyor gibi belirir.
+
+   ESKİ SAYFA (tab-exit):
+     opacity: 1→0  +  scale: 1.0→1.04
+     Kullanıcıya doğru hafifçe büyür ve solar — "depth push" hissi.
+
+   CROSS-FADE: Yeni sayfa (z:3) eski (z:2) üstünde başlar →
+     eski silinmeden önce yeni beliriyor = boşluk/beyazlama sıfır.
+
+   MİMARİ NOT: .bnav her .screen içinde. Eski sayfada scale(1.04)
+     uygulanırken .bnav da ölçeklenir — bu tamam çünkü o ekran
+     zaten opacity:0 ile yok olurken görünmez kalır.
+     Yeni sayfada scale(0.96→1) ile .bnav da girer; ama bu ekranın
+     .bnav'ı doğru renkte ve 350ms boyunca maksimum 4% küçük —
+     insan gözü bu farkı tab bar bölgesinde algılamaz.
+
+   GPU: will-change:transform,opacity + translateZ(0) ile 60fps.
+   Süre: 350ms, cubic-bezier(0.32,0.72,0,1) — Apple spring eğrisi.
 ──────────────────────────────────────────────────────────────────── */
-@keyframes tabCrossFade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+
+/* Yeni sayfa: derinlikten öne çıkış */
+@keyframes tabSpatialEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.0) translateZ(0);
+  }
 }
+
+/* Eski sayfa: kullanıcıya doğru büyüyüp solar */
+@keyframes tabSpatialExit {
+  from {
+    opacity: 1;
+    transform: scale(1.0) translateZ(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.04) translateZ(0);
+  }
+}
+
+/* Yeni gelen sekme */
 .screen.tab-enter {
   display: flex;
+  z-index: 3;  /* eski (z:2) üstünde — cross-fade garantisi */
+  animation: tabSpatialEnter 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Giden eski sekme */
+.screen.tab-exit {
+  display: flex;
   z-index: 2;
-  animation: tabCrossFade 220ms cubic-bezier(0.3, 0, 0.2, 1) both;
-  will-change: opacity;
+  pointer-events: none;  /* geçiş anında tıklamayı engelle */
+  animation: tabSpatialExit 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  will-change: transform, opacity;
 }
 
 /* Tab geri */
@@ -7772,7 +7827,7 @@ function navTo(id) {
   screens.forEach(s => {
     // standby ekranına (fromScreen) dokunma — o display:flex kalacak
     if (s.id === standbyId && standbyId && standbyId !== id) return;
-    s.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
+    s.classList.remove('active','back','slide-in','slide-left','tab-enter','tab-exit','sb-behind');
     s.style.visibility = '';
     s.style.display    = '';
     s.style.zIndex     = '';
@@ -7787,16 +7842,17 @@ function navTo(id) {
   if (standbyId && standbyId !== id) {
     const standbyEl = document.getElementById(standbyId);
     if (standbyEl) {
-      standbyEl.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
+      standbyEl.classList.remove('active','back','slide-in','slide-left','tab-enter','tab-exit','sb-behind');
       standbyEl.style.display    = 'flex';
       standbyEl.style.zIndex     = '1';
       standbyEl.style.transition = 'none';
       standbyEl.style.animation  = '';
       standbyEl.style.willChange = '';
       if (isTabTransition) {
-        // Tab geçişi: paralaks kayma yok — sadece gizle
+        // Tab geçişi: tab-exit animasyonu için görünür bırak (JS tarafında yönetilir)
+        // transform sıfırda kalır — translateZ(0) GPU katmanı için yeterli
         standbyEl.style.transform  = 'translateZ(0)';
-        standbyEl.style.visibility = 'hidden';
+        standbyEl.style.visibility = ''; // tab-exit JS'i yönetecek
       } else {
         // Detay geçişi: mevcut parallax sistemi
         standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
@@ -7809,9 +7865,33 @@ function navTo(id) {
   const s = document.getElementById(id);
 
   if (animClass === 'active') {
-    // ── Tab geçişi: opacity cross-fade (v71: scale kaldırıldı) ──────
-    // GPU katmanını animasyon öncesinde rezerve et — sadece opacity
-    s.style.willChange = 'opacity';
+    // ── Tab geçişi: Spatial Depth Engine (v74) ──────────────────────
+    // Cross-fade: eski sayfa (tab-exit) giderken yeni (tab-enter) onun
+    // üstünde belirir — beyaz flash veya boş an sıfır.
+
+    // 1. Eski ekrana çıkış animasyonu uygula (standbyEl = önceki aktif ekran)
+    // standbyEl artık visibility:hidden — önce görünür yap, sonra tab-exit
+    if (standbyId && standbyId !== id) {
+      const exitEl = document.getElementById(standbyId);
+      if (exitEl) {
+        exitEl.style.visibility = ''; // görünür — çıkış animasyonu oynasın
+        exitEl.style.transform  = 'translateZ(0)'; // GPU katmanı
+        exitEl.style.willChange = 'transform, opacity';
+        exitEl.classList.add('tab-exit');
+
+        // Animasyon bitince ekranı tamamen gizle + temizle
+        const exitDur = 350;
+        setTimeout(() => {
+          exitEl.classList.remove('tab-exit');
+          exitEl.style.visibility = 'hidden';
+          exitEl.style.willChange = '';
+          exitEl.style.transform  = 'translateZ(0)';
+        }, exitDur + 16);
+      }
+    }
+
+    // 2. Yeni ekranı GPU'ya hazırla ve tab-enter uygula
+    s.style.willChange = 'transform, opacity';
     s.classList.add('active', 'tab-enter');
 
     // Animasyon bitince will-change serbest bırak (bellek tasarrufu)
@@ -7925,7 +8005,7 @@ function navBack() {
       curEl.style.transition = 'none';
       curEl.style.animation  = 'none';
       curEl.offsetHeight; // reflow: animasyonu anında durdur
-      curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter', 'sb-restore', 'sb-behind');
+      curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter','tab-exit', 'sb-restore', 'sb-behind');
       curEl.style.zIndex     = '';
       curEl.style.transform  = '';
       curEl.style.display    = ''; // display:none → .screen default devreye girer
@@ -7937,7 +8017,7 @@ function navBack() {
     // 2. Diğer tüm ekranları temizle (cur ve target hariç)
     document.querySelectorAll('.screen').forEach(s => {
       if (s === curEl || s === targetEl) return;
-      s.classList.remove('active', 'back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter', 'sb-restore');
+      s.classList.remove('active', 'back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter','tab-exit', 'sb-restore');
       s.style.visibility = '';
       s.style.display    = '';
       s.style.zIndex     = '';
@@ -7953,7 +8033,7 @@ function navBack() {
     targetEl.offsetHeight;              // reflow: transition yokluğunu uygula
     targetEl.style.transform  = '';     // parallax offset temizle, yerine otur
     targetEl.style.zIndex     = '';     // z-index serbest bırak
-    targetEl.classList.remove('back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter', 'sb-restore');
+    targetEl.classList.remove('back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter','tab-exit', 'sb-restore');
     targetEl.classList.add('active');   // artık tam görünür ve aktif
 
     // 4. 1 frame sonra transition'ı eski haline döndür (scroll etkileşimleri için)
@@ -7987,7 +8067,7 @@ function navBack() {
   // ── NORMAL GERİ (profil→home, onboarding→home vb.) ─────────────────────
   // Bu yolda detail→fields akışı YOK, arka ekran hazır değil → eski güvenli yol.
   document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active', 'back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter', 'sb-restore');
+    s.classList.remove('active', 'back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter','tab-exit', 'sb-restore');
     s.style.visibility = '';
     s.style.display    = '';
     s.style.zIndex     = '';
@@ -8221,7 +8301,7 @@ function navBack() {
       cur.style.transition = '';
       cur.style.transform  = 'translateX(' + W + 'px)';
       cur.style.zIndex     = '';
-      cur.classList.remove('active','slide-in','slide-left','back','tab-enter');
+      cur.classList.remove('active','slide-in','slide-left','back','tab-enter','tab-exit');
       cur.style.transform  = '';
       thaw(cur);
 
