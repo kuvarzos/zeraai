@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v66                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v67                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v66                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v67                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -40,19 +40,14 @@
 ║  Fontlar     : Fraunces (başlık), Inter (gövde), Outfit (sayı) ║
 ║  Veri        : localStorage — FIELDS, KAYITLAR, USER_PREFS     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  BOTTOM TAB BAR (v66) — 2026 iOS PREMIUM                        ║
-║  • Glassmorphism zemin: backdrop-filter blur(20px) + saturate   ║
-║  • Morphing Pill: tek DOM, translate3d GPU kayışı, squircle     ║
-║  • syncBnav: rAF içinde pill konumlandırır (input lag = 0)      ║
-║  • FAB: rAF press, scale(0.92) shrink, spring geri (.32s)       ║
-║  • FAB navigasyon TETİKLEMEZ — sadece openKayit() çağırır      ║
-║  • Hit target: 44×44pt (::before pseudo)                        ║
-║  • .fab-pressed sınıfı ile CSS transition devralır              ║
-╠══════════════════════════════════════════════════════════════════╣
-║  ÇÖZÜLEN BUGLAR (v65-v66)                                        ║
-║  ✅ bnav transparan: backdrop-filter glassmorphism ile yenilendi ║
-║  ✅ Pill flash: transition:'none' → ready class sistemi         ║
-║  ✅ FAB onclick: rAF tabanlı press, nav tetiklemiyor            ║
+║  TAB GEÇİŞ ANİMASYONU (v67) — CROSS-FADE + SCALE              ║
+║  • @keyframes tabCrossFade: opacity 0→1 + scale 0.98→1         ║
+║  • Süre: 300ms / cubic-bezier(0.3, 0, 0.2, 1)                 ║
+║  • will-change: transform, opacity (animasyon süresince)       ║
+║  • Sonra will-change serbest bırakılır (animationend)          ║
+║  • Standby tab: translateX YOK, sadece visibility:hidden       ║
+║  • Detay geçişi (slide-in/back): DOKUNULMADI                   ║
+║  • Swipe-back sistemi: DOKUNULMADI                             ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
@@ -648,10 +643,30 @@ body.app-ready { background: var(--bg); }
   display: flex;
   z-index: 2;
 }
-/* Tab geçiş — iOS native davranışı: anlık, opacity/scale animasyonu YOK */
-.screen.tab-enter {
-  /* Kasıtlı boş — gerçek iOS tab geçişi instantaneous */
+
+/* ── Tab Geçişi v67: Cross-Fade + Subtle Scale ──────────────────────
+   2026 iOS Premium: yeni sayfa opacity 0→1 + scale 0.98→1, 300ms.
+   Yatay slide YOK. Eski sayfa anında kaybolur, yeni sayfa üst katmandan
+   belirir → ekran asla boş kalmaz.
+   will-change burada değil — JS navTo() içinde s.style ile yönetilir.
+──────────────────────────────────────────────────────────────────── */
+@keyframes tabCrossFade {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
 }
+.screen.tab-enter {
+  display: flex;
+  z-index: 2;
+  animation: tabCrossFade 300ms cubic-bezier(0.3, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
 /* Tab geri */
 .screen.back {
   display: flex;
@@ -7759,7 +7774,7 @@ function navTo(id) {
   // Tab geçişi mi, detay geçişi mi?
   const isTabTransition = navOrder.includes(id);
 
-  // Tab geçişlerinde yön fark etmez — her zaman cross-fade
+  // Tab geçişlerinde yön fark etmez — cross-fade + scale
   // Detay geçişlerinde yön önemli — ileri sağdan, geri soldan
   let animClass;
   if (isTabTransition) {
@@ -7777,15 +7792,13 @@ function navTo(id) {
     fromScreen = id;                      // home'da swipe yok
   }
 
-  // ── v62: Tab geçişlerinde fromScreen'i "standby" konumda bırak ─────────────
+  // ── v67: Tab geçişlerinde standby ekranı ────────────────────────────────────
   // openDetail() fields'i display:flex + parallax konumunda bırakır → swipe anında görünür.
-  // navTo() tab geçişlerinde de aynı mantık: fromScreen display:flex kalır,
-  // sadece z-index ve transform ayarlanır → swipe başladığında bk hazır, beyaz flash yok.
+  // TAB geçişlerinde: standby ekran display:flex kalır (swipe hazırlığı),
+  // ama translateX KULLANILMAZ — cross-fade geçişte paralaks kayması görünmez olmalı.
+  // Görsel gizleme: visibility:hidden (layout korunur, flash yok).
   //
-  // Hangi ekran "standby" olacak?
-  // Tab geçişi (fields/kayitlarim/kasa → home veya aralarında):
-  //   fromScreen = swipe ile geri dönülecek ekran → o standby kalır
-  // Diğer tüm ekranlar temizlenir.
+  // DETAY geçişlerinde: eskisi gibi parallax translateX kullanılır.
 
   const standbyId = fromScreen; // swipe hedefi — bu ekranı kapatma
 
@@ -7799,29 +7812,48 @@ function navTo(id) {
     s.style.transform  = '';
     s.style.transition = '';
     s.style.animation  = '';
+    s.style.willChange = '';
   });
 
-  // Standby ekranı: display:flex kalır (swipe hazırlığı) ama
-  // visibility:hidden ile görsel olarak gizlenir — flicker sıfır.
-  // Swipe gesture başlayınca onStart() içinde visibility açılır.
+  // Standby ekranı: tab geçişinde translateX olmadan, sadece visibility:hidden
+  // (swipe sistemi onStart()'ta visibility'i açar — bu davranış bozulmaz)
   if (standbyId && standbyId !== id) {
     const standbyEl = document.getElementById(standbyId);
     if (standbyEl) {
       standbyEl.classList.remove('active','back','slide-in','slide-left','tab-enter','sb-behind');
       standbyEl.style.display    = 'flex';
       standbyEl.style.zIndex     = '1';
-      standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
       standbyEl.style.transition = 'none';
-      standbyEl.style.visibility = 'hidden'; // v65: tab geçişinde görünmez — flicker önleme
+      standbyEl.style.animation  = '';
+      standbyEl.style.willChange = '';
+      if (isTabTransition) {
+        // Tab geçişi: paralaks kayma yok — sadece gizle
+        standbyEl.style.transform  = 'translateZ(0)';
+        standbyEl.style.visibility = 'hidden';
+      } else {
+        // Detay geçişi: mevcut parallax sistemi
+        standbyEl.style.transform  = 'translateX(-' + (window.innerWidth * 0.3) + 'px)';
+        standbyEl.style.visibility = 'hidden'; // v65: tab geçişinde görünmez — flicker önleme
+      }
     }
   }
 
   currentScreen = id;
   const s = document.getElementById(id);
-  s.classList.add(animClass);
-  // Tab geçişlerinde ayrıca tab-enter ekle (animasyon active'den ayrıldı)
+
   if (animClass === 'active') {
-    s.classList.add('tab-enter');
+    // ── Tab geçişi: cross-fade + scale ──────────────────────────────
+    // GPU katmanını animasyon öncesinde rezerve et
+    s.style.willChange = 'transform, opacity';
+    s.classList.add('active', 'tab-enter');
+
+    // Animasyon bitince will-change serbest bırak (bellek tasarrufu)
+    s.addEventListener('animationend', function _cleanup() {
+      s.style.willChange = '';
+      s.removeEventListener('animationend', _cleanup);
+    }, { once: true });
+  } else {
+    s.classList.add(animClass);
   }
 
   // ── Ekran render optimizasyonu (v61) ─────────────────────────────────────
