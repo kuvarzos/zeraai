@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v70                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v71                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v70                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v71                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -644,27 +644,24 @@ body.app-ready { background: var(--bg); }
   z-index: 2;
 }
 
-/* ── Tab Geçişi v67: Cross-Fade + Subtle Scale ──────────────────────
-   2026 iOS Premium: yeni sayfa opacity 0→1 + scale 0.98→1, 300ms.
-   Yatay slide YOK. Eski sayfa anında kaybolur, yeni sayfa üst katmandan
-   belirir → ekran asla boş kalmaz.
-   will-change burada değil — JS navTo() içinde s.style ile yönetilir.
+/* ── Tab Geçişi v71: Opacity-Only Cross-Fade ────────────────────────
+   SORUN (v67-v70): scale(0.98→1) tüm ekrana uygulanıyordu.
+   .bnav ekranın içinde olduğu için pasif sekmeler de 0.98→1.0
+   ölçekleniyordu = "anlık zıplama" (passive tabs at 0.98 → 1.0 = 2% jump).
+
+   ÇÖZÜM: Scale tamamen kaldırıldı. Sadece opacity geçişi.
+   Bu aynı zamanda gerçek iOS tab geçişiyle tutarlı — UIKit'te
+   tab geçişleri cross-fade'dir, scale yoktur.
 ──────────────────────────────────────────────────────────────────── */
 @keyframes tabCrossFade {
-  from {
-    opacity: 0;
-    transform: scale(0.98) translateZ(0);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateZ(0);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .screen.tab-enter {
   display: flex;
   z-index: 2;
-  animation: tabCrossFade 300ms cubic-bezier(0.3, 0, 0.2, 1) both;
-  will-change: transform, opacity;
+  animation: tabCrossFade 220ms cubic-bezier(0.3, 0, 0.2, 1) both;
+  will-change: opacity;
 }
 
 /* Tab geri */
@@ -7929,9 +7926,9 @@ function navTo(id) {
   const s = document.getElementById(id);
 
   if (animClass === 'active') {
-    // ── Tab geçişi: cross-fade + scale ──────────────────────────────
-    // GPU katmanını animasyon öncesinde rezerve et
-    s.style.willChange = 'transform, opacity';
+    // ── Tab geçişi: opacity cross-fade (v71: scale kaldırıldı) ──────
+    // GPU katmanını animasyon öncesinde rezerve et — sadece opacity
+    s.style.willChange = 'opacity';
     s.classList.add('active', 'tab-enter');
 
     // Animasyon bitince will-change serbest bırak (bellek tasarrufu)
