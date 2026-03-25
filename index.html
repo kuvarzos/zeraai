@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v79                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v80                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v79                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v80                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -87,13 +87,20 @@
 ║       doCommit sonrası standby blok eklendi                     ║
 ║  v79: Swipe-back flash kökten çözüldü — 4 katmanlı fix         ║
 ║       FIX-1: .phone.app-ready::before → zemin her zaman --bg   ║
-║              geçiş boşluğunda beyaz/koyu parlama imkânsız      ║
-║       FIX-2: onStart() bk+cur opacity:1 garantisi eklendi      ║
-║              yarım kalmış animasyonlar sıfırlanıyor             ║
-║       FIX-3: doCommit() bk.opacity:1 transition'dan ÖNCE set   ║
-║       FIX-4: navBack detail-exit: targetEl z:2 (eskiden z:1)   ║
-║              detail z:3 (eskiden z:2) — phone zemini görünmez  ║
-║       FIX-5: doCommit/doCancel/doAbort opacity:'' temizliği     ║
+║       FIX-2: onStart() bk+cur opacity:1 garantisi              ║
+║       FIX-3: doCommit() bk.opacity:1 transition'dan önce       ║
+║       FIX-4: navBack detail-exit targetEl z:2, detail z:3      ║
+║  v80: Composite layer flash kökten çözüldü                     ║
+║       KÖK NEDEN: display:none → iOS WebKit composite layer     ║
+║       yok eder → software render fallback → 1 frame beyaz      ║
+║       FIX-1: doCommit cleanup → setTimeout yerine transitionend ║
+║              display:none yerine opacity:0+visibility:hidden   ║
+║              Transition freeze: transition:none+reflow önce    ║
+║              Çift rAF: paint frame tamamlanınca cleanup         ║
+║       FIX-2: doCancel cleanup → aynı transitionend pattern     ║
+║              transition freeze + forced reflow her cleanup'ta  ║
+║       FIX-3: navBack detail-exit → animationend ile cleanup    ║
+║              display:none yerine opacity+visibility→rAF pattern║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
@@ -8306,35 +8313,55 @@ function navBack() {
 
     // 3. cur (detail): anında gizlemek yerine iosDetailExit ile sola kayarak çıkar.
     //    iOS standardı: geri butonunda detail sola doğru kayar — kullanıcı nereye
-    //    döndüğünü anlıyor. fields zaten açıkta (z:1 aktif), detail z:2'de animasyonla çıkar.
-    //    v78 FIX: Önceki versiyon detail'i anında gizliyordu → 1 frame flash.
+    //    döndüğünü anlıyor. fields zaten açıkta (z:2 aktif), detail z:3'de animasyonla çıkar.
     if (curEl) {
       // Önce mevcut animasyonları durdur
       curEl.style.transition = 'none';
       curEl.style.animation  = 'none';
       curEl.offsetHeight;
       curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter','tab-exit', 'sb-restore', 'sb-behind');
-      // detail-exit animasyonu ekle — 380ms boyunca sağa kayarak çıkar
-      // (iosDetailExit: translateX(0→100%) + opacity(1→0.55))
+      // detail-exit animasyonu: bir sonraki frame'de başlat (freeze sonrası)
       requestAnimationFrame(() => {
         curEl.style.transition = '';
         curEl.style.animation  = '';
         curEl.classList.add('detail-exit');
       });
-      // Animasyon bittikten sonra temizle
-      const SLIDE_DUR = 380 + 16;
-      setTimeout(() => {
+
+      // v80: animationend ile tam zamanlı temizle (setTimeout yerine)
+      // display:none yerine opacity+visibility — composite layer korunur, flash yok
+      var navBackDone = false;
+      function navBackCleanup() {
+        if (navBackDone) return;
+        navBackDone = true;
         curEl.classList.remove('detail-exit');
-        curEl.style.display    = '';
-        curEl.style.visibility = '';
+        // opacity:0 + visibility:hidden ile layer koru, 1 rAF sonra display:none
+        curEl.style.opacity    = '0';
+        curEl.style.visibility = 'hidden';
         curEl.style.zIndex     = '';
         curEl.style.transform  = '';
         curEl.style.transition = '';
         curEl.style.animation  = '';
         curEl.style.willChange = '';
-        // targetEl z-index'ini de serbest bırak
+        requestAnimationFrame(() => {
+          curEl.style.display    = 'none';
+          curEl.style.opacity    = '';
+          curEl.style.visibility = '';
+        });
         targetEl.style.zIndex = '';
-      }, SLIDE_DUR);
+      }
+
+      function onNavBackAnimEnd(e) {
+        if (e.target !== curEl) return;
+        if (e.animationName !== 'iosDetailExit') return;
+        curEl.removeEventListener('animationend', onNavBackAnimEnd);
+        clearTimeout(navBackTimer);
+        requestAnimationFrame(() => requestAnimationFrame(navBackCleanup));
+      }
+      curEl.addEventListener('animationend', onNavBackAnimEnd);
+      var navBackTimer = setTimeout(() => {
+        curEl.removeEventListener('animationend', onNavBackAnimEnd);
+        navBackCleanup();
+      }, 380 + 100);
     }
 
     // 4. State güncelle
@@ -8608,42 +8635,63 @@ function navBack() {
     shadow.style.transition  = 'transform ' + dur + 'ms ' + EASE;
     shadow.style.transform   = 'translateX(' + W + 'px)';
 
-    setTimeout(function () {
+    // ── Cleanup: transitionend ile tam zamanlamalı ───────────────────────────
+    // v80: setTimeout(dur+16) yerine transitionend kullanıyoruz.
+    // Neden: setTimeout mobil'de throttle edilebilir, erken/geç tetiklenebilir.
+    // transitionend → animasyon TAM bittikten sonra, 1ms bile erken değil.
+    // Güvenlik: 600ms hard timeout (animasyon herhangi bir sebepten iptal olursa)
+    var cleanupDone = false;
+    function cleanup() {
+      if (cleanupDone) return;
+      cleanupDone = true;
+
       // Overlay + shadow temizle
       overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.20);pointer-events:none;display:none;will-change:opacity';
       shadow.style.display    = 'none';
       shadow.style.transition = '';
       shadow.style.transform  = '';
 
-      // bk: ÖNCE aktif et — display:flex garantili, görünür
-      bk.style.transition  = '';
+      // bk: transition'ı önce FREEZE et — transform:''/none geçişinde titreme önle
+      // reflow ile değeri anlık uygula, sonra transition temizle
+      bk.style.transition = 'none';
+      bk.offsetHeight; // forced reflow — transition anında öldürüldü
       bk.style.transform   = '';
       bk.style.zIndex      = '';
       bk.style.visibility  = '';
-      bk.style.opacity     = '';   // v79: inline opacity temizle — CSS'e bırak
+      bk.style.opacity     = '';
       if (!bk.classList.contains('active')) bk.classList.add('active');
-      thaw(bk);
+      // animation temizliği: bir sonraki frame — layout thrash yok
+      requestAnimationFrame(function() {
+        bk.style.animation  = '';
+        bk.style.willChange = '';
+      });
 
-      // cur: bk aktif olduktan SONRA gizle — aralarında boşluk olmaz
-      // v78 FIX: transform ikiye atanıyordu (önce W'ya, hemen ardından ''ye) →
-      //          detail 1 frame ekran ortasına snap edip flash yapıyordu.
-      //          Çözüm: transition:none + display:none ile anında gizle, transform'a dokunma.
-      cur.style.transition = 'none';
-      cur.style.opacity    = '';   // v79: inline opacity temizle
-      cur.style.display    = 'none';   // anında gizle — transform flash yok
-      cur.style.zIndex     = '';
-      cur.style.transform  = '';
+      // cur: display:none YERİNE opacity:0 + visibility:hidden + pointer-events:none
+      // Neden: display:none composite layer'ı yok eder → iOS WebKit software
+      // render fallback'e düşer → 1 frame beyaz/boş flash.
+      // opacity:0 + visibility:hidden ile layer korunur, flash imkansız.
+      cur.style.transition     = 'none';
+      cur.style.opacity        = '0';
+      cur.style.visibility     = 'hidden';
+      cur.style.pointerEvents  = 'none';
+      cur.style.zIndex         = '';
+      cur.style.transform      = '';
+      cur.style.animation      = '';
+      cur.style.willChange     = '';
       cur.classList.remove('active','slide-in','slide-left','back','tab-enter','tab-exit','detail-exit');
-      cur.style.animation  = '';
-      cur.style.willChange = '';
-      thaw(cur);
+      // Bir sonraki frame'de display:none ile tamamen kapat (layer zaten yok artık)
+      requestAnimationFrame(function() {
+        cur.style.display       = 'none';
+        cur.style.opacity       = '';
+        cur.style.visibility    = '';
+        cur.style.pointerEvents = '';
+      });
 
       currentScreen = target;
       var newFrom = ['fields','kayitlarim','kasa'].includes(target) ? 'home' : target;
       fromScreen  = newFrom;
 
-      // v78 FIX: doCommit sonrası newFrom standby'a alınmıyordu →
-      //          bir sonraki swipe'ta bk ekranı display:none kalabiliyordu.
+      // newFrom standby'a al — bir sonraki swipe anında hazır
       if (newFrom && newFrom !== target) {
         var standbyEl = document.getElementById(newFrom);
         if (standbyEl) {
@@ -8668,8 +8716,26 @@ function navBack() {
       setSbLeft(target);
       syncBnav(target);
       setupHeaderScroll();
-    }, dur + 16);
-  }
+    }
+
+    // transitionend listener — cur'un transform transition'ı bitince temizle
+    // (cur ekranı dışarı çıkarken trigger — bk'de de benzer süre var)
+    function onTransEnd(e) {
+      if (e.target !== cur) return;
+      if (e.propertyName !== 'transform') return;
+      cur.removeEventListener('transitionend', onTransEnd);
+      clearTimeout(safetyTimer);
+      // Çift rAF: paint frame'in tamamlanmasını bekle, sonra cleanup
+      requestAnimationFrame(function() {
+        requestAnimationFrame(cleanup);
+      });
+    }
+    cur.addEventListener('transitionend', onTransEnd);
+    // Hard safety timeout — transitionend gelmezse yine de temizle
+    var safetyTimer = setTimeout(function() {
+      cur.removeEventListener('transitionend', onTransEnd);
+      cleanup();
+    }, Math.max(dur + 100, 500));
 
   // ── Cancel: cur yerine döner ────────────────────────────────────────────────
   // iOS 2026: spring easing ile overshoot — daha organik geri dönüş
@@ -8695,25 +8761,45 @@ function navBack() {
     shadow.style.transition  = 'transform ' + dur + 'ms ' + SPRING;
     shadow.style.transform   = 'translateX(0)';
 
-    setTimeout(function () {
+    var cancelDone = false;
+    function cancelCleanup() {
+      if (cancelDone) return;
+      cancelDone = true;
+
       overlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.20);pointer-events:none;display:none;will-change:opacity';
       shadow.style.display    = 'none';
       shadow.style.transition = '';
       shadow.style.transform  = '';
 
-      cur.style.transition = '';
+      // cur: transition freeze → transform temizle (titreme önleme)
+      cur.style.transition = 'none';
+      cur.offsetHeight; // forced reflow
       cur.style.transform  = '';
       cur.style.zIndex     = '';
-      thaw(cur);
+      requestAnimationFrame(function() { cur.style.animation = ''; });
 
-      // bk: display:flex + parallax standby'da — bir sonraki swipe anında hazır
-      // v78 FIX: onStart() bk.visibility='' yaptı — cancel bitince geri hidden'a al.
-      bk.style.transition  = '';
+      // bk: transition freeze → parallax konumu set et → visibility:hidden
+      bk.style.transition = 'none';
+      bk.offsetHeight; // forced reflow
       bk.style.transform   = 'translateX(' + (-W * PAR) + 'px)';
       bk.style.zIndex      = '';
       bk.style.visibility  = 'hidden';
-      thaw(bk);
-    }, dur + 16);
+      requestAnimationFrame(function() { bk.style.animation = ''; });
+    }
+
+    // transitionend tetikleyici: cur'un spring animasyonu bitince
+    function onCancelTransEnd(e) {
+      if (e.target !== cur) return;
+      if (e.propertyName !== 'transform') return;
+      cur.removeEventListener('transitionend', onCancelTransEnd);
+      clearTimeout(cancelTimer);
+      requestAnimationFrame(function() { requestAnimationFrame(cancelCleanup); });
+    }
+    cur.addEventListener('transitionend', onCancelTransEnd);
+    var cancelTimer = setTimeout(function() {
+      cur.removeEventListener('transitionend', onCancelTransEnd);
+      cancelCleanup();
+    }, dur + 100);
   }
 
   // ── Abort: lock öncesi iptal ───────────────────────────────────────────────
