@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v77                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v78                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v77                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v78                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -24,49 +24,72 @@
 ║  --green #227F83  → CTA, aktif, ilerleme (teal)                ║
 ║  --gold  #D4A017  → Uyarı, bekleme                             ║
 ║  --red   #C0574A  → Hata, kritik                               ║
-║  --bg    #F9F6EE  → Zemin (buğday tarlası)                     ║
+║  --bg    #EDE8DD  → Zemin (buğday tarlası)                     ║
 ║  --c-primary/-lt/-mid  → onay, devam, aktif seçim              ║
 ║  --c-dismiss/-lt/-mid  → kapat, iptal, geri, pasif             ║
 ║  KURAL: Teal sadece aktif/onay. Nötr (#7A7570) sadece pasif.   ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  TEKNİK MİMARİ                                                  ║
 ║  Navigasyon  : navTo(id), navBack(), openDetail(key)            ║
-║  Swipe-back  : Sol kenar 0-44px, parallax %30, velocity commit  ║
+║  Parallax    : var _PAR = 0.28 — TEK KAYNAK (JS global)        ║
+║                openDetail/navBack/navTo/swipe hepsi _PAR kullanır║
+║  Swipe-back  : Sol kenar 0-44px, _PAR=%28, velocity commit     ║
+║                EASE: cubic-bezier(.4,0,.2,1) iOS interaktif     ║
+║                SPRING: cubic-bezier(.34,1.56,.64,1) cancel/back ║
+║                COMMIT_R=0.40, VEL_MIN=280px/s, PAR=0.28        ║
+║                Shadow: 28px, %22 opak — iOS 2026 derinlik      ║
 ║  Standby sys : fromScreen display:flex+visibility:hidden park   ║
 ║                → swipe onStart()'ta visibility açılır           ║
-║  Tab geçişi  : X-Style Cross-Fade 200ms — enter:scale(0.98→1)+fade ║
-║                exit:opacity fade 150ms, slayt YOK              ║
-║  Detail geç. : iosSlideIn/iosSlideBack (.38s)                   ║
-║  z-index     : aktif ekran=2, standby=1, sheet=80+, modal=200  ║
+║  Tab geçişi  : iOS 2026 saf opacity cross-fade                  ║
+║                iosTabEnter: opacity 0→1, 220ms ease-out         ║
+║                iosTabExit:  opacity 1→0, 160ms ease-in          ║
+║                Scale YOK → .bnav'a geom. etki sıfır            ║
+║  Detail geç. : iosSlideIn (.38s) ileri / iosDetailExit (.38s)  ║
+║                geri butonu — detail sağa kayarak çıkar          ║
+║                swipe-back: 1:1 parmak + velocity commit         ║
+║  Home giriş  : homeEnterAnim — opacity+translateY(6px) 300ms   ║
+║  z-index     : aktif=2, standby=1, bnav=10, sheet=80+, modal=200║
 ║                #global-fab-wrap=15 (tüm nav üzerinde, sabit)   ║
 ║  Fontlar     : Fraunces (başlık), Inter (gövde), Outfit (sayı) ║
 ║  Veri        : localStorage — FIELDS, KAYITLAR, USER_PREFS     ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  BOTTOM TAB BAR — v77 MEVCUT DURUM                              ║
+║  BOTTOM TAB BAR — v77 MİMARİSİ                                  ║
 ║  • 4 sekme: Ana Sayfa / Tarlalarım / Kayıtlarım / Kasa         ║
-║  • Ortada FAB — sadece openKayit() tetikler, nav YOK           ║
+║  • FAB: #global-fab-wrap → .phone doğrudan çocuğu, z-index:15  ║
+║      Tab geçişleri FAB'ı ASLA yeniden render etmez             ║
+║      syncFabVisibility(): splash/onboarding'de gizlenir        ║
 ║  • Glassmorphism: rgba(226,220,208,0.96) + blur(25px)          ║
-║  • Separatör: border-top 0.5px rgba(255,255,255,0.72)          ║
 ║  • Morphing pill: .bnav-pill, JS translate3d, transition:none  ║
-║  • v77 DÖRT FİX — ZERO-FLICKER MİMARİSİ:                       ║
-║    [1] Layout Consistency: transform-origin 50% 29px → 50% 50% ║
-║        xTabEnter scale(0.98) artık ekran ortasından yayılır,   ║
-║        header sabit kalırken içerik kayması matematiksek sıfır ║
-║    [2] Global FAB: #global-fab-wrap → .phone doğrudan çocuğu   ║
-║        z-index:15, position:absolute, tek DOM elemanı          ║
-║        6 screen'deki .fab-wrap → .bnav-fab-spacer (görünmez)   ║
-║        Tab geçişleri FAB'ı ASLA yeniden render etmez           ║
-║        syncFabVisibility(): splash/onboarding'de gizler        ║
-║    [3] Skeleton Screens: kayitlarim/fields ilk geçişte         ║
-║        @keyframes skelShimmer — CSS-only, rAF loop yok         ║
-║        Veri gelince innerHTML replace, layout shift sıfır      ║
-║    [4] will-change: tab-exit → sadece opacity (transform yok)  ║
-║        Gereksiz compositor bellek kullanımı temizlendi         ║
-║  • v76 X-STYLE MİMARİ (korundu):                               ║
-║      contain:layout style, transition:none, xIconPop 150ms     ║
-║      ic-opacity swap (reflow:0), hit-target 44×44pt            ║
-║  • Aktif sekme: renk teal + filled ikon + bold label — ANLIK   ║
-║  • Pasif sekme: renk gri + outline ikon + soluk label — ANLIK  ║
+║  • İkon animasyonu: sadece tıklanan SVG — xIconPop 150ms spring ║
+║  • contain:layout style → render izolasyonu                    ║
+║  • ic-outline/ic-filled swap: sadece opacity (reflow:0)        ║
+║  • Hit target: 44×44pt sabit (::before, left/right:0)          ║
+║  • Skeleton: kayitlarim/fields → skelShimmer CSS-only          ║
+╠══════════════════════════════════════════════════════════════════╣
+║  GEÇİŞ SİSTEMİ KRONOLOJİSİ                                     ║
+║  v74: Spatial Depth (scale 0.96/1.04, 350ms) — KALDIRILDI      ║
+║  v75: Counter-scale workaround — KALDIRILDI                     ║
+║  v76: X-Style (scale 0.98+opacity, 200ms) — KALDIRILDI         ║
+║  v77: iOS 2026 saf opacity cross-fade — MEVCUT                  ║
+║       Kök neden: .screen base'inde transition+@keyframes        ║
+║       çakışması → transition base'den kaldırıldı               ║
+║       sheet-presented: transition sadece orada tanımlı         ║
+╠══════════════════════════════════════════════════════════════════╣
+║  SWIPE-BACK KRONOLOJİSİ                                         ║
+║  v77: iOS 2026 Premium parametreler                             ║
+║       PAR uyumsuzluğu fix (0.3 hardcode → _PAR=0.28)           ║
+║       navBack geri butonu: detail-exit animasyonu eklendi       ║
+║       Sheet dismiss: cubic-bezier(.32,0,.67,0) decelerate       ║
+║       Sheet spring: cubic-bezier(.34,1.56,.64,1) overshoot      ║
+║  v78: Swipe-back flash/flicker tam giderildi                    ║
+║       BUG-1: doCommit() cur transform çift atama →             ║
+║              detail 1 frame snap ediyordu. FIX: transition:none ║
+║              + display:none ile anında gizle.                   ║
+║       BUG-2: doCommit() sonrası newFrom standby'a alınmıyordu  ║
+║              → bir sonraki swipe bozuluyordu. FIX: standby blok ║
+║       BUG-3: doCancel/doAbort bk.visibility='' dönmüyordu →    ║
+║              bk ekranı standby'da görünür kalıyordu. FIX: her  ║
+║              dal sonunda visibility:hidden restore edildi.      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
@@ -8574,16 +8597,34 @@ function navBack() {
       thaw(bk);
 
       // cur: bk aktif olduktan SONRA gizle — aralarında boşluk olmaz
-      cur.style.transition = '';
-      cur.style.transform  = 'translateX(' + W + 'px)';
+      // v78 FIX: transform ikiye atanıyordu (önce W'ya, hemen ardından ''ye) →
+      //          detail 1 frame ekran ortasına snap edip flash yapıyordu.
+      //          Çözüm: transition:none + display:none ile anında gizle, transform'a dokunma.
+      cur.style.transition = 'none';
+      cur.style.display    = 'none';   // anında gizle — transform flash yok
       cur.style.zIndex     = '';
-      cur.classList.remove('active','slide-in','slide-left','back','tab-enter','tab-exit');
       cur.style.transform  = '';
+      cur.classList.remove('active','slide-in','slide-left','back','tab-enter','tab-exit','detail-exit');
+      cur.style.animation  = '';
+      cur.style.willChange = '';
       thaw(cur);
 
       currentScreen = target;
       var newFrom = ['fields','kayitlarim','kasa'].includes(target) ? 'home' : target;
       fromScreen  = newFrom;
+
+      // v78 FIX: doCommit sonrası newFrom standby'a alınmıyordu →
+      //          bir sonraki swipe'ta bk ekranı display:none kalabiliyordu.
+      if (newFrom && newFrom !== target) {
+        var standbyEl = document.getElementById(newFrom);
+        if (standbyEl) {
+          standbyEl.style.display    = 'flex';
+          standbyEl.style.zIndex     = '1';
+          standbyEl.style.transform  = 'translateX(-' + W * PAR + 'px)';
+          standbyEl.style.transition = 'none';
+          standbyEl.style.visibility = 'hidden';
+        }
+      }
 
       document.querySelectorAll('.screen').forEach(function(s) {
         if (s === bk || s === cur) return;
@@ -8637,9 +8678,11 @@ function navBack() {
       thaw(cur);
 
       // bk: display:flex + parallax standby'da — bir sonraki swipe anında hazır
-      bk.style.transition = '';
-      bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
-      bk.style.zIndex     = '';
+      // v78 FIX: onStart() bk.visibility='' yaptı — cancel bitince geri hidden'a al.
+      bk.style.transition  = '';
+      bk.style.transform   = 'translateX(' + (-W * PAR) + 'px)';
+      bk.style.zIndex      = '';
+      bk.style.visibility  = 'hidden';
       thaw(bk);
     }, dur + 16);
   }
@@ -8647,14 +8690,17 @@ function navBack() {
   // ── Abort: lock öncesi iptal ───────────────────────────────────────────────
   function doAbort() {
     if (!g) return;
-    var cur = g.cur, bk = g.bk;
+    var cur = g.cur, bk = g.bk, W = g.W;
     g = null;
 
     overlay.style.display = 'none';
     shadow.style.display  = 'none';
 
-    bk.style.transform = '';
-    bk.style.zIndex    = '';
+    // v78 FIX: onStart() bk.visibility='' yaptı — abort'ta geri hidden'a al.
+    // Parallax konumunu da koru — standby'daki haliyle bırak.
+    bk.style.transform  = 'translateX(-' + (W * PAR) + 'px)';
+    bk.style.zIndex     = '';
+    bk.style.visibility = 'hidden';
     thaw(bk);
 
     cur.style.transform = '';
