@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v79                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v80                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v79                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v80                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -39,7 +39,10 @@
 ║                COMMIT_R=0.40, VEL_MIN=280px/s, PAR=0.28        ║
 ║                Shadow: 28px, %22 opak — iOS 2026 derinlik      ║
 ║  Standby sys : fromScreen display:flex+visibility:hidden park   ║
-║                → swipe onStart()'ta visibility açılır           ║
+║                → onStart: visibility açılır, animasyon sınıfları║
+║                  (tab-enter/exit/slide) freeze'de kaldırılır    ║
+║                → doAbort: visibility:hidden + parallax restore  ║
+║                → doCommit: newFrom standby'a alınır             ║
 ║  Tab geçişi  : iOS 2026 saf opacity cross-fade                  ║
 ║                iosTabEnter: opacity 0→1, 220ms ease-out         ║
 ║                iosTabExit:  opacity 1→0, 160ms ease-in          ║
@@ -47,6 +50,8 @@
 ║  Detail geç. : iosSlideIn (.38s) ileri / iosDetailExit (.38s)  ║
 ║                geri butonu — detail sağa kayarak çıkar          ║
 ║                swipe-back: 1:1 parmak + velocity commit         ║
+║  cur cleanup : transition:none + offsetHeight reflow → freeze   ║
+║                → display:none (composite layer güvenli kapanır) ║
 ║  Home giriş  : homeEnterAnim — opacity+translateY(6px) 300ms   ║
 ║  z-index     : aktif=2, standby=1, bnav=10, sheet=80+, modal=200║
 ║                #global-fab-wrap=15 (tüm nav üzerinde, sabit)   ║
@@ -76,22 +81,44 @@
 ║       sheet-presented: transition sadece orada tanımlı         ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  SWIPE-BACK KRONOLOJİSİ                                         ║
-║  v77: iOS 2026 Premium parametreler (PAR fix, spring, shadow)   ║
-║  v79: 3 cerrahi fix — v77 tabanı korundu, minimum müdahale      ║
-║  FIX-1 doAbort: bk.visibility='hidden' + parallax geri yüklendi ║
-║    Kök: onStart bk'yi görünür yapıyor, doAbort geri almıyordu.  ║
-║    Etki: geri butonuna tap'ta bk (home) 1 frame görünüp kaybol- ║
-║    uyordu → kullanıcı "çalışmıyor" sanıyordu.                   ║
-║  FIX-2 doCommit: cur cleanup yeniden yazıldı                    ║
-║    Kök: transform çift atama (→W sonra →'') + transition aktif- ║
-║    ken display:none → composite layer flash.                    ║
-║    Fix: transition:none+reflow freeze → display:none → temizlik.║
-║  FIX-3 doCommit: newFrom standby setup eklendi                  ║
-║    Kök: fields'dan sonra home standby'a alınmıyordu → sonraki   ║
-║    swipe'ta home display:none'dan flex'e geçiş → layout jump.   ║
-║  FIX-4 onStart: tab-enter/exit/slide sınıfları freeze sonrası   ║
-║    kaldırıldı → thaw rAF'ta animation:'' ile yeniden başlasın   ║
-║    diye CSS sınıfı kalmıyor — ekran kaybolması önlendi.          ║
+║  v77: iOS 2026 Premium — PAR=0.28, EASE, SPRING, shadow 28px   ║
+║       navBack detail-exit animasyonu eklendi                    ║
+║       Sheet dismiss/spring easing'leri ayarlandı               ║
+║  v79: 4 cerrahi fix — v77 tabanı korundu, minimum müdahale     ║
+║  v80: Ana Sayfa boş görünme fix                                 ║
+║  ┌─ FIX-5 home tab geçişi ──────────────────────────────────┐  ║
+║  │ Kök: fromScreen='home' → standbyId=id → kayıtlarım exit   │  ║
+║  │ animasyonu atlanıyor + home tab-enter opacity:0'da         │  ║
+║  │ kalabiliyor. Fix: home'a geçişte fromScreen=currentScreen  │  ║
+║  │ (exit animasyonu doğru ekrana gitsin), geçiş bittikten     │  ║
+║  │ sonra 240ms timeout ile fromScreen='home' reset.           │  ║
+║  │ Bonus: home'a dönerken içerik render tetikleniyor.         │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-1 doAbort ──────────────────────────────────────────┐  ║
+║  │ Kök: onStart bk.visibility='' yapıyor, doAbort geri       │  ║
+║  │ almıyordu. Geri butonu tap'ta bk 1 frame ekrana snap      │  ║
+║  │ edip kayboluyordu → "çalışmıyor" hissi.                   │  ║
+║  │ Fix: visibility:hidden + translateX(-W*PAR) restore.      │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-2 doCommit cur cleanup ──────────────────────────────┐  ║
+║  │ Kök: transform çift atama (→W sonra →'') aynı tick.       │  ║
+║  │ Transition aktifken display:none → composite layer yok    │  ║
+║  │ → browser software fallback → beyaz frame flash.          │  ║
+║  │ Fix: transition:none + offsetHeight reflow → freeze,      │  ║
+║  │ ardından display:none. Çift atama kaldırıldı.             │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-3 doCommit standby ──────────────────────────────────┐  ║
+║  │ Kök: target='fields' sonrası home standby'a alınmıyordu.  │  ║
+║  │ Sonraki swipe: home display:none→flex layout jump.        │  ║
+║  │ Fix: newFrom standby setup (display:flex, visibility:     │  ║
+║  │ hidden, translateX(-W*PAR)) doCommit cleanup'a eklendi.   │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-4 onStart animasyon sınıfları ───────────────────────┐  ║
+║  │ Kök: freeze animasyonu dondurur ama CSS sınıfını bırakır. │  ║
+║  │ thaw rAF'ta animation:'' → CSS sınıfı (tab-enter) yeniden │  ║
+║  │ keyframe başlatıyor → ekran opacity:0'dan başlıyor.       │  ║
+║  │ Fix: freeze sonrası tab-enter/exit/slide-in/left kaldır.  │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
@@ -8047,8 +8074,13 @@ function navTo(id) {
     fromScreen = currentScreen;           // detail → gelinen ekrana döner
   } else if (['fields','kayitlarim','kasa'].includes(id)) {
     fromScreen = 'home';                  // bu tablardan swipe → home
+  } else if (id === 'home') {
+    // home'a tab geçişinde: mevcut ekranı standby olarak işaretle
+    // → çıkış animasyonu (tab-exit) doğru ekrana uygulanır
+    // → fromScreen sonradan 'home' olarak güncellenir (swipe yok)
+    fromScreen = currentScreen;
   } else {
-    fromScreen = id;                      // home'da swipe yok
+    fromScreen = id;
   }
 
   // ── v67: Tab geçişlerinde standby ekranı ────────────────────────────────────
@@ -8188,6 +8220,19 @@ function navTo(id) {
         if (typeof renderTarlaSirasi    === 'function') renderTarlaSirasi();
       });
     }
+  }
+  // v80 FIX: home'a tab geçişinde içeriği yenile + fromScreen sıfırla
+  // Kök: fromScreen = currentScreen ile standby/exit doğru çalışıyor ama
+  // geçiş bittikten sonra fromScreen 'home' olmalı (home'dan swipe-back yok).
+  if (id === 'home') {
+    requestAnimationFrame(() => {
+      if (typeof renderFieldsProgress === 'function') renderFieldsProgress();
+      if (typeof renderHavaTahmin    === 'function') renderHavaTahmin();
+      if (typeof renderHavaTavsiye   === 'function') renderHavaTavsiye();
+    });
+    // Geçiş animasyonu (220ms) bittikten sonra fromScreen'i sıfırla
+    // → home'da yanlışlıkla swipe-back tetiklenmesin
+    setTimeout(() => { fromScreen = 'home'; }, 240);
   }
 
   setSbLeft(id);
