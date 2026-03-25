@@ -47,6 +47,8 @@
 ║                iosTabEnter: opacity 0→1, 220ms ease-out         ║
 ║                iosTabExit:  opacity 1→0, 160ms ease-in          ║
 ║                Scale YOK → .bnav'a geom. etki sıfır            ║
+║                _exitTimer: her ekranda bekleyen timer ref'i     ║
+║                → yeni navTo'da iptal edilir (race condition yok)║
 ║  Detail geç. : iosSlideIn (.38s) ileri / iosDetailExit (.38s)  ║
 ║                geri butonu — detail sağa kayarak çıkar          ║
 ║                swipe-back: 1:1 parmak + velocity commit         ║
@@ -80,20 +82,11 @@
 ║       çakışması → transition base'den kaldırıldı               ║
 ║       sheet-presented: transition sadece orada tanımlı         ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  SWIPE-BACK KRONOLOJİSİ                                         ║
+║  SWIPE-BACK & NAVİGASYON FİX KRONOLOJİSİ                       ║
 ║  v77: iOS 2026 Premium — PAR=0.28, EASE, SPRING, shadow 28px   ║
 ║       navBack detail-exit animasyonu eklendi                    ║
 ║       Sheet dismiss/spring easing'leri ayarlandı               ║
 ║  v79: 4 cerrahi fix — v77 tabanı korundu, minimum müdahale     ║
-║  v80: Ana Sayfa boş görünme fix                                 ║
-║  ┌─ FIX-5 home tab geçişi ──────────────────────────────────┐  ║
-║  │ Kök: fromScreen='home' → standbyId=id → kayıtlarım exit   │  ║
-║  │ animasyonu atlanıyor + home tab-enter opacity:0'da         │  ║
-║  │ kalabiliyor. Fix: home'a geçişte fromScreen=currentScreen  │  ║
-║  │ (exit animasyonu doğru ekrana gitsin), geçiş bittikten     │  ║
-║  │ sonra 240ms timeout ile fromScreen='home' reset.           │  ║
-║  │ Bonus: home'a dönerken içerik render tetikleniyor.         │  ║
-║  └───────────────────────────────────────────────────────────┘  ║
 ║  ┌─ FIX-1 doAbort ──────────────────────────────────────────┐  ║
 ║  │ Kök: onStart bk.visibility='' yapıyor, doAbort geri       │  ║
 ║  │ almıyordu. Geri butonu tap'ta bk 1 frame ekrana snap      │  ║
@@ -118,6 +111,42 @@
 ║  │ thaw rAF'ta animation:'' → CSS sınıfı (tab-enter) yeniden │  ║
 ║  │ keyframe başlatıyor → ekran opacity:0'dan başlıyor.       │  ║
 ║  │ Fix: freeze sonrası tab-enter/exit/slide-in/left kaldır.  │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  v80: Ana Sayfa boş görünme fix — 3 katmanlı çözüm             ║
+║  ┌─ FIX-5A Race condition (_exitTimer) ──────────────────────┐  ║
+║  │ Kök: home→kayitlarim geçişinde home'a tab-exit + 176ms    │  ║
+║  │ timer set edilir (visibility:hidden yapacak). Kullanıcı   │  ║
+║  │ 176ms içinde home'a dönerse: navTo home'u görünür yapar,  │  ║
+║  │ timer dolar, home tekrar gizlenir → boş sayfa.            │  ║
+║  │ Fix: exitEl._exitTimer ile timer ref saklanır. Her yeni   │  ║
+║  │ navTo'da screens.forEach + hedef ekranda timer iptal.     │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-5B tab-enter reflow garantisi ───────────────────────┐  ║
+║  │ Kök: tab-enter eklenmeden önce reflow yok → browser önceki│  ║
+║  │ animasyon state'ini tutabilir → iosTabEnter fire etmez.   │  ║
+║  │ Fix: animation:'none' + offsetHeight + animation:''       │  ║
+║  │ → browser animasyonu her zaman sıfırdan başlatır.         │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-5C animationend fallback ────────────────────────────┐  ║
+║  │ Kök: animationend bazı koşullarda fire etmez → tab-enter  │  ║
+║  │ sınıfı kalır → fill-mode:both → opacity:0'da donmuş ekran.│  ║
+║  │ Fix: 300ms fallback setTimeout → tab-enter kaldır +       │  ║
+║  │ opacity:'' reset. animationend gelirse timer iptal edilir.│  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-6 animationend bubble koruması ──────────────────────┐  ║
+║  │ Kök: home/fields içindeki .fu/.skel child elementlerin    │  ║
+║  │ animasyonları (fadeUp, skelShimmer vb.) animationend'ini  │  ║
+║  │ parent .screen'e bubble ediyor. { once:true } bu ilk      │  ║
+║  │ bubble'ı tüketip iosTabEnter bitmeden tab-enter kaldırıyor│  ║
+║  │ → ekran opacity:0'da donuyor → TÜM TABLARDA BOŞLUK BUG'I.│  ║
+║  │ Fix: e.target===s VE e.animationName==='iosTabEnter'      │  ║
+║  │ çift kontrolü — child bubble'lar ignore, doğru temizleme. │  ║
+║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-5D fromScreen home geçişi ───────────────────────────┐  ║
+║  │ Kök: navTo('home')'da fromScreen='home' → standbyId=id    │  ║
+║  │ → kayitlarim için tab-exit animasyonu atlanıyor.           │  ║
+║  │ Fix: id==='home' branch → fromScreen=currentScreen ile    │  ║
+║  │ doğru ekrana exit animasyonu. 240ms sonra fromScreen reset.│  ║
 ║  └───────────────────────────────────────────────────────────┘  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
@@ -1211,12 +1240,12 @@ body.app-ready { background: var(--bg); }
 .wb-left { display:flex; align-items:center; gap:8px; }
 .wb-temp { font-family:var(--num); font-size:24px; font-weight:600; color:var(--text); line-height:1; } /* v55: 19→24px, 500→600 — outdoor 7:1 okunabilirlik (AgriTech raporu) */
 .wb-desc { font-size:10px; color:var(--text2); font-weight:500; margin-top:1px; }
-.wb-stats { display:flex; align-items:center; gap:6px; flex:1; justify-content:center; } /* v55.3: 8→6px — 3 stat için compact spacing */
+.wb-stats { display:flex; align-items:center; gap:6px; flex:1; justify-content:center; min-width:0; overflow:hidden; } /* v55.3: 8→6px — 3 stat için compact spacing */
 .wb-stat { display:flex; align-items:center; gap:3px; font-size:11px; font-weight:600; color:var(--text2); white-space:nowrap; }
 .wb-stat.wok  { color:var(--green-mid); } /* v51 */
 .wb-stat.wwarn{ color:var(--gold-text); } /* v51: 5.0:1 */
 .wb-stat.wbad { color:var(--red); }
-.wb-badge { display:flex; align-items:center; gap:4px; border-radius:var(--r-pill); padding:4px 9px; font-size:10px; font-weight:700; flex-shrink:0; }
+.wb-badge { display:flex; align-items:center; gap:4px; border-radius:var(--r-pill); padding:4px 9px; font-size:10px; font-weight:700; flex-shrink:0; white-space:nowrap; }
 .wb-badge.ok   { background:var(--green-lt); color:var(--green-mid); }
 .wb-badge.warn { background:var(--gold-lt); color:var(--gold-text); } /* v51: 5.6:1 */
 .wb-badge.bad  { background:var(--red-lt);   color:var(--red); }
@@ -8178,18 +8207,30 @@ function navTo(id) {
     // Animasyon bitince will-change serbest bırak (bellek tasarrufu)
     // + güvenlik: animationend fire etmezse 300ms sonra tab-enter kaldır (opacity:1 garantisi)
     const _animTarget = s;
-    const _animFallback = setTimeout(() => {
-      _animTarget.classList.remove('tab-enter');
-      _animTarget.style.willChange = '';
-      _animTarget.style.opacity = '';
-    }, 300);
-    s.addEventListener('animationend', function _cleanup() {
+    // FIX-6: animationend bubble koruması
+    // Kök: home/fields/kayitlarim içindeki child elementlerin animasyonları
+    // (fadeUp .fu, skelShimmer, wbBadgePop vb.) animationend event'ini
+    // parent .screen'e bubble ediyor. { once:true } bu ilk bubble'ı tüketip
+    // iosTabEnter tamamlanmadan tab-enter kaldırılıyor → ekran opacity:0'da
+    // donuyor → TÜM TAB GEÇİŞLERİNDE BOŞLUK BUG'I.
+    // Fix: e.target===s (child değil ekranın kendisi) VE
+    //      e.animationName==='iosTabEnter' çift kontrolü.
+    //      Fallback timer'da da listener temizlenir — memory leak yok.
+    function _cleanupTabEnter(e) {
+      if (e.target !== s || e.animationName !== 'iosTabEnter') return;
       clearTimeout(_animFallback);
       s.classList.remove('tab-enter');
       s.style.willChange = '';
       s.style.opacity = '';
-      s.removeEventListener('animationend', _cleanup);
-    }, { once: true });
+      s.removeEventListener('animationend', _cleanupTabEnter);
+    }
+    const _animFallback = setTimeout(() => {
+      _animTarget.classList.remove('tab-enter');
+      _animTarget.style.willChange = '';
+      _animTarget.style.opacity = '';
+      _animTarget.removeEventListener('animationend', _cleanupTabEnter); // memory-safe
+    }, 300);
+    s.addEventListener('animationend', _cleanupTabEnter);
   } else {
     s.classList.add(animClass);
   }
