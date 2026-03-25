@@ -8094,6 +8094,8 @@ function navTo(id) {
   const standbyId = fromScreen; // swipe hedefi — bu ekranı kapatma
 
   screens.forEach(s => {
+    // Bekleyen exit timer'ını iptal et (race condition önleme)
+    if (s._exitTimer) { clearTimeout(s._exitTimer); s._exitTimer = null; }
     // standby ekranına (fromScreen) dokunma — o display:flex kalacak
     if (s.id === standbyId && standbyId && standbyId !== id) return;
     s.classList.remove('active','back','slide-in','slide-left','tab-enter','tab-exit','sb-behind');
@@ -8134,15 +8136,16 @@ function navTo(id) {
   const s = document.getElementById(id);
 
   if (animClass === 'active') {
-    // ── Tab geçişi: Spatial Depth Engine (v74) ──────────────────────
+    // ── Tab geçişi: Cross-fade ─────────────────────────────────────
     // Cross-fade: eski sayfa (tab-exit) giderken yeni (tab-enter) onun
     // üstünde belirir — beyaz flash veya boş an sıfır.
 
-    // 1. Eski ekrana çıkış animasyonu uygula (standbyEl = önceki aktif ekran)
-    // standbyEl artık visibility:hidden — önce görünür yap, sonra tab-exit
+    // 1. Eski ekrana çıkış animasyonu uygula
     if (standbyId && standbyId !== id) {
       const exitEl = document.getElementById(standbyId);
       if (exitEl) {
+        // Önceki bekleyen exit timer'ını iptal et (race condition önleme)
+        if (exitEl._exitTimer) { clearTimeout(exitEl._exitTimer); exitEl._exitTimer = null; }
         exitEl.style.visibility = ''; // görünür — çıkış animasyonu oynasın
         exitEl.style.transform  = 'translateZ(0)'; // GPU katmanı
         exitEl.style.willChange = 'transform, opacity';
@@ -8150,7 +8153,8 @@ function navTo(id) {
 
         // Animasyon bitince ekranı tamamen gizle + temizle
         const exitDur = 160; // v78: iosTabExit süresiyle eşleşiyor (160ms)
-        setTimeout(() => {
+        exitEl._exitTimer = setTimeout(() => {
+          exitEl._exitTimer = null;
           exitEl.classList.remove('tab-exit');
           exitEl.style.visibility = 'hidden';
           exitEl.style.willChange = '';
@@ -8159,13 +8163,31 @@ function navTo(id) {
       }
     }
 
+    // Hedef ekrana gidildiğinde bekleyen exit timer'ını iptal et
+    // (örn: kayitlarim→home geçişinde home'un exit timer'ı hâlâ aktifse)
+    if (s._exitTimer) { clearTimeout(s._exitTimer); s._exitTimer = null; }
+
     // 2. Yeni ekranı GPU'ya hazırla ve tab-enter uygula
+    // reflow: önceki animasyon durumunu temizle → tab-enter kesinlikle baştan başlar
+    s.style.animation = 'none';
+    s.offsetHeight; // reflow
+    s.style.animation = '';
     s.style.willChange = 'transform, opacity';
     s.classList.add('active', 'tab-enter');
 
     // Animasyon bitince will-change serbest bırak (bellek tasarrufu)
+    // + güvenlik: animationend fire etmezse 300ms sonra tab-enter kaldır (opacity:1 garantisi)
+    const _animTarget = s;
+    const _animFallback = setTimeout(() => {
+      _animTarget.classList.remove('tab-enter');
+      _animTarget.style.willChange = '';
+      _animTarget.style.opacity = '';
+    }, 300);
     s.addEventListener('animationend', function _cleanup() {
+      clearTimeout(_animFallback);
+      s.classList.remove('tab-enter');
       s.style.willChange = '';
+      s.style.opacity = '';
       s.removeEventListener('animationend', _cleanup);
     }, { once: true });
   } else {
