@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v78                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v79                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v78                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v79                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -81,15 +81,19 @@
 ║       navBack geri butonu: detail-exit animasyonu eklendi       ║
 ║       Sheet dismiss: cubic-bezier(.32,0,.67,0) decelerate       ║
 ║       Sheet spring: cubic-bezier(.34,1.56,.64,1) overshoot      ║
-║  v78: Swipe-back flash/flicker tam giderildi                    ║
-║       BUG-1: doCommit() cur transform çift atama →             ║
-║              detail 1 frame snap ediyordu. FIX: transition:none ║
-║              + display:none ile anında gizle.                   ║
-║       BUG-2: doCommit() sonrası newFrom standby'a alınmıyordu  ║
-║              → bir sonraki swipe bozuluyordu. FIX: standby blok ║
-║       BUG-3: doCancel/doAbort bk.visibility='' dönmüyordu →    ║
-║              bk ekranı standby'da görünür kalıyordu. FIX: her  ║
-║              dal sonunda visibility:hidden restore edildi.      ║
+║  v78: Swipe-back 1. tur flash giderildi                         ║
+║       doCommit() çift transform atama düzeltildi                ║
+║       doCancel/doAbort bk visibility:hidden restore             ║
+║       doCommit sonrası standby blok eklendi                     ║
+║  v79: Swipe-back flash kökten çözüldü — 4 katmanlı fix         ║
+║       FIX-1: .phone.app-ready::before → zemin her zaman --bg   ║
+║              geçiş boşluğunda beyaz/koyu parlama imkânsız      ║
+║       FIX-2: onStart() bk+cur opacity:1 garantisi eklendi      ║
+║              yarım kalmış animasyonlar sıfırlanıyor             ║
+║       FIX-3: doCommit() bk.opacity:1 transition'dan ÖNCE set   ║
+║       FIX-4: navBack detail-exit: targetEl z:2 (eskiden z:1)   ║
+║              detail z:3 (eskiden z:2) — phone zemini görünmez  ║
+║       FIX-5: doCommit/doCancel/doAbort opacity:'' temizliği     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
@@ -284,6 +288,17 @@ body.app-ready { background: var(--bg); }
   transition: background 0.4s ease;
 }
 .phone.app-ready { background: var(--bg); }
+/* v79 — Flash bastırma: geçiş sırasında .screen'ler arasındaki
+   her türlü boşlukta .phone zemini görünür olabilir.
+   ::before ile zemin her zaman --bg → beyaz/koyu parlama imkânsız. */
+.phone.app-ready::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  z-index: 0;
+  pointer-events: none;
+}
 
 /* ── Header (status bar + nav bar birleşik) ──────────────────
    Rapor önerileri:
@@ -735,7 +750,7 @@ body.app-ready { background: var(--bg); }
 }
 .screen.detail-exit {
   display: flex;
-  z-index: 2;           /* fields (z:auto/active) üzerinde — cross-over yok */
+  z-index: 3;           /* v79: targetEl artık z:2 — detail-exit üstte kalmalı */
   pointer-events: none;
   animation: iosDetailExit .38s cubic-bezier(.4,0,.2,1) both;
   will-change: opacity, transform;
@@ -8281,7 +8296,10 @@ function navBack() {
     targetEl.style.transition = 'none';
     targetEl.offsetHeight;              // reflow
     targetEl.style.transform  = '';     // parallax offset temizle
-    targetEl.style.zIndex     = '1';    // detail (z:2) altında kalsın animasyon boyunca
+    targetEl.style.opacity    = '1';    // v79: inline opacity garantisi
+    // v79: detail-exit animasyonu boyunca targetEl z:2'de olmalı.
+    // Önceki z:1 → detail opacity:.55'e düşünce phone zemini görünüyordu.
+    targetEl.style.zIndex     = '2';
     targetEl.classList.remove('back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter','tab-exit', 'sb-restore');
     targetEl.classList.add('active');
     requestAnimationFrame(() => { targetEl.style.transition = ''; });
@@ -8495,11 +8513,13 @@ function navBack() {
       bk.offsetHeight;
     }
     bk.style.visibility = '';
+    bk.style.opacity    = '1';   // v79: yarım kalmış tab-exit opacity'sini sıfırla
     bk.style.zIndex     = '1';
     bk.style.transform  = 'translateX(' + (-W * PAR) + 'px)';
 
     // cur: üste al, harekete hazırla
     freeze(cur);
+    cur.style.opacity   = '1';   // v79: yarım kalmış animasyon opacity'sini sıfırla
     cur.style.zIndex    = '2';
     cur.style.transform = 'translateX(0)';
     cur.style.display   = 'flex';
@@ -8567,7 +8587,14 @@ function navBack() {
     var cur = g.cur, bk = g.bk, target = g.target, W = g.W;
     g = null;
 
-    // cur: EASE ile sağa çık (Apple interactive easing)
+    // v79 FIX — Flash kökü: bk commit başında hâlâ visibility:hidden olabilir
+    // (onStart görünür yaptı ama bazı branch'larda reset edilmişti).
+    // Transition başlamadan ÖNCE bk'yi kesinlikle tam görünür yap.
+    bk.style.visibility = '';
+    bk.style.opacity    = '1';
+
+    // cur: EASE ile sağa çık — sadece transform, opacity DOKUNMA
+    // (opacity değiştirmek commit sürecinde cur içeriğini flash yapabilir)
     cur.style.transition = 'transform ' + dur + 'ms ' + EASE;
     cur.style.transform  = 'translateX(' + W + 'px)';
 
@@ -8593,6 +8620,7 @@ function navBack() {
       bk.style.transform   = '';
       bk.style.zIndex      = '';
       bk.style.visibility  = '';
+      bk.style.opacity     = '';   // v79: inline opacity temizle — CSS'e bırak
       if (!bk.classList.contains('active')) bk.classList.add('active');
       thaw(bk);
 
@@ -8601,6 +8629,7 @@ function navBack() {
       //          detail 1 frame ekran ortasına snap edip flash yapıyordu.
       //          Çözüm: transition:none + display:none ile anında gizle, transform'a dokunma.
       cur.style.transition = 'none';
+      cur.style.opacity    = '';   // v79: inline opacity temizle
       cur.style.display    = 'none';   // anında gizle — transform flash yok
       cur.style.zIndex     = '';
       cur.style.transform  = '';
