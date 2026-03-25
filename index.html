@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v77                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v78                                 ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v77                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v78                        ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -81,6 +81,11 @@
 ║       navBack geri butonu: detail-exit animasyonu eklendi       ║
 ║       Sheet dismiss: cubic-bezier(.32,0,.67,0) decelerate       ║
 ║       Sheet spring: cubic-bezier(.34,1.56,.64,1) overshoot      ║
+║  v78: navBack() detail path — swipe IIFE ile birebir eşleşti   ║
+║       Eski: iosDetailExit keyframe (opacity değişimi var)       ║
+║       Yeni: doCommit ile aynı EASE/süre/overlay/parallax        ║
+║             cur sağa çıkar, bk parallax→0, overlay/shadow eşlik║
+║             Geri buton ile parmak swipe görsel olarak özdeş     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
@@ -8253,6 +8258,11 @@ function navBack() {
   // openDetail() → bk: display:flex + zIndex:1 + parallax transform AÇIK BIRAKTI
   if (currentScreen === 'detail') {
     const curEl = document.getElementById('detail');
+    const W     = window.innerWidth;
+
+    // Swipe-back IIFE ile birebir aynı easing/süre/overlay parametreleri
+    const EASE   = 'cubic-bezier(0.4,0,0.2,1)';
+    const dur    = 350; // velocity yok → sabit 350ms (doCommit ortalama süresi)
 
     // 1. Diğer tüm ekranları temizle (cur ve target hariç)
     document.querySelectorAll('.screen').forEach(s => {
@@ -8266,56 +8276,89 @@ function navBack() {
       s.style.animation  = '';
     });
 
-    // 2. bk (fields/targetEl): parallax temizle, anında aktif et — display DOKUNMAZ
-    //    openDetail() onu display:flex + parallax konumunda bıraktı.
-    //    transition:none + reflow → parallax anında temizlenir (flash yok).
+    // 2. bk (fields/targetEl): tam olarak doCommit'teki bk gibi hazırla
+    //    transition:none freeze → parallax konumuna yerleştir → animasyonu başlat
     targetEl.style.transition = 'none';
-    targetEl.offsetHeight;              // reflow
-    targetEl.style.transform  = '';     // parallax offset temizle
-    targetEl.style.zIndex     = '1';    // detail (z:2) altında kalsın animasyon boyunca
+    targetEl.style.animation  = 'none';
+    targetEl.offsetHeight; // reflow — freeze uygulansın
+    targetEl.style.display    = 'flex';
+    targetEl.style.zIndex     = '1';
+    targetEl.style.transform  = 'translateX(' + (-W * _PAR) + 'px)';
+    targetEl.style.visibility = '';
     targetEl.classList.remove('back', 'slide-in', 'slide-left', 'sb-behind', 'tab-enter','tab-exit', 'sb-restore');
-    targetEl.classList.add('active');
-    requestAnimationFrame(() => { targetEl.style.transition = ''; });
 
-    // 3. cur (detail): anında gizlemek yerine iosDetailExit ile sola kayarak çıkar.
-    //    iOS standardı: geri butonunda detail sola doğru kayar — kullanıcı nereye
-    //    döndüğünü anlıyor. fields zaten açıkta (z:1 aktif), detail z:2'de animasyonla çıkar.
-    //    v78 FIX: Önceki versiyon detail'i anında gizliyordu → 1 frame flash.
+    // 3. cur (detail): tam olarak doCommit'teki cur gibi hazırla
     if (curEl) {
-      // Önce mevcut animasyonları durdur
       curEl.style.transition = 'none';
       curEl.style.animation  = 'none';
-      curEl.offsetHeight;
-      curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter','tab-exit', 'sb-restore', 'sb-behind');
-      // detail-exit animasyonu ekle — 380ms boyunca sağa kayarak çıkar
-      // (iosDetailExit: translateX(0→100%) + opacity(1→0.55))
-      requestAnimationFrame(() => {
-        curEl.style.transition = '';
-        curEl.style.animation  = '';
-        curEl.classList.add('detail-exit');
-      });
-      // Animasyon bittikten sonra temizle
-      const SLIDE_DUR = 380 + 16;
-      setTimeout(() => {
-        curEl.classList.remove('detail-exit');
-        curEl.style.display    = '';
-        curEl.style.visibility = '';
-        curEl.style.zIndex     = '';
-        curEl.style.transform  = '';
-        curEl.style.transition = '';
-        curEl.style.animation  = '';
-        curEl.style.willChange = '';
-        // targetEl z-index'ini de serbest bırak
-        targetEl.style.zIndex = '';
-      }, SLIDE_DUR);
+      curEl.offsetHeight; // reflow
+      curEl.style.zIndex     = '2';
+      curEl.style.transform  = 'translateX(0)';
+      curEl.style.display    = 'flex';
+      curEl.classList.remove('active', 'slide-in', 'slide-left', 'back', 'tab-enter','tab-exit', 'sb-restore', 'sb-behind', 'detail-exit');
     }
 
-    // 4. State güncelle
+    // 4. Overlay + shadow: doCommit ile aynı — swipe başlangıcı hissi
+    const sbOverlay = document.getElementById('sb-dim-overlay') ||
+      (() => { const el = document.createElement('div'); el.id='sb-dim-overlay'; el.style.cssText='position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.20);pointer-events:none;display:none;will-change:opacity'; (document.querySelector('.phone')||document.body).appendChild(el); return el; })();
+    const sbShadow  = document.getElementById('sb-shadow') ||
+      (() => { const el = document.createElement('div'); el.id='sb-shadow'; el.style.cssText='position:absolute;top:0;bottom:0;left:0;width:28px;z-index:9;pointer-events:none;display:none;will-change:transform;background:linear-gradient(to right,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.08) 60%,transparent 100%)'; (document.querySelector('.phone')||document.body).appendChild(el); return el; })();
+
+    sbOverlay.style.display    = 'block';
+    sbOverlay.style.opacity    = '0.20';
+    sbShadow.style.display     = 'block';
+    sbShadow.style.transform   = 'translateX(0)';
+
+    // 5. Animasyonu başlat — doCommit ile birebir aynı
+    requestAnimationFrame(() => {
+      // cur: EASE ile sağa çık
+      curEl.style.transition = 'transform ' + dur + 'ms ' + EASE;
+      curEl.style.transform  = 'translateX(' + W + 'px)';
+
+      // bk: EASE ile yerine otur (parallax → 0)
+      targetEl.style.transition = 'transform ' + dur + 'ms ' + EASE;
+      targetEl.style.transform  = 'translateX(0)';
+
+      // overlay solar
+      sbOverlay.style.transition = 'opacity ' + dur + 'ms ' + EASE;
+      sbOverlay.style.opacity    = '0';
+
+      // shadow cur ile birlikte sağa gider
+      sbShadow.style.transition = 'transform ' + dur + 'ms ' + EASE;
+      sbShadow.style.transform  = 'translateX(' + W + 'px)';
+    });
+
+    // 6. Animasyon bitince doCommit ile aynı cleanup
+    setTimeout(() => {
+      // overlay + shadow temizle
+      sbOverlay.style.cssText = 'position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.20);pointer-events:none;display:none;will-change:opacity';
+      sbShadow.style.display    = 'none';
+      sbShadow.style.transition = '';
+      sbShadow.style.transform  = '';
+
+      // bk: aktif et
+      targetEl.style.transition = '';
+      targetEl.style.transform  = '';
+      targetEl.style.zIndex     = '';
+      targetEl.style.visibility = '';
+      if (!targetEl.classList.contains('active')) targetEl.classList.add('active');
+      requestAnimationFrame(() => { targetEl.style.transition = ''; targetEl.style.animation = ''; });
+
+      // cur: gizle
+      curEl.style.transition = '';
+      curEl.style.transform  = '';
+      curEl.style.zIndex     = '';
+      curEl.classList.remove('active','slide-in','slide-left','back','tab-enter','tab-exit','detail-exit');
+      requestAnimationFrame(() => { curEl.style.transition = ''; curEl.style.animation = ''; });
+
+    }, dur + 16);
+
+    // 7. State güncelle
     currentScreen = target;
     const newFromDetail = (['fields', 'kayitlarim', 'kasa'].includes(target)) ? 'home' : target;
     fromScreen = newFromDetail;
 
-    // v62+v65: yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
+    // yeni fromScreen'i standby'a al — bir sonraki swipe anında hazır
     if (newFromDetail && newFromDetail !== target) {
       const standbyEl = document.getElementById(newFromDetail);
       if (standbyEl) {
