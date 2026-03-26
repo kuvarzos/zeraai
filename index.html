@@ -1039,15 +1039,17 @@ body.app-ready { background: var(--bg); }
   touch-action: manipulation;
   user-select: none; -webkit-user-select: none;
 }
-.fab-slot { margin-top: -26px; }
+/* fab-slot: margin-top kaldırıldı — global FAB absolute positioned */
+.fab-slot { margin-top: 0; }
 
 .fab {
-  width: 54px; height: 54px;
+  /* iOS 26 Liquid Glass standartı: 56px daire, tam touch target */
+  width: 56px; height: 56px;
   background: var(--green); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   box-shadow:
-    0 4px 18px rgba(34,127,131,.42),
-    0 2px 6px  rgba(34,127,131,.20),
+    0 6px 24px rgba(34,127,131,.40),
+    0 2px 8px  rgba(34,127,131,.22),
     0 0 0 3px var(--bg);
   /* rAF tabanlı press — CSS transition sadece geri dönüş için */
   transition:
@@ -1085,7 +1087,9 @@ body.app-ready { background: var(--bg); }
 
 .fab-lbl {
   font-size: 10px; font-weight: 700;
-  color: var(--text3); letter-spacing: .15px; line-height: 1;
+  color: var(--green-mid);
+  letter-spacing: .1px; line-height: 1;
+  white-space: nowrap;
 }
 
 /* ── v77 Global FAB — Tüm navigasyonun üzerinde, sabit katman ────────────
@@ -1106,13 +1110,20 @@ body.app-ready { background: var(--bg); }
 ────────────────────────────────────────────────────────────────────────── */
 #global-fab-wrap {
   position: absolute;
-  /* Konum: .bnav yüksekliği yaklaşık 80px (padding-bottom:28px + ikon alanı)
-     FAB merkezi: bnav üst kenarından -26px yukarıda (fab-slot: margin-top:-26px)
-     Hesap: bottom = 80px - (-26px offset) = bnav tabanından 54px yukarı */
-  bottom: 46px;
+  /* ── iOS 26 Liquid Glass Tab Bar — Center FAB ───────────────────────────
+     Apple Music / Shortcuts pattern: FAB bnav içine entegre, ikon merkezi
+     bnav ikon satırıyla hizalı, label home indicator hizasında.
+
+     Hesap:
+       bnav yüksekliği ≈ 81px (28px home-indicator + 53px içerik)
+       FAB-wrap toplam yüksekliği: 56px(fab) + 4px(gap) + 12px(label) = 72px
+       bottom: 28px → FAB merkezi = 28 + 12 + 4 + 28 = 72px
+       bnav-icon merkezi ≈ 51px → FAB 21px taşar → iOS "raised center" pattern
+  ──────────────────────────────────────────────────────────────────────── */
+  bottom: 28px;
   left: 50%;
   transform: translateX(-50%) translateZ(0);
-  z-index: 15; /* bnav(10) + screen(2-3) üzerinde */
+  z-index: 15; /* bnav(10) üzerinde, sheet(80+) altında */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1121,17 +1132,41 @@ body.app-ready { background: var(--bg); }
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   user-select: none; -webkit-user-select: none;
-  /* GPU katmanı: hiçbir ebeveyn animasyonundan etkilenmez */
+  /* GPU katmanı */
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  will-change: transform;
-  /* splash/onboarding'de gizli — JS syncFabVisibility() ile yönetilir */
-  visibility: hidden;
+  will-change: transform, opacity;
+  /* Varsayılan: gizli — syncFabVisibility() ile yönetilir */
+  opacity: 0;
   pointer-events: none;
+  /* visibility gecikmeli kalkar → opacity:0 → display:none benzeri davranış */
+  visibility: hidden;
 }
 #global-fab-wrap.fab-visible {
   visibility: visible;
+  opacity: 1;
   pointer-events: auto;
+  /* Ekrana girişte spring animasyonu */
+  transition:
+    opacity .28s cubic-bezier(.4,0,.2,1),
+    transform .36s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* Sheet açıkken FAB spring-out ile küçülür ve solar — iOS 26 native */
+#global-fab-wrap.fab-sheet-open {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) scale(0.68) translateZ(0);
+  transition:
+    opacity  .16s cubic-bezier(.4,0,1,1),
+    transform .20s cubic-bezier(.4,0,1,1);
+}
+
+/* fab-visible + fab-sheet-open aynı anda: sheet önce gelir */
+#global-fab-wrap.fab-visible.fab-sheet-open {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) scale(0.68) translateZ(0);
 }
 
 /* Yer tutucu: her bnav'da FAB'ın kapladığı flex alanını korur */
@@ -3931,12 +3966,10 @@ body.app-ready { background: var(--bg); }
        JS: syncFabVisibility() ile splash/onboarding'de gizlenir.
   ═══════════════════════════════════════════════════════════════════════ -->
   <div id="global-fab-wrap">
-    <div class="fab-slot">
-      <div class="fab" id="global-fab">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M11 3v16M3 11h16" stroke="white" stroke-width="2.3" stroke-linecap="round"/>
-        </svg>
-      </div>
+    <div class="fab" id="global-fab">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 4v16M4 12h16" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
     </div>
     <div class="fab-lbl">Kayıt Gir</div>
   </div>
@@ -8016,15 +8049,27 @@ function setupBnav() {
 }
 
 // ── syncFabVisibility: splash/onboarding'de FAB gizle, diğerlerinde göster ─
-// Global FAB varsayılan olarak visibility:hidden başlar (CSS).
-// navTo() her çağrıldığında bu fonksiyon ekran kimliğine göre karar verir.
+// visibility:hidden → opacity:0 başlangıcı. fab-visible ile görünür.
 // KISIT: pointer-events:none korunur — görünmez ekranlarda tıklama engellenir.
 var FAB_HIDDEN_SCREENS = ['splash', 'onboarding'];
 function syncFabVisibility(screenId) {
   var wrap = document.getElementById('global-fab-wrap');
   if (!wrap) return;
   var hide = FAB_HIDDEN_SCREENS.indexOf(screenId) !== -1;
-  wrap.classList.toggle('fab-visible', !hide);
+  if (hide) {
+    wrap.classList.remove('fab-visible');
+    // visibility:hidden için kısa gecikme (opacity transition tamamlanabilsin)
+    setTimeout(function() {
+      if (!wrap.classList.contains('fab-visible')) {
+        wrap.style.visibility = 'hidden';
+      }
+    }, 300);
+  } else {
+    wrap.style.visibility = 'visible'; // önce visibility aç, sonra class ekle
+    requestAnimationFrame(function() {
+      wrap.classList.add('fab-visible');
+    });
+  }
 }
 
 // Kurulum: DOMContentLoaded veya hemen
@@ -9880,6 +9925,9 @@ function openKayit() {
   const el = document.getElementById('kayit-sheet');
   el.classList.remove('closing');
   el.classList.add('open');
+  // iOS 26: sheet açılırken FAB spring-out gizle
+  const fab = document.getElementById('global-fab-wrap');
+  if (fab) fab.classList.add('fab-sheet-open');
   // reset
   kayitIslem = null; kayitTarla = null; kayitTarih = 'bugun';
   ilacSayac = 1; gubreSayac = 1; kayitFotolar = [];
@@ -9901,6 +9949,9 @@ function openKayit() {
 function closeKayit() {
   const el = document.getElementById('kayit-sheet');
   el.classList.add('closing');
+  // iOS 26: sheet kapanırken FAB spring-in göster (sheet'in kapanma süresiyle senkron)
+  const fab = document.getElementById('global-fab-wrap');
+  if (fab) fab.classList.remove('fab-sheet-open');
   setTimeout(() => { el.classList.remove('open','closing'); }, 230);
 }
 
