@@ -1,9 +1,9 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
-║  ZERAİ (Hasat) — PROJE NOTU v80                                 ║
+║  ZERAİ (Hasat) — PROJE NOTU v80-fix                            ║
 ║  YENİ KONUŞMADA: sadece bu HTML'i yükle, geçmişi taşıma.       ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  UYGULAMA    : Zeraai  |  VERSİYON: v80                        ║
+║  UYGULAMA    : Zeraai  |  VERSİYON: v80-fix                   ║
 ║  PLATFORM    : iOS-benzeri mobil prototype (393×852px)          ║
 ║  YAPI        : Tek HTML — CSS + JS içinde, localStorage veri   ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -55,8 +55,9 @@
 ║  cur cleanup : transition:none + offsetHeight reflow → freeze   ║
 ║                → display:none (composite layer güvenli kapanır) ║
 ║  Home giriş  : homeEnterAnim — opacity+translateY(6px) 300ms   ║
-║  z-index     : aktif=2, standby=1, bnav=10, sheet=80+, modal=200║
-║                #global-fab-wrap=15 (tüm nav üzerinde, sabit)   ║
+║  z-index     : aktif=2, standby=1, bnav=10, FAB=15,            ║
+║                sheet=80+, .sheet-overlay=200                   ║
+║                FAB sheet'in ALTINDA kalır (doğal stacking)     ║
 ║  Fontlar     : Fraunces (başlık), Inter (gövde), Outfit (sayı) ║
 ║  Veri        : localStorage — FIELDS, KAYITLAR, USER_PREFS     ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -65,6 +66,7 @@
 ║  • FAB: #global-fab-wrap → .phone doğrudan çocuğu, z-index:15  ║
 ║      Tab geçişleri FAB'ı ASLA yeniden render etmez             ║
 ║      syncFabVisibility(): splash/onboarding'de gizlenir        ║
+║      fab-sheet-open class: kayit-sheet açıkken FAB solar       ║
 ║  • Glassmorphism: rgba(226,220,208,0.96) + blur(25px)          ║
 ║  • Morphing pill: .bnav-pill, JS translate3d, transition:none  ║
 ║  • İkon animasyonu: sadece tıklanan SVG — xIconPop 150ms spring ║
@@ -72,6 +74,19 @@
 ║  • ic-outline/ic-filled swap: sadece opacity (reflow:0)        ║
 ║  • Hit target: 44×44pt sabit (::before, left/right:0)          ║
 ║  • Skeleton: kayitlarim/fields → skelShimmer CSS-only          ║
+╠══════════════════════════════════════════════════════════════════╣
+║  GLOBAL FAB — iOS 26 RAISED CENTER BUTTON                       ║
+║  Konum   : bottom:28px — home indicator hizasında               ║
+║            FAB merkezi bnav ikon merkezinden ~21px taşar        ║
+║            → Apple Music / Shortcuts "raised center" pattern   ║
+║  Boyut   : 56×56px (iOS 26 Liquid Glass standardı)             ║
+║  HTML    : #global-fab-wrap > .fab#global-fab + .fab-lbl       ║
+║            fab-slot wrapper kaldırıldı; SVG ikon 22→24px       ║
+║  Gizleme : .fab-sheet-open → scale(0.68)+opacity:0, 160ms      ║
+║            openKayit() → class ekle  (spring-out)              ║
+║            closeKayit() → class kaldır (spring-in, 280ms)      ║
+║            Diğer sheet'ler (.phone çocuğu değil) → doğal z-idx ║
+║  Label   : color: --green-mid (aktif bnav rengiyle tutarlı)    ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  GEÇİŞ SİSTEMİ KRONOLOJİSİ                                     ║
 ║  v74: Spatial Depth (scale 0.96/1.04, 350ms) — KALDIRILDI      ║
@@ -133,6 +148,12 @@
 ║  │ Fix: 300ms fallback setTimeout → tab-enter kaldır +       │  ║
 ║  │ opacity:'' reset. animationend gelirse timer iptal edilir.│  ║
 ║  └───────────────────────────────────────────────────────────┘  ║
+║  ┌─ FIX-5D fromScreen home geçişi ───────────────────────────┐  ║
+║  │ Kök: navTo('home')'da fromScreen='home' → standbyId=id    │  ║
+║  │ → kayitlarim için tab-exit animasyonu atlanıyor.           │  ║
+║  │ Fix: id==='home' branch → fromScreen=currentScreen ile    │  ║
+║  │ doğru ekrana exit animasyonu. 240ms sonra fromScreen reset.│  ║
+║  └───────────────────────────────────────────────────────────┘  ║
 ║  ┌─ FIX-6 animationend bubble koruması ──────────────────────┐  ║
 ║  │ Kök: home/fields içindeki .fu/.skel child elementlerin    │  ║
 ║  │ animasyonları (fadeUp, skelShimmer vb.) animationend'ini  │  ║
@@ -142,19 +163,26 @@
 ║  │ Fix: e.target===s VE e.animationName==='iosTabEnter'      │  ║
 ║  │ çift kontrolü — child bubble'lar ignore, doğru temizleme. │  ║
 ║  └───────────────────────────────────────────────────────────┘  ║
-║  ┌─ FIX-5D fromScreen home geçişi ───────────────────────────┐  ║
-║  │ Kök: navTo('home')'da fromScreen='home' → standbyId=id    │  ║
-║  │ → kayitlarim için tab-exit animasyonu atlanıyor.           │  ║
-║  │ Fix: id==='home' branch → fromScreen=currentScreen ile    │  ║
-║  │ doğru ekrana exit animasyonu. 240ms sonra fromScreen reset.│  ║
+║  ┌─ FIX-7 FAB iOS 26 konumlandırma ─────────────────────────┐  ║
+║  │ Kök-1: bottom:46px → FAB bnav'ın çok üzerinde float      │  ║
+║  │ ediyordu; diğer sekme ikonlarından kopuk görünüm.         │  ║
+║  │ Kök-2: kayit-sheet (.phone çocuğu, z:200) aynı stacking  │  ║
+║  │ context → sheet açıkken FAB görünür kalıyordu.            │  ║
+║  │ Fix-1: bottom:28px → iOS "raised center" pattern.        │  ║
+║  │   FAB merkezi bnav ikon satırından ~21px taşar.           │  ║
+║  │   Apple Music/Shortcuts tab-bar FAB geometrisi.           │  ║
+║  │ Fix-2: openKayit() → .fab-sheet-open ekle                │  ║
+║  │   closeKayit() → .fab-sheet-open kaldır                  │  ║
+║  │   CSS: scale(0.68)+opacity:0, 160ms ease-in gidiş        │  ║
+║  │        scale(1)+opacity:1, 280ms spring dönüş            │  ║
+║  │ Boyut: 54→56px · SVG: 22→24px · fab-slot kaldırıldı      │  ║
+║  │ Label: --text3 → --green-mid (aktif bnav ile tutarlı)     │  ║
 ║  └───────────────────────────────────────────────────────────┘  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  AÇIK KONULAR / SIRADAKI                                        ║
 ║  → Gerçek hava API (OpenWeatherMap veya MGM) entegrasyonu      ║
 ║  → Bildirim toggle'ları şu an mockup — API gelince aktif       ║
 ║  → Onboarding görsel içerik (ikon/punto/spacing) polish        ║
-║  → Tab bar mimari refactor: .bnav'ı .screen dışına taşı        ║
-║     (Global FAB v77 ile kısmi çözüm yapıldı)                   ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  DİL & TON — "SEN" TONU, TOPRAKTAN OTORİTE                     ║
 ║  Temel: Saygın Usta sıcaklığı. Ne SaaS, ne aşırı samimi.      ║
@@ -9580,6 +9608,7 @@ function obBitir() {
     obEl.classList.add('ob-exiting');
     homeEl.classList.add('active', 'home-entering');
     syncBnav('home');
+    syncFabVisibility('home'); // v81-fix: FAB onboarding→home geçişinde gizli kalıyordu
     currentScreen = 'home';
 
     setTimeout(() => {
