@@ -1225,6 +1225,150 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
 .profil-cikis:active { background: rgba(168,64,53,0.12); }
 .profil-cikis-txt { font-size: 14px; font-weight: 600; color: var(--red); }
 
+
+/* ─── KASA EKRANI ─── */
+#screen-kasa { background: var(--bg); padding-top: 0; }
+
+.kasa-scroll {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-bottom: 100px;
+}
+.kasa-scroll::-webkit-scrollbar { display: none; }
+
+.kasa-hero {
+  background: linear-gradient(160deg, #1A6366 0%, #227F83 60%, #2E9298 100%);
+  padding: 48px 20px 24px;
+  flex-shrink: 0; position: relative; overflow: hidden;
+}
+.kasa-hero::before {
+  content: ''; position: absolute;
+  top: -50px; right: -30px;
+  width: 200px; height: 200px;
+  background: rgba(255,255,255,0.07); border-radius: 50%;
+}
+.kasa-hero::after {
+  content: ''; position: absolute;
+  bottom: -30px; left: 10px;
+  width: 130px; height: 130px;
+  background: rgba(255,255,255,0.045); border-radius: 50%;
+}
+.kasa-sezon-sec {
+  position: absolute; top: 12px; right: 16px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: var(--r-pill); padding: 6px 12px;
+  font-size: 12px; font-weight: 700; color: white;
+  cursor: pointer; z-index: 1;
+}
+.kasa-lbl {
+  font-size: 10px; color: rgba(255,255,255,0.6);
+  font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; margin-bottom: 5px;
+  position: relative; z-index: 1;
+}
+.kasa-net {
+  font-family: 'Fraunces', serif;
+  font-size: 44px; font-weight: 500; color: white;
+  letter-spacing: -1px; line-height: 1;
+  position: relative; z-index: 1; margin-bottom: 18px;
+}
+.kasa-net span { font-size: 22px; opacity: 0.5; font-weight: 300; margin-right: 2px; }
+.kasa-mini-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; position: relative; z-index: 1;
+}
+.kasa-mini {
+  background: rgba(255,255,255,0.13);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--r); padding: 11px 13px;
+}
+.kasa-mini-lbl {
+  font-size: 10px; color: rgba(255,255,255,0.58);
+  font-weight: 600; letter-spacing: 0.4px;
+  text-transform: uppercase; margin-bottom: 5px;
+}
+.kasa-mini-val { font-size: 20px; font-weight: 400; color: white; }
+.kasa-mini-trend { font-size: 10px; font-weight: 700; margin-top: 4px; }
+.kasa-mini-trend.up   { color: #86EFAC; }
+.kasa-mini-trend.down { color: #FCA5A5; }
+
+.bar-chart {
+  margin: 16px 16px 0;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 16px;
+  box-shadow: var(--shadow);
+}
+.bar-chart-title {
+  font-family: 'Fraunces', serif;
+  font-size: 15px; font-weight: 500; color: var(--text);
+  margin-bottom: 14px;
+}
+.bar-chart-area {
+  display: flex; align-items: flex-end;
+  gap: 6px; height: 80px; margin-bottom: 8px;
+}
+.bar-col {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; gap: 4px;
+  height: 100%;
+}
+.bar-fill { width: 100%; border-radius: 5px 5px 0 0; min-height: 3px; }
+.bar-fill.gelir { background: var(--green); }
+.bar-fill.gider { background: var(--gold-lt); border: 1px solid var(--gold); }
+.bar-ay { font-size: 9px; color: var(--text3); font-weight: 600; }
+.bar-legend { display: flex; gap: 14px; margin-top: 4px; }
+.bar-legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text2); font-weight: 500;
+}
+.bar-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+.gider-kart {
+  margin: 16px 16px 0;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow);
+}
+.gider-satir {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+}
+.gider-satir:last-child { border-bottom: none; }
+.gider-ic {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 16px;
+}
+.gider-body { flex: 1; }
+.gider-ad { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.gider-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.gider-bar-bg {
+  flex: 1; height: 4px; background: var(--border);
+  border-radius: 4px; overflow: hidden;
+}
+.gider-bar-fill { height: 100%; border-radius: 4px; }
+.gider-pct { font-size: 10px; font-weight: 700; color: var(--text3); }
+.gider-tutar { font-size: 14px; font-weight: 500; color: var(--text); }
+
+.tarla-kar-kart {
+  margin: 16px 16px 0;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow);
+}
+.tarla-kar-satir {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px; border-bottom: 1px solid var(--border);
+}
+.tarla-kar-satir:last-child { border-bottom: none; }
+.tarla-kar-renk { width: 4px; height: 36px; border-radius: 4px; flex-shrink: 0; }
+.tarla-kar-body { flex: 1; }
+.tarla-kar-ad  { font-size: 14px; font-weight: 600; color: var(--text); }
+.tarla-kar-alt { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.tarla-kar-sag { text-align: right; }
+.tarla-kar-val { font-size: 15px; font-weight: 600; color: var(--text); }
+.tarla-kar-val.pos { color: var(--green-mid); }
+.tarla-kar-val.neg { color: var(--red); }
+.tarla-kar-detay { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
 </style>
 </head>
 <body>
@@ -1789,7 +1933,138 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
     </div>
 
   </div>
-    <div id="screen-kasa"        class="screen"        data-screen="kasa"></div>
+    <div id="screen-kasa"        class="screen"        data-screen="kasa">
+
+    <!-- Hero -->
+    <div class="kasa-hero">
+      <div class="kasa-sezon-sec">2025 Sezonu ▾</div>
+      <div class="kasa-lbl">Net Kar</div>
+      <div class="kasa-net"><span>₺</span><span id="kasa-net-val">12.470</span></div>
+      <div class="kasa-mini-row">
+        <div class="kasa-mini">
+          <div class="kasa-mini-lbl">Toplam Gelir</div>
+          <div class="kasa-mini-val" id="kasa-gelir-val">₺56.600</div>
+          <div class="kasa-mini-trend up" id="kasa-gelir-trend">↑ %14 geçen yıla göre</div>
+        </div>
+        <div class="kasa-mini">
+          <div class="kasa-mini-lbl">Toplam Gider</div>
+          <div class="kasa-mini-val" id="kasa-gider-val">₺44.130</div>
+          <div class="kasa-mini-trend down" id="kasa-gider-trend">↓ %8 geçen yıla göre</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kasa-scroll">
+
+      <!-- Aylık bar grafik -->
+      <div class="bar-chart fu">
+        <div class="bar-chart-title">Aylık Gelir / Gider</div>
+        <div class="bar-chart-area" id="kasa-bar-area">
+          <!-- JS ile doldurulur -->
+        </div>
+        <div class="bar-legend">
+          <div class="bar-legend-item">
+            <div class="bar-legend-dot" style="background:var(--green)"></div> Gelir
+          </div>
+          <div class="bar-legend-item">
+            <div class="bar-legend-dot" style="background:var(--gold)"></div> Gider
+          </div>
+        </div>
+      </div>
+
+      <!-- Gider dağılımı -->
+      <div class="sec fu" style="margin-top:16px;">
+        <div class="sec-title">Gider Dağılımı</div>
+      </div>
+      <div class="gider-kart fu">
+        <div class="gider-satir">
+          <div class="gider-ic" style="background:var(--sky-lt)">💊</div>
+          <div class="gider-body">
+            <div class="gider-ad">İlaç</div>
+            <div class="gider-bar-wrap">
+              <div class="gider-bar-bg"><div class="gider-bar-fill" style="width:28%;background:var(--sky)"></div></div>
+              <div class="gider-pct">%28</div>
+            </div>
+          </div>
+          <div class="gider-tutar">₺12.356</div>
+        </div>
+        <div class="gider-satir">
+          <div class="gider-ic" style="background:var(--gold-lt)">🌱</div>
+          <div class="gider-body">
+            <div class="gider-ad">Gübre</div>
+            <div class="gider-bar-wrap">
+              <div class="gider-bar-bg"><div class="gider-bar-fill" style="width:32%;background:var(--gold)"></div></div>
+              <div class="gider-pct">%32</div>
+            </div>
+          </div>
+          <div class="gider-tutar">₺14.122</div>
+        </div>
+        <div class="gider-satir">
+          <div class="gider-ic" style="background:var(--green-lt)">🌾</div>
+          <div class="gider-body">
+            <div class="gider-ad">Tohum</div>
+            <div class="gider-bar-wrap">
+              <div class="gider-bar-bg"><div class="gider-bar-fill" style="width:22%;background:var(--green)"></div></div>
+              <div class="gider-pct">%22</div>
+            </div>
+          </div>
+          <div class="gider-tutar">₺9.708</div>
+        </div>
+        <div class="gider-satir">
+          <div class="gider-ic" style="background:var(--bg2)">🚜</div>
+          <div class="gider-body">
+            <div class="gider-ad">Yakıt &amp; Makine</div>
+            <div class="gider-bar-wrap">
+              <div class="gider-bar-bg"><div class="gider-bar-fill" style="width:18%;background:var(--text3)"></div></div>
+              <div class="gider-pct">%18</div>
+            </div>
+          </div>
+          <div class="gider-tutar">₺7.944</div>
+        </div>
+      </div>
+
+      <!-- Tarla bazlı kar/zarar -->
+      <div class="sec fu" style="margin-top:16px;">
+        <div class="sec-title">Tarla Bazlı Kar / Zarar</div>
+      </div>
+      <div class="tarla-kar-kart fu">
+        <div class="tarla-kar-satir">
+          <div class="tarla-kar-renk" style="background:#C8951A"></div>
+          <div class="tarla-kar-body">
+            <div class="tarla-kar-ad">Kuzey Tarla</div>
+            <div class="tarla-kar-alt">Buğday · 45 dönüm</div>
+          </div>
+          <div class="tarla-kar-sag">
+            <div class="tarla-kar-val pos">+₺4.200</div>
+            <div class="tarla-kar-detay">Gelir ₺18.400 · Gider ₺14.200</div>
+          </div>
+        </div>
+        <div class="tarla-kar-satir">
+          <div class="tarla-kar-renk" style="background:#2B9E9B"></div>
+          <div class="tarla-kar-body">
+            <div class="tarla-kar-ad">Doğu Parsel</div>
+            <div class="tarla-kar-alt">Çeltik · 30 dönüm · devam ediyor</div>
+          </div>
+          <div class="tarla-kar-sag">
+            <div class="tarla-kar-val" style="color:var(--text3);font-size:13px;">Henüz hasat yok</div>
+            <div class="tarla-kar-detay">Gider ₺11.400</div>
+          </div>
+        </div>
+        <div class="tarla-kar-satir">
+          <div class="tarla-kar-renk" style="background:#B45309"></div>
+          <div class="tarla-kar-body">
+            <div class="tarla-kar-ad">Güney Tarla</div>
+            <div class="tarla-kar-alt">Ayçiçeği · 60 dönüm</div>
+          </div>
+          <div class="tarla-kar-sag">
+            <div class="tarla-kar-val pos">+₺2.470</div>
+            <div class="tarla-kar-detay">Gelir ₺23.870 · Gider ₺21.400</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
     <div id="screen-profil"      class="screen"        data-screen="profil">
     <div class="profil-scroll">
 
@@ -2361,6 +2636,7 @@ function navTo(id) {
   if (id === 'home') updateHomeGreeting();
   if (id === 'kayitlarim') renderKayitlar(aktifFiltre);
   if (id === 'profil') profilGuncelle();
+  if (id === 'kasa') renderKasaBar();
 }
 
 /* ─── NAV BACK ───────────────────────────────────────────── */
@@ -3328,6 +3604,35 @@ function profilCikis() {
     localStorage.clear();
     location.reload();
   }
+}
+
+
+/* ─── KASA BAR GRAFİK ────────────────────────────────────── */
+const kasaAylik = [
+  { ay:'Eyl', gelir:0,      gider:6000  },
+  { ay:'Eki', gelir:0,      gider:8400  },
+  { ay:'Kas', gelir:0,      gider:4200  },
+  { ay:'Ara', gelir:0,      gider:3750  },
+  { ay:'Oca', gelir:0,      gider:5280  },
+  { ay:'Şub', gelir:0,      gider:10200 },
+  { ay:'Mar', gelir:56600,  gider:6300  },
+];
+
+function renderKasaBar() {
+  const area = document.getElementById('kasa-bar-area');
+  if (!area) return;
+  const maxVal = Math.max(...kasaAylik.map(d => Math.max(d.gelir, d.gider)), 1);
+  area.innerHTML = kasaAylik.map(d => {
+    const gH = Math.round(d.gelir / maxVal * 72);
+    const eH = Math.round(d.gider / maxVal * 72);
+    return `<div class="bar-col">
+      <div style="display:flex;align-items:flex-end;gap:2px;height:72px;">
+        <div class="bar-fill gelir" style="height:${gH}px;flex:1"></div>
+        <div class="bar-fill gider" style="height:${eH}px;flex:1"></div>
+      </div>
+      <div class="bar-ay">${d.ay}</div>
+    </div>`;
+  }).join('');
 }
 
 /* ─── INIT ───────────────────────────────────────────────── */
