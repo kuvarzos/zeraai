@@ -2704,7 +2704,7 @@ function setSbLeft(screenId) {
   if (screenId !== 'fields' && right) right.innerHTML = '';
 
   if (screenId === 'home') {
-    left.innerHTML = `<div class="sb-avatar" id="sb-avatar" style="cursor:pointer">A</div>
+    left.innerHTML = `<div class="sb-avatar" id="sb-avatar" style="cursor:pointer" onclick="navTo('profil')">A</div>
       <div id="sb-greeting" style="display:flex;flex-direction:column;margin-left:8px;">
         <span style="font-size:11px;color:var(--text2)" id="sb-greeting-sub">Günaydın,</span>
         <span style="font-size:15px;font-weight:600;color:var(--text)" id="sb-greeting-name">Ahmet</span>
@@ -3642,7 +3642,9 @@ document.addEventListener('DOMContentLoaded', () => {
   _bnavShow(false);
   _fabShow(false);
   setSbLeft('splash');
+  lsKayitlarYukle();
   lsProfilYukle();
+  profilGuncelle();
   updateHomeGreeting();
 
   // Home scroll → header shadow
