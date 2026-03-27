@@ -8031,24 +8031,11 @@ function setupBnav() {
 // ── syncFabVisibility: splash/onboarding'de FAB gizle, diğerlerinde göster ─
 // visibility:hidden → opacity:0 başlangıcı. fab-visible ile görünür.
 // KISIT: pointer-events:none korunur — görünmez ekranlarda tıklama engellenir.
-var FAB_HIDDEN_SCREENS = ['splash', 'onboarding'];
+// syncFabVisibility — _fabShow'a yönlendiriyor (tek kaynak)
+var FAB_HIDDEN_SCREENS = ['splash', 'onboarding', 'detail', 'profil', 'bildirimler'];
 function syncFabVisibility(screenId) {
-  var wrap = document.getElementById('global-fab-wrap');
-  if (!wrap) return;
-  var hide = FAB_HIDDEN_SCREENS.indexOf(screenId) !== -1;
-  if (hide) {
-    wrap.classList.remove('fab-visible');
-    // visibility:hidden için kısa gecikme (opacity transition tamamlanabilsin)
-    setTimeout(function() {
-      if (!wrap.classList.contains('fab-visible')) {
-        wrap.style.visibility = 'hidden';
-      }
-    }, 300);
-  } else {
-    wrap.style.visibility = 'visible'; // önce visibility aç, sonra class ekle
-    requestAnimationFrame(function() {
-      wrap.classList.add('fab-visible');
-    });
+  if (typeof _fabShow === 'function') {
+    _fabShow(FAB_HIDDEN_SCREENS.indexOf(screenId) === -1);
   }
 }
 
@@ -8066,113 +8053,145 @@ if (document.readyState === 'loading') {
 // Detay geçişi: slide-in/slide-left (sağdan/soldan).
 // Sıfır race condition: timer yok, standby display trick yok.
 // ══════════════════════════════════════════════════════════════════
+// ── Ekranı sıfırla — tüm animasyon sınıfları ve inline stiller temiz ──
+function _screenReset(el) {
+  if (!el) return;
+  el.classList.remove('active','back','slide-in','slide-left','tab-enter','tab-exit','sb-behind','detail-exit');
+  el.style.cssText = '';
+}
+
+// ── Global bnav göster/gizle ───────────────────────────────────────
+function _bnavShow(show) {
+  var bnav = document.getElementById('global-bnav');
+  if (!bnav) return;
+  bnav.style.display = show ? 'flex' : 'none';
+}
+
+// ── Global FAB göster/gizle ────────────────────────────────────────
+// Detail ekranında gizlenir (geri butonu ile dönünce yeniden gösterilir)
+function _fabShow(show) {
+  var wrap = document.getElementById('global-fab-wrap');
+  if (!wrap) return;
+  if (show) {
+    wrap.style.visibility = 'visible';
+    requestAnimationFrame(function() { wrap.classList.add('fab-visible'); });
+  } else {
+    wrap.classList.remove('fab-visible');
+    setTimeout(function() {
+      if (!wrap.classList.contains('fab-visible')) wrap.style.visibility = 'hidden';
+    }, 200);
+  }
+}
+
 function navTo(id) {
   // ── ÖZEL GEÇİŞ: splash → onboarding ─────────────────────────────
   if (currentScreen === 'splash' && id === 'onboarding') {
     const splashEl = document.getElementById('splash');
     const obEl     = document.getElementById('onboarding');
-
     splashEl.classList.remove('active');
     splashEl.classList.add('splash-exit');
     document.body.classList.add('app-ready');
     document.querySelector('.phone')?.classList.add('app-ready');
     obEl.classList.add('active', 'ob-entering');
-
     setTimeout(() => { splashEl.classList.remove('splash-exit'); splashEl.style.display = 'none'; }, 420);
     setTimeout(() => { obEl.classList.remove('ob-entering'); }, 620);
-
     const sqIcon = document.getElementById('ob-squircle-icon');
     if (sqIcon) { sqIcon.classList.remove('animate'); void sqIcon.offsetWidth; sqIcon.classList.add('animate'); }
-
     currentScreen = 'onboarding';
     fromScreen    = 'onboarding';
     setSbLeft('onboarding');
     syncBnav('onboarding');
-    syncFabVisibility('onboarding');
-    _bnavShow(false); // splash/onboarding'de bnav gizli
+    _bnavShow(false);
+    _fabShow(false);
     return;
   }
 
-  const isTab = navOrder.includes(id);
-  const prevScreen = currentScreen;
-  const prevEl = document.getElementById(prevScreen);
+  const isTab    = navOrder.includes(id);
+  const prevId   = currentScreen;
+  const prevEl   = document.getElementById(prevId);
   const targetEl = document.getElementById(id);
   if (!targetEl) return;
 
-  // fromScreen: swipe-back için hedef
-  if (DETAIL_SCREENS.includes(id)) {
-    fromScreen = currentScreen;
-  } else if (id === 'home') {
-    fromScreen = 'home';
-  } else {
-    fromScreen = 'home';
-  }
+  // fromScreen — swipe-back hedefi
+  fromScreen = DETAIL_SCREENS.includes(id) ? prevId : 'home';
 
-  // ── Tüm ekranları temizle (hedef ve prev hariç) ──────────────────
+  // ── Tüm ekranları sıfırla (hedef hariç, prev cross-fade için ayrı işlenir)
   document.querySelectorAll('.screen').forEach(s => {
-    if (s === targetEl || s === prevEl) return;
+    if (s === targetEl || (isTab && s === prevEl)) return;
     _screenReset(s);
   });
 
-  // ── Geçiş animasyonu ─────────────────────────────────────────────
+  // ── Geçiş animasyonu ──────────────────────────────────────────────
   if (isTab) {
-    // Tab → cross-fade: eski solar, yeni belirir
+    // Eski ekran: solar
     if (prevEl && prevEl !== targetEl) {
-      prevEl.style.zIndex = '2';
+      prevEl.classList.remove('active','slide-in','slide-left','tab-enter');
+      prevEl.style.zIndex        = '2';
       prevEl.style.pointerEvents = 'none';
-      prevEl.classList.remove('active');
+      prevEl.style.opacity       = '';
       prevEl.classList.add('tab-exit');
-      setTimeout(() => { _screenReset(prevEl); }, 180);
+      setTimeout(() => { _screenReset(prevEl); }, 200);
     }
-    // Yeni ekran — animasyonu sıfırla ve başlat
-    targetEl.style.animation = 'none';
-    targetEl.offsetHeight; // reflow
-    targetEl.style.animation = '';
-    targetEl.style.zIndex = '3';
-    targetEl.classList.add('active', 'tab-enter');
-    // tab-enter temizle — child bubble koruması
-    function _cleanup(e) {
-      if (e.target !== targetEl || e.animationName !== 'iosTabEnter') return;
-      clearTimeout(_fallback);
-      targetEl.classList.remove('tab-enter');
-      targetEl.style.opacity = '';
-      targetEl.removeEventListener('animationend', _cleanup);
-    }
-    const _fallback = setTimeout(() => {
-      targetEl.classList.remove('tab-enter');
-      targetEl.style.opacity = '';
-      targetEl.removeEventListener('animationend', _cleanup);
-    }, 280);
-    targetEl.addEventListener('animationend', _cleanup);
+
+    // ── HATA 1 FİX: Yeni ekranı animasyonsuz önce göster,
+    //    sonra tab-enter ekle. Bu sayede child elementlerin
+    //    animationend'i tab-enter'ı mahvetmiyor.
+    _screenReset(targetEl);
+    targetEl.style.zIndex  = '3';
+    targetEl.style.opacity = '0';
+    targetEl.classList.add('active');
+
+    // Bir frame bekle → DOM yerleşsin, sonra fade-in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Basit opacity geçişi — animasyon sınıfı yok, çakışma imkânsız
+        targetEl.style.transition = 'opacity 220ms ease-out';
+        targetEl.style.opacity    = '1';
+        setTimeout(() => {
+          targetEl.style.transition = '';
+          targetEl.style.opacity    = '';
+          targetEl.style.zIndex     = '';
+        }, 240);
+      });
+    });
+
   } else {
     // Detay/profil → slide
-    const fromIdx = navOrder.indexOf(prevScreen);
-    const toIdx   = navOrder.indexOf(id);
-    const animClass = (fromIdx === -1 || toIdx >= fromIdx) ? 'slide-in' : 'slide-left';
     if (prevEl && prevEl !== targetEl) {
-      prevEl.style.zIndex = '1';
-      prevEl.style.transform = 'translateX(-' + (window.innerWidth * _PAR) + 'px)';
+      prevEl.style.zIndex     = '1';
+      prevEl.style.transform  = 'translateX(-' + (window.innerWidth * _PAR) + 'px)';
       prevEl.style.transition = 'none';
+      prevEl.classList.add('active');
     }
     targetEl.style.zIndex = '2';
-    targetEl.classList.add(animClass);
+    targetEl.classList.add('slide-in');
   }
 
   currentScreen = id;
 
   // ── Ekran bazlı veri render ───────────────────────────────────────
+  if (id === 'home') {
+    requestAnimationFrame(() => {
+      if (typeof renderHavaTahmin  === 'function') renderHavaTahmin();
+      if (typeof renderHavaTavsiye === 'function') renderHavaTavsiye();
+      if (typeof renderKritikBant  === 'function') renderKritikBant();
+      if (typeof renderWbBadge     === 'function') renderWbBadge();
+      if (typeof homeEmptyStateGuncelle === 'function') homeEmptyStateGuncelle();
+    });
+  }
+  if (id === 'fields') {
+    requestAnimationFrame(() => {
+      if (typeof renderFieldsProgress === 'function') renderFieldsProgress();
+    });
+  }
   if (id === 'kayitlarim') {
     const scrollEl = document.getElementById('kayit-liste-scroll');
-    if (scrollEl) {
-      scrollEl.innerHTML = Array(5).fill(0).map(() =>
-        `<div class="skel-item"><div class="skel-line skel-ic"></div><div class="skel-body"><div class="skel-line skel-t1"></div><div class="skel-line skel-t2"></div></div><div class="skel-line skel-amt"></div></div>`
-      ).join('');
-    }
+    if (scrollEl) scrollEl.innerHTML = Array(5).fill(0).map(() =>
+      `<div class="skel-item"><div class="skel-line skel-ic"></div><div class="skel-body"><div class="skel-line skel-t1"></div><div class="skel-line skel-t2"></div></div><div class="skel-line skel-amt"></div></div>`
+    ).join('');
     requestAnimationFrame(() => {
       renderKayitlar(aktifFiltre);
-      document.querySelectorAll('.filtre-chip').forEach(c => {
-        c.classList.toggle('active', c.dataset.tip === aktifFiltre);
-      });
+      document.querySelectorAll('.filtre-chip').forEach(c => c.classList.toggle('active', c.dataset.tip === aktifFiltre));
     });
   }
   if (id === 'kasa' && typeof kasaSezonVeri !== 'undefined') {
@@ -8182,37 +8201,17 @@ function navTo(id) {
       if (v) renderKasaEkrani(aktifYil, v);
     });
   }
-  if (id === 'fields') {
-    requestAnimationFrame(() => {
-      if (typeof renderFieldsProgress === 'function') renderFieldsProgress();
-    });
-  }
-  if (id === 'home') {
-    requestAnimationFrame(() => {
-      if (typeof renderHavaTahmin  === 'function') renderHavaTahmin();
-      if (typeof renderHavaTavsiye === 'function') renderHavaTavsiye();
-    });
-  }
 
+  // ── UI senkron ────────────────────────────────────────────────────
   setSbLeft(id);
   syncBnav(id);
-  syncFabVisibility(id);
   _bnavShow(!['splash','onboarding'].includes(id));
+
+  // ── HATA 3 FİX: FAB — detail'de gizle, diğerlerinde göster ──────
+  const hideFab = ['splash','onboarding','detail','profil','bildirimler'].includes(id);
+  _fabShow(!hideFab);
+
   setupHeaderScroll();
-}
-
-// Ekranı sıfırla — tüm animasyon sınıfları ve inline stiller temiz
-function _screenReset(el) {
-  if (!el) return;
-  el.classList.remove('active','back','slide-in','slide-left','tab-enter','tab-exit','sb-behind','detail-exit');
-  el.style.cssText = '';
-}
-
-// Global bnav göster/gizle
-function _bnavShow(show) {
-  var bnav = document.getElementById('global-bnav');
-  if (!bnav) return;
-  bnav.style.display = show ? 'flex' : 'none';
 }
 
 let currentDetailKey = null;
@@ -8247,32 +8246,36 @@ function openDetail(key) {
     detailEl.classList.add('slide-in');
   }
   setSbLeft('detail');
+  _fabShow(false); // Detail ekranında FAB gizle
 }
 
 function navBack() {
-  // Gidilecek ekranı belirle — fallback: home
   const target = (fromScreen && fromScreen !== currentScreen && document.getElementById(fromScreen))
     ? fromScreen : 'home';
 
   const targetEl = document.getElementById(target);
   if (!targetEl) { navTo('home'); return; }
 
-  // ── Detail'den geri: slide animasyonlu ───────────────────────────
+  // ── Detail'den geri ───────────────────────────────────────────────
   if (currentScreen === 'detail') {
     const curEl = document.getElementById('detail');
 
-    // Diğer tüm ekranları sıfırla
+    // Diğer ekranları sıfırla (cur ve target hariç)
     document.querySelectorAll('.screen').forEach(s => {
       if (s === curEl || s === targetEl) return;
       _screenReset(s);
     });
 
-    // Hedef ekranı anında göster (parallax temizle)
-    targetEl.style.transition = 'none';
-    targetEl.offsetHeight;
-    targetEl.style.transform = '';
-    targetEl.style.zIndex    = '1';
-    targetEl.classList.remove('back','slide-in','slide-left','tab-enter','tab-exit');
+    // HATA 2 FİX: Hedef ekranı tam temizle — parallax transform + tüm stiller
+    // cssText = '' yerine tek tek sıfırla (active sınıfı ekleyeceğiz)
+    targetEl.style.transition  = 'none';
+    targetEl.style.transform   = '';
+    targetEl.style.zIndex      = '1';
+    targetEl.style.display     = '';
+    targetEl.style.visibility  = '';
+    targetEl.style.opacity     = '';
+    targetEl.offsetHeight; // reflow — parallax anında kaldırıldı
+    targetEl.classList.remove('back','slide-in','slide-left','tab-enter','tab-exit','sb-behind');
     targetEl.classList.add('active');
     requestAnimationFrame(() => { targetEl.style.transition = ''; });
 
@@ -8294,14 +8297,17 @@ function navBack() {
     }
 
     currentScreen = target;
-    fromScreen    = navOrder.includes(target) ? 'home' : target;
+    fromScreen    = 'home';
+
     setSbLeft(target);
     syncBnav(target);
+    _bnavShow(true);
+    _fabShow(true); // HATA 3 FİX: detail'den dönerken FAB'ı geri getir
     setupHeaderScroll();
     return;
   }
 
-  // ── Normal geri (profil→home vb.) ────────────────────────────────
+  // ── Normal geri (profil → home vb.) ──────────────────────────────
   document.querySelectorAll('.screen').forEach(s => _screenReset(s));
 
   targetEl.style.animation = 'none';
@@ -8310,12 +8316,12 @@ function navBack() {
   targetEl.classList.add(navOrder.includes(target) ? 'active' : 'slide-left');
 
   currentScreen = target;
-  fromScreen    = navOrder.includes(target) ? 'home' : target;
+  fromScreen    = 'home';
 
   setSbLeft(target);
   syncBnav(target);
-  syncFabVisibility(target);
   _bnavShow(!['splash','onboarding'].includes(target));
+  _fabShow(!['splash','onboarding','detail','profil','bildirimler'].includes(target));
   setupHeaderScroll();
 }// ── Swipe-Back Gesture — iOS 2026 Premium ────────────────────────────────────
 //
@@ -8575,6 +8581,9 @@ function navBack() {
 
       setSbLeft(target);
       syncBnav(target);
+      // Swipe-back sonrası FAB'ı geri getir (detail'den çıkıldıysa)
+      var hideFabTargets = ['splash','onboarding','detail','profil','bildirimler'];
+      if (typeof _fabShow === 'function') _fabShow(hideFabTargets.indexOf(target) === -1);
       setupHeaderScroll();
     }, dur + 16);
   }
