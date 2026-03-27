@@ -94,24 +94,66 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   position: absolute; top: 0; left: 0; right: 0;
   height: 58px; z-index: 20;
   background: var(--bg-header);
-  display: flex; align-items: flex-end; justify-content: space-between;
-  padding: 0 20px 10px;
-  transition: box-shadow 0.2s;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  border-bottom: 1px solid transparent;
 }
-#sb-bar.scrolled { box-shadow: var(--shadow); }
-#sb-left { display: flex; align-items: center; gap: 8px; }
-#sb-right { display: flex; align-items: center; gap: 10px; }
-.sb-icon-btn {
+#sb-bar.scrolled {
+  box-shadow: 0 1px 4px rgba(40,36,28,0.09);
+  border-bottom-color: rgba(216,209,200,0.5);
+}
+#sb-bar.sb-hidden { visibility: hidden; }
+#sb-left { display: flex; align-items: center; gap: 0; }
+#sb-right { display: flex; align-items: center; gap: 4px; }
+
+/* Avatar wrapper — 44px dokunma alanı */
+.sb-avatar-wrap {
+  min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.sb-avatar {
   width: 32px; height: 32px; border-radius: 50%;
+  background: var(--green); display: flex; align-items: center;
+  justify-content: center; color: #fff; font-size: 16px;
+  font-weight: 600; font-family: 'Fraunces', serif;
+  flex-shrink: 0;
+}
+
+/* Selamlama bloğu */
+.sb-greeting {
+  display: flex; flex-direction: column; gap: 1px;
+  margin-left: 4px;
+}
+.sb-greeting-sub {
+  font-size: 11px; color: var(--text2); font-weight: 400;
+  font-family: 'Inter', sans-serif; line-height: 1.2;
+}
+.sb-greeting-name {
+  font-size: 15px; font-weight: 600; color: var(--text);
+  font-family: 'Inter', sans-serif; line-height: 1.2;
+}
+
+/* Geri butonu */
+.sb-icon-btn {
+  min-width: 44px; min-height: 44px; border-radius: 50%;
   background: transparent; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   color: var(--text); -webkit-tap-highlight-color: transparent;
 }
-.sb-avatar {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: var(--green); display: flex; align-items: center;
-  justify-content: center; color: #fff; font-size: 12px;
-  font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer;
+
+/* Zil wrapper — 44px dokunma alanı */
+.sb-bell-wrap {
+  position: relative;
+  min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.sb-bell-badge {
+  position: absolute; top: 8px; right: 8px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #A84035; pointer-events: none;
 }
 
 /* ─── SCREENS ────────────────────────────────────────────── */
@@ -153,26 +195,52 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
 .screen.detail-exit { animation: iosSlideBack 300ms cubic-bezier(.4,0,.2,1) forwards; z-index: 4; }
 
 /* ─── FAB ────────────────────────────────────────────────── */
+/*
+  Koordinat mantığı (iOS "raised center button" standardı):
+  - Tab bar: height 82px, padding-bottom 26px
+  - Tab bar görsel içerik alanı: 82 - 26 = 56px (top'tan 0, bottom'dan 26px)
+  - FAB çapı: 56px, yarıçap: 28px
+  - Hedef: FAB merkezinin tab bar üst border'ıyla çakışması
+  - FAB merkezi yerden: 82px (tab bar top border)
+  - Wrap bottom: 82 - 28(yarıçap) - 4(gap) - 10(label) = 40px
+  → FAB'ın yarısı tab bar içinde, yarısı dışarıda — iOS standardı
+*/
 #global-fab-wrap {
   position: absolute;
-  bottom: 22px; left: 50%; transform: translateX(-50%);
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 15;
   visibility: hidden;
   transition: visibility 0s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 #global-fab-wrap.fab-visible { visibility: visible; }
 
 .fab {
   width: 56px; height: 56px; border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 4px 16px rgba(34,127,131,0.40);
+  box-shadow: 0 4px 20px rgba(34,127,131,0.45), 0 1px 4px rgba(34,127,131,0.20);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   color: #fff; -webkit-tap-highlight-color: transparent;
   transition: transform 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
 }
 .fab:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(34,127,131,0.30); }
 .fab svg { pointer-events: none; }
+
+/* Kayıt Gir label — FAB altında, tab bar içinde */
+.fab-lbl {
+  font-size: 10px; font-weight: 500; font-family: 'Inter', sans-serif;
+  line-height: 1; letter-spacing: 0.01em;
+  color: var(--text3);
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 @keyframes xIconPop {
   0%   { transform: scale(0.5) rotate(-45deg); opacity: 0; }
@@ -188,11 +256,11 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   display: none; /* controlled by _bnavShow */
   align-items: flex-start;
   justify-content: space-around;
-  padding: 0 4px 28px;
-  background: rgba(237,232,221,0.85);
-  backdrop-filter: blur(20px) saturate(1.8);
-  -webkit-backdrop-filter: blur(20px) saturate(1.8);
-  border-top: 1px solid rgba(216,209,200,0.6);
+  padding: 0 4px 26px;
+  background: rgba(232,226,212,0.82);
+  backdrop-filter: blur(28px) saturate(2.2) brightness(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(2.2) brightness(1.04);
+  border-top: 1px solid rgba(210,202,188,0.55);
   z-index: 10;
   contain: layout style;
 }
@@ -201,34 +269,52 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   position: relative;
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: flex-start;
-  padding-top: 10px; gap: 3px;
+  padding-top: 8px; gap: 3px;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
-  color: var(--text3); transition: color 0.2s;
-  min-height: 54px;
+  color: var(--text3);
+  transition: color 0.22s ease;
+  min-height: 54px; z-index: 1;
 }
 .bnav-item.active { color: var(--green); }
 
 .bnav-icon-wrap {
   position: relative; width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
+  transition: transform 0.18s cubic-bezier(.34,1.56,.64,1);
 }
+.bnav-item.active .bnav-icon-wrap {
+  transform: scale(1.08);
+}
+
 .bnav-lbl {
   font-size: 10px; font-weight: 500; font-family: 'Inter', sans-serif;
   line-height: 1; letter-spacing: 0.01em;
 }
+
+/* FAB spacer — sadece boşluk tutucu, label #global-fab-wrap içinde */
 .bnav-fab-spacer {
   flex: 1; pointer-events: none;
 }
 
-/* Active pill indicator */
+/* Active pill — kapsül (iOS 18 style) */
 .bnav-pill {
-  position: absolute; top: 4px;
-  height: 3px; border-radius: 2px;
-  background: var(--green);
+  position: absolute;
+  top: 4px;
+  height: 34px;
+  border-radius: 17px;
+  background: rgba(34,127,131,0.11);
   transition: left 0.28s cubic-bezier(.4,0,.2,1),
-              width 0.28s cubic-bezier(.4,0,.2,1);
+              width 0.28s cubic-bezier(.4,0,.2,1),
+              opacity 0.18s ease;
   pointer-events: none;
+  z-index: 0;
 }
+
+/* ─── BNAV İKON AKTİF/PASİF ──────────────────────────────── */
+.bnav-ic-off { display: block; }
+.bnav-ic-on  { display: none; }
+.bnav-item.active .bnav-ic-off { display: none; }
+.bnav-item.active .bnav-ic-on  { display: block; }
 
 /* ─── SHEET ──────────────────────────────────────────────── */
 .sheet-overlay {
@@ -359,7 +445,7 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   overflow: hidden;
 }
 .ob-progress-bar {
-  position: absolute; top: 0; left: 0; right: 0;
+  position: absolute; top: 58px; left: 0; right: 0;
   height: 3px; background: var(--border); z-index: 5;
 }
 .ob-progress-fill {
@@ -367,20 +453,24 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   transition: width 0.4s cubic-bezier(.4,0,.2,1);
   width: 33%;
 }
-.ob-skip {
-  position: absolute; top: 16px; right: 20px; z-index: 5;
+.ob-skip-btn {
   font-family: 'Inter', sans-serif; font-size: 14px;
   font-weight: 500; color: var(--text3);
   background: none; border: none; cursor: pointer;
-  padding: 8px 4px; -webkit-tap-highlight-color: transparent;
+  min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; -webkit-tap-highlight-color: transparent;
 }
 .ob-wrap {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; text-align: center;
-  padding: 0 28px 36px;
-  padding-top: 52px;
+  /* 58px header + 3px progress bar + 24px nefes boşluğu */
+  padding: 85px 28px 40px;
 }
-.ob-step { display: none; flex-direction: column; align-items: center; flex: 1; }
+.ob-step {
+  display: none; flex-direction: column;
+  align-items: center; flex: 1; width: 100%;
+}
 .ob-step.active {
   display: flex;
   animation: obStepIn 340ms cubic-bezier(.32,.72,0,1) both;
@@ -404,12 +494,12 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   from { opacity: 1; transform: translateX(0); }
   to   { opacity: 0; transform: translateX(-22%); }
 }
-.ob-icon-wrap { margin-top: 48px; margin-bottom: 32px; }
+.ob-icon-wrap { margin-top: 0; margin-bottom: 24px; }
 .ob-squircle {
   width: 80px; height: 80px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 26px;
-  filter: drop-shadow(0 8px 24px rgba(34,127,131,0.13));
+  border-radius: 28px;
+  filter: drop-shadow(0 6px 18px rgba(34,127,131,0.11));
 }
 .ob-squircle--teal  { background: #EBF5F5; }
 .ob-squircle--gold  { background: #FDF6E3; filter: drop-shadow(0 8px 24px rgba(212,160,23,0.16)); }
@@ -417,8 +507,8 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
 .ob-title {
   font-family: 'Fraunces', serif;
   font-size: 30px; font-weight: 500;
-  color: var(--text); margin-bottom: 10px;
-  line-height: 1.22; letter-spacing: -0.4px;
+  color: var(--text); margin-bottom: 8px;
+  line-height: 1.22; letter-spacing: -0.5px;
 }
 .ob-desc {
   font-size: 14px; color: var(--text2); font-weight: 400;
@@ -426,10 +516,10 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
 }
 .ob-input {
   background: white; border: 1.5px solid var(--border);
-  border-radius: 14px; padding: 17px 18px;
+  border-radius: 14px; padding: 16px 18px;
   font-family: 'Inter', sans-serif; font-size: 16px;
   color: var(--text); outline: none; width: 100%;
-  text-align: center; margin-bottom: 12px;
+  text-align: left; margin-bottom: 12px;
   -webkit-appearance: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -487,6 +577,22 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   -webkit-tap-highlight-color: transparent;
 }
 .ob-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(34,127,131,0.25); }
+/* Draw-on animasyonu — ob ikonları için */
+@keyframes obDraw {
+  from { stroke-dashoffset: var(--dash-len, 200); }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes obFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.ob-step.active .ob-draw {
+  animation: obDraw 0.7s 0.15s cubic-bezier(.4,0,.2,1) both;
+}
+.ob-step.active .ob-fade {
+  animation: obFadeIn 0.5s 0.55s ease both;
+}
+
 @keyframes checkDraw {
   from { stroke-dashoffset: 28; }
   to   { stroke-dashoffset: 0; }
@@ -497,20 +603,22 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
 .ob-check-path.drawing {
   animation: checkDraw 0.38s cubic-bezier(.4,0,.2,1) forwards;
 }
-@keyframes obExitAnim {
-  from { opacity: 1; transform: scale(1); filter: blur(0); }
-  to   { opacity: 0; transform: scale(1.04); filter: blur(2px); }
+/* Onboarding → Home geçişi: cross dissolve */
+@keyframes obExitDissolve {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 .ob-exiting {
-  animation: obExitAnim 300ms cubic-bezier(.4,0,1,1) both;
+  animation: obExitDissolve 400ms cubic-bezier(.4,0,.2,1) both;
   pointer-events: none;
 }
-@keyframes homeEnterAnim {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+
+@keyframes homeEnterDissolve {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .home-entering {
-  animation: homeEnterAnim 300ms cubic-bezier(.32,.72,0,1) both;
+  animation: homeEnterDissolve 400ms cubic-bezier(.4,0,.2,1) both;
 }
 
 
@@ -520,20 +628,6 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   padding-bottom: 100px;
 }
 .home-scroll::-webkit-scrollbar { display: none; }
-
-/* Large Title selamlama */
-.lt-greeting {
-  padding: 10px 20px 16px;
-  display: flex; flex-direction: column; gap: 2px;
-}
-.lt-greeting-sub {
-  font-size: 13px; color: var(--text2); font-weight: 400;
-}
-.lt-greeting-name {
-  font-family: 'Fraunces', serif;
-  font-size: 34px; font-weight: 700;
-  color: var(--text); line-height: 1.1; letter-spacing: -0.5px;
-}
 
 /* Section başlık */
 .sec {
@@ -550,49 +644,109 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
 
 /* ─── HAVA KARTI ─── */
 .wb {
-  margin: 6px 16px 0;
+  margin: 8px 16px 0;
   background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 13px 16px;
-  cursor: pointer; box-shadow: var(--shadow);
+  border-radius: var(--r-lg); padding: 14px 16px 12px;
+  cursor: pointer; box-shadow: var(--shadow-md);
   transition: background 0.15s;
+  user-select: none;
 }
 .wb:active { background: var(--bg2); }
+
+/* Üst satır: sol (ikon+sıcaklık+konum) + orta (nem/rüzgar) + sağ (badge) */
 .wb-main {
   display: flex; align-items: center;
-  justify-content: space-between; gap: 6px;
+  justify-content: space-between; gap: 8px;
 }
-.wb-left { display: flex; align-items: center; gap: 10px; }
-.wb-temp {
-  font-size: 26px; font-weight: 600; color: var(--text); line-height: 1;
-}
-.wb-desc { font-size: 10px; color: var(--text2); font-weight: 500; margin-top: 2px; }
-.wb-badge {
-  display: flex; align-items: center; gap: 4px;
-  border-radius: var(--r-pill); padding: 5px 10px;
-  font-size: 10px; font-weight: 700; flex-shrink: 0;
-}
-.wb-badge.ok   { background: var(--green-lt); color: var(--green-mid); }
-.wb-badge.warn { background: var(--gold-lt);  color: var(--gold-text); }
-.wb-badge.bad  { background: var(--red-lt);   color: var(--red); }
-.wb-badge.frost{ background: var(--frost-lt); color: var(--frost); }
+.wb-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
-/* 5 günlük mini tahmin */
+/* Hava durumu SVG ikon sarmalayıcı */
+.wb-ic {
+  width: 42px; height: 42px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Sıcaklık + konum */
+.wb-temp-block { display: flex; flex-direction: column; gap: 1px; }
+.wb-temp {
+  font-size: 28px; font-weight: 700; color: var(--text);
+  line-height: 1; letter-spacing: -0.5px;
+  font-family: 'Inter', sans-serif;
+}
+.wb-desc {
+  font-size: 11px; color: var(--text2); font-weight: 500;
+}
+
+/* Nem + rüzgar — ortada, SVG ikonlu */
+.wb-meta {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+}
+.wb-meta-row {
+  display: flex; align-items: center; gap: 4px;
+}
+.wb-meta-val {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+}
+
+/* Tarımsal durum badge */
+.wb-badge {
+  display: flex; align-items: center; gap: 5px;
+  border-radius: var(--r-pill); padding: 6px 10px;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+  line-height: 1;
+}
+.wb-badge.ok    { background: var(--green-lt); color: var(--green-mid); }
+.wb-badge.warn  { background: var(--gold-lt);  color: var(--gold-text); }
+.wb-badge.bad   { background: var(--red-lt);   color: var(--red); }
+.wb-badge.frost { background: var(--frost-lt); color: var(--frost); }
+.wb-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  background: currentColor; opacity: 0.8;
+}
+
+/* 5 günlük tahmin paneli — varsayılan AÇIK, isteğe bağlı kapanır */
 .fc-panel {
   max-height: 0; overflow: hidden;
-  transition: max-height 0.42s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+  transition: max-height 0.38s cubic-bezier(.4,0,.2,1), opacity 0.26s ease;
   opacity: 0;
 }
-.fc-panel.open { max-height: 200px; opacity: 1; }
-.fc-div { height: 1px; background: var(--border); margin: 10px 0; opacity: 0.5; }
+.fc-panel.open { max-height: 160px; opacity: 1; }
+
+.fc-div { height: 1px; background: var(--border); margin: 11px 0 10px; opacity: 0.6; }
+
+/* 5 günlük satır + toggle oku */
+.fc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.fc-header-lbl {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+.fc-chevron {
+  display: flex; align-items: center;
+  transition: transform 0.28s ease;
+  color: var(--text3);
+}
+.fc-panel.open .fc-chevron { transform: rotate(180deg); }
+
 .fc-row { display: flex; justify-content: space-between; }
 .fc-day {
   flex: 1; display: flex; flex-direction: column;
-  align-items: center; gap: 3px;
+  align-items: center; gap: 4px;
 }
-.fc-lbl { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; }
+.fc-lbl {
+  font-size: 9px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
 .fc-lbl.today { color: var(--green-mid); }
-.fc-t { font-size: 13px; font-weight: 500; color: var(--text); }
-.fc-t span { font-size: 10px; color: var(--text3); }
+.fc-ic {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.fc-t { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1; }
+.fc-t span { font-size: 10px; font-weight: 400; color: var(--text3); }
 
 /* ─── KRİTİK UYARI BANDI ─── */
 .alert {
@@ -1383,11 +1537,12 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
 
     <!-- ② FAB -->
     <div id="global-fab-wrap">
-      <button class="fab" id="global-fab" aria-label="Ekle">
+      <button class="fab" id="global-fab" aria-label="Kayıt Gir">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
       </button>
+      <span class="fab-lbl">Kayıt Gir</span>
     </div>
 
     <!-- ③ Screens (empty) -->
@@ -1417,7 +1572,6 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
   <div class="ob-progress-bar">
     <div class="ob-progress-fill" id="ob-progress-fill"></div>
   </div>
-  <button class="ob-skip" id="ob-skip">Atla</button>
 
   <div class="ob-wrap">
 
@@ -1425,24 +1579,38 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
     <div class="ob-step ob-first-in active" id="ob-step-0">
       <div class="ob-icon-wrap">
         <div class="ob-squircle ob-squircle--teal">
-          <svg width="44" height="44" viewBox="0 0 56 56" fill="none">
-            <line x1="14" y1="46" x2="42" y2="46" stroke="#227F83" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="28" y1="46" x2="28" y2="24" stroke="#227F83" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M28 36 C23 32 18 26 20 20 C22 24 26 30 28 36Z" stroke="#227F83" stroke-width="2" fill="#C5E1E2"/>
-            <path d="M28 36 C33 32 38 26 36 20 C34 24 30 30 28 36Z" stroke="#227F83" stroke-width="2" fill="#C5E1E2"/>
-            <g opacity="0" class="ob-sun">
-              <circle cx="28" cy="11" r="4" fill="#D4A017"/>
-              <line x1="28" y1="4" x2="28" y2="2" stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
-              <line x1="33.5" y1="5.5" x2="35" y2="4" stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
-              <line x1="35.5" y1="11" x2="37.5" y2="11" stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
-              <line x1="22.5" y1="5.5" x2="21" y2="4" stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
-              <line x1="20.5" y1="11" x2="18.5" y2="11" stroke="#D4A017" stroke-width="2" stroke-linecap="round"/>
-            </g>
-          </svg>
+            <svg width="48" height="48" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line class="ob-draw" style="--dash-len:30" stroke-dasharray="30"
+                x1="14" y1="44" x2="42" y2="44"
+                stroke="#227F83" stroke-width="2.5" stroke-linecap="round"/>
+              <line class="ob-draw" style="--dash-len:22" stroke-dasharray="22"
+                x1="28" y1="44" x2="28" y2="22"
+                stroke="#227F83" stroke-width="2.5" stroke-linecap="round"/>
+              <path class="ob-fade"
+                d="M28 35 C24 31 17 27 19 20 C21 23 25 30 28 35Z"
+                fill="#C5E1E2" opacity="0"/>
+              <path class="ob-fade"
+                d="M28 35 C32 31 39 27 37 20 C35 23 31 30 28 35Z"
+                fill="#C5E1E2" opacity="0"/>
+              <path class="ob-draw" style="--dash-len:28" stroke-dasharray="28"
+                d="M28 35 C24 31 17 27 19 20 C21 23 25 30 28 35Z"
+                stroke="#227F83" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+              <path class="ob-draw" style="--dash-len:28" stroke-dasharray="28"
+                d="M28 35 C32 31 39 27 37 20 C35 23 31 30 28 35Z"
+                stroke="#227F83" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+              <g class="ob-fade" opacity="0">
+                <circle cx="28" cy="11" r="3.5" fill="#D4A017"/>
+                <line x1="28" y1="5" x2="28" y2="3.5" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="32.5" y1="6.5" x2="33.5" y2="5.5" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="34" y1="11" x2="35.5" y2="11" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="23.5" y1="6.5" x2="22.5" y2="5.5" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="22" y1="11" x2="20.5" y2="11" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
         </div>
-      </div>
-      <div class="ob-title">İsmin?</div>
-      <div class="ob-desc">Emeğin hep seninle kalsın.</div>
+        <div class="ob-title">İsmin?</div>
+        <div class="ob-desc">Emeğin hep seninle kalsın.</div>
       <input class="ob-input" id="ob-isim" type="text" placeholder="Adın..." maxlength="30" autocomplete="given-name">
       <button class="ob-btn" onclick="obNext(1)">Devam</button>
     </div>
@@ -1451,15 +1619,22 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
     <div class="ob-step" id="ob-step-1">
       <div class="ob-icon-wrap">
         <div class="ob-squircle ob-squircle--gold">
-          <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
-            <path d="M21 4C15 4 10 9 10 15c0 9 11 23 11 23s11-14 11-23c0-6-5-11-11-11z"
-              stroke="#D4A017" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
-            <circle cx="21" cy="15" r="5" stroke="#D4A017" stroke-width="2" fill="none"/>
-          </svg>
+          <svg width="48" height="48" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="ob-fade" opacity="0"
+              d="M28 6C21 6 15 12 15 19c0 10 13 27 13 27s13-17 13-27c0-7-6-13-13-13z"
+              fill="#FDF6E3"/>
+              <circle class="ob-fade" opacity="0" cx="28" cy="19" r="5.5" fill="#F5D97A" fill-opacity="0.5"/>
+              <path class="ob-draw" style="--dash-len:80" stroke-dasharray="80"
+                d="M28 6C21 6 15 12 15 19c0 10 13 27 13 27s13-17 13-27c0-7-6-13-13-13z"
+                stroke="#D4A017" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+              <circle class="ob-draw" style="--dash-len:36" stroke-dasharray="36"
+                cx="28" cy="19" r="5.5"
+                stroke="#D4A017" stroke-width="2.5" fill="none"/>
+            </svg>
+          </div>
         </div>
-      </div>
-      <div class="ob-title">Neredeysen,<br>oradayız.</div>
-      <div class="ob-desc">Bulunduğun yerin hava durumu ve tahminleri.</div>
+        <div class="ob-title">Neredeysen,<br>oradayız.</div>
+        <div class="ob-desc">Bulunduğun yerin hava durumu ve tahminleri.</div>
       <div class="ob-picker-row">
         <select class="ob-select" id="ob-il">
           <option value="">İl seç...</option>
@@ -1475,11 +1650,20 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
     <div class="ob-step" id="ob-step-2">
       <div class="ob-icon-wrap">
         <div class="ob-squircle ob-squircle--amber">
-          <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
-            <path d="M21 6C15 6 11 11 11 17v8l-3 4h26l-3-4v-8C31 11 27 6 21 6z"
-              stroke="#C87820" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
-            <path d="M18 29a3 3 0 006 0" stroke="#C87820" stroke-width="2" stroke-linecap="round" fill="none"/>
-            <line x1="21" y1="6" x2="21" y2="3" stroke="#C87820" stroke-width="2" stroke-linecap="round"/>
+          <svg width="48" height="48" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="ob-fade" opacity="0"
+              d="M28 8C22 8 17 13 17 19v9l-4 5h30l-4-5v-9C39 13 34 8 28 8z"
+              fill="#FEF3E8"/>
+            <path class="ob-draw" style="--dash-len:90" stroke-dasharray="90"
+              d="M28 8C22 8 17 13 17 19v9l-4 5h30l-4-5v-9C39 13 34 8 28 8z"
+              stroke="#C87820" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+            <path class="ob-draw" style="--dash-len:20" stroke-dasharray="20"
+              d="M24 33a4 4 0 008 0"
+              stroke="#C87820" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <line class="ob-draw" style="--dash-len:6" stroke-dasharray="6"
+              x1="28" y1="8" x2="28" y2="5"
+              stroke="#C87820" stroke-width="2.5" stroke-linecap="round"/>
+            <circle class="ob-fade" opacity="0" cx="38" cy="14" r="4" fill="#D4A017"/>
           </svg>
         </div>
       </div>
@@ -1511,40 +1695,79 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
     <div id="screen-home" class="screen" data-screen="home">
     <div class="home-scroll" id="home-scroll">
 
-      <!-- Large Title selamlama -->
-      <div class="lt-greeting">
-        <div class="lt-greeting-sub" id="lt-greeting-sub">Günaydın,</div>
-        <div class="lt-greeting-name" id="lt-greeting-name">Ahmet</div>
-      </div>
-
       <!-- Hava kartı -->
       <div class="wb fu" onclick="toggleWeather(this)">
+
+        <!-- Üst satır: ikon + sıcaklık / nem+rüzgar / badge -->
         <div class="wb-main">
           <div class="wb-left">
-            <div>
+            <!-- Güneş ikonu (SVG) -->
+            <div class="wb-ic" data-condition="clear-day" data-ic-size="big"></div>
+            <div class="wb-temp-block">
               <div class="wb-temp">23°</div>
               <div class="wb-desc">Açık · Manisa</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:center;">
-            <span style="font-size:11px;font-weight:600;color:var(--text2)">💧 %55</span>
-            <span style="font-size:11px;font-weight:600;color:var(--text2)">🌬 8 km/s</span>
+
+          <!-- Nem + Rüzgar -->
+          <div class="wb-meta">
+            <div class="wb-meta-row">
+              <!-- Nem ikonu -->
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2C7 2 3 6.5 3 9a4 4 0 008 0c0-2.5-4-7-4-7z" fill="#60A5FA" fill-opacity="0.8"/>
+              </svg>
+              <span class="wb-meta-val">%55</span>
+            </div>
+            <div class="wb-meta-row">
+              <!-- Rüzgar ikonu -->
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <path d="M2 5h7a2 2 0 000-4" stroke="#94A3B8" stroke-width="1.4" stroke-linecap="round"/>
+                <path d="M2 8h9a2 2 0 010 4H10" stroke="#94A3B8" stroke-width="1.4" stroke-linecap="round"/>
+                <path d="M2 11h5" stroke="#94A3B8" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              <span class="wb-meta-val">8 km/s</span>
+            </div>
           </div>
+
+          <!-- Tarımsal durum badge -->
           <div class="wb-badge ok">
-            <span>⬤</span> Tarım için uygun
+            <div class="wb-badge-dot"></div>
+            Tarıma uygun
           </div>
         </div>
-        <!-- 5 günlük mini tahmin -->
-        <div class="fc-panel" id="fc-panel">
+
+        <!-- 5 günlük tahmin — varsayılan açık, tap ile kapanır -->
+        <div class="fc-panel open" id="fc-panel">
           <div class="fc-div"></div>
           <div class="fc-row">
-            <div class="fc-day"><div class="fc-lbl today">Bugün</div><div class="fc-t">23°<span>/14°</span></div></div>
-            <div class="fc-day"><div class="fc-lbl">Sal</div><div class="fc-t">21°<span>/13°</span></div></div>
-            <div class="fc-day"><div class="fc-lbl">Çar</div><div class="fc-t">18°<span>/11°</span></div></div>
-            <div class="fc-day"><div class="fc-lbl">Per</div><div class="fc-t">22°<span>/14°</span></div></div>
-            <div class="fc-day"><div class="fc-lbl">Cum</div><div class="fc-t">25°<span>/15°</span></div></div>
+            <div class="fc-day">
+              <div class="fc-lbl today">Bugün</div>
+              <div class="fc-ic" data-condition="clear-day" data-ic-size="small"></div>
+              <div class="fc-t">23°<span>/14°</span></div>
+            </div>
+            <div class="fc-day">
+              <div class="fc-lbl">Sal</div>
+              <div class="fc-ic" data-condition="partly-cloudy-day" data-ic-size="small"></div>
+              <div class="fc-t">21°<span>/13°</span></div>
+            </div>
+            <div class="fc-day">
+              <div class="fc-lbl">Çar</div>
+              <div class="fc-ic" data-condition="cloudy" data-ic-size="small"></div>
+              <div class="fc-t">18°<span>/11°</span></div>
+            </div>
+            <div class="fc-day">
+              <div class="fc-lbl">Per</div>
+              <div class="fc-ic" data-condition="clear-day" data-ic-size="small"></div>
+              <div class="fc-t">22°<span>/14°</span></div>
+            </div>
+            <div class="fc-day">
+              <div class="fc-lbl">Cum</div>
+              <div class="fc-ic" data-condition="clear-day" data-ic-size="small"></div>
+              <div class="fc-t">25°<span>/15°</span></div>
+            </div>
           </div>
         </div>
+
       </div>
 
       <!-- Kritik uyarı bandı -->
@@ -1706,7 +1929,7 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
     </div><!-- .home-scroll -->
   </div><!-- #screen-home -->
     <div id="screen-fields"      class="screen"        data-screen="fields">
-    <div class="fields-scroll">
+    <div class="fields-scroll" id="fields-scroll">
       <div class="lt-tab-title">Tarlalarım</div>
 
       <!-- Kuzey Tarla -->
@@ -2149,48 +2372,84 @@ html, body { width: 100%; height: 100%; background: #1a1a1a; font-family: 'Inter
     <!-- ④ Tab bar — single instance -->
     <nav id="global-bnav">
       <!-- pill indicator (injected by setupBnav) -->
+
+      <!-- Ana Sayfa -->
       <div class="bnav-item" data-nav="home">
         <div class="bnav-icon-wrap">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
-            <path d="M9 21V12h6v9"/>
+          <!-- inactive: outline ev -->
+          <svg class="bnav-ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
+            <path d="M9 21V13h6v8"/>
+          </svg>
+          <!-- active: filled ev -->
+          <svg class="bnav-ic-on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" fill="currentColor" fill-opacity="0.18"/>
+            <path d="M9 21V13h6v8"/>
           </svg>
         </div>
         <span class="bnav-lbl">Ana Sayfa</span>
       </div>
+
+      <!-- Tarlalarım — tarla sıraları ikonu -->
       <div class="bnav-item" data-nav="fields">
         <div class="bnav-icon-wrap">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="18" rx="2"/>
-            <path d="M8 3v18M2 9h6M2 15h6"/>
+          <!-- inactive: outline tarla sıraları -->
+          <svg class="bnav-ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 17c3-4 5-4 8 0s5 4 8 0"/>
+            <path d="M2 12c3-4 5-4 8 0s5 4 8 0"/>
+            <path d="M2 7c3-4 5-4 8 0s5 4 8 0"/>
+          </svg>
+          <!-- active: accent çizgi kalınlaşır + üst ekin filizi -->
+          <svg class="bnav-ic-on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 17c3-4 5-4 8 0s5 4 8 0" stroke-width="2.2"/>
+            <path d="M2 12c3-4 5-4 8 0s5 4 8 0" stroke-width="1.6" stroke-opacity="0.65"/>
+            <path d="M2 7c3-4 5-4 8 0s5 4 8 0" stroke-width="1.3" stroke-opacity="0.4"/>
           </svg>
         </div>
         <span class="bnav-lbl">Tarlalarım</span>
       </div>
-      <!-- FAB spacer -->
+
+      <!-- FAB spacer — boşluk tutucu (label FAB wrap içinde) -->
       <div class="bnav-fab-spacer"></div>
+
+      <!-- Kayıtlarım — liste + kalem ikonu -->
       <div class="bnav-item" data-nav="kayitlarim">
         <div class="bnav-icon-wrap">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
-            <path d="M14 2v6h6M8 13h8M8 17h5"/>
+          <!-- inactive: outline liste -->
+          <svg class="bnav-ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <path d="M7 8h10M7 12h10M7 16h6"/>
+          </svg>
+          <!-- active: filled arka plan + belirgin çizgiler -->
+          <svg class="bnav-ic-on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" fill-opacity="0.15"/>
+            <path d="M7 8h10M7 12h10M7 16h6" stroke-width="2"/>
           </svg>
         </div>
         <span class="bnav-lbl">Kayıtlarım</span>
       </div>
+
+      <!-- Kasa — para torbası ikonu -->
       <div class="bnav-item" data-nav="kasa">
         <div class="bnav-icon-wrap">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="5" width="20" height="14" rx="2"/>
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M2 10h4M18 10h4"/>
+          <!-- inactive: outline kasa/cüzdan -->
+          <svg class="bnav-ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="3"/>
+            <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+            <path d="M15 14h.01" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <!-- active: filled cüzdan -->
+          <svg class="bnav-ic-on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.15"/>
+            <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+            <circle cx="16" cy="14" r="1.5" fill="currentColor"/>
           </svg>
         </div>
         <span class="bnav-lbl">Kasa</span>
       </div>
+
     </nav>
 
-  
   <!-- KAYIT GİR SHEET -->
   <div class="kayit-sheet-overlay" id="kayit-sheet" onclick="kayitSheetDis(event)">
     <div class="kayit-sheet-panel">
@@ -2510,16 +2769,14 @@ function syncBnav(screenId) {
     item.classList.toggle('active', item.dataset.nav === activeTab);
   });
 
-  // Move pill
+  // Move capsule pill — covers icon + small padding
   const pill = document.querySelector('#global-bnav .bnav-pill');
   const activeItem = document.querySelector(`#global-bnav .bnav-item[data-nav="${activeTab}"]`);
   if (pill && activeItem) {
     const navRect  = document.getElementById('global-bnav').getBoundingClientRect();
     const itemRect = activeItem.getBoundingClientRect();
-    const iconWrap = activeItem.querySelector('.bnav-icon-wrap');
-    const iconRect = iconWrap.getBoundingClientRect();
-    const pillW    = iconRect.width + 8;
-    const pillLeft = iconRect.left - navRect.left + (iconRect.width - pillW) / 2;
+    const pillW    = 52;
+    const pillLeft = itemRect.left - navRect.left + (itemRect.width - pillW) / 2;
     pill.style.width = pillW + 'px';
     pill.style.left  = pillLeft + 'px';
   }
@@ -2633,10 +2890,13 @@ function navTo(id) {
   _bnavShow(true);
   syncBnav(id);
   setSbLeft(id);
-  if (id === 'home') updateHomeGreeting();
+  if (id === 'home') {
+    updateHomeGreeting();
+    homeRecentsGuncelle();
+  }
   if (id === 'kayitlarim') renderKayitlar(aktifFiltre);
-  if (id === 'profil') profilGuncelle();
-  if (id === 'kasa') renderKasaBar();
+  if (id === 'profil') { profilGuncelle(); profilKayitSayisiGuncelle(); }
+  if (id === 'kasa') kasaHesapla();
 }
 
 /* ─── NAV BACK ───────────────────────────────────────────── */
@@ -2696,60 +2956,101 @@ function openDetail(key) {
 
 /* ─── HEADER LEFT ────────────────────────────────────────── */
 function setSbLeft(screenId) {
-  const left  = document.getElementById('sb-left');
-  const right = document.getElementById('sb-right');
-  if (!left) return;
+  const left   = document.getElementById('sb-left');
+  const right  = document.getElementById('sb-right');
+  const header = document.getElementById('sb-bar');
+  if (!left || !right || !header) return;
 
-  // Sağ tarafı sıfırla (fields dışında)
-  if (screenId !== 'fields' && right) right.innerHTML = '';
+  // splash → header gizli
+  if (screenId === 'splash') {
+    header.classList.add('sb-hidden');
+    left.innerHTML  = '';
+    right.innerHTML = '';
+    return;
+  }
+
+  header.classList.remove('sb-hidden');
+  header.classList.remove('scrolled');
+
+  // onboarding → adıma göre sol (geri / boş), sağ (Atla)
+  if (screenId === 'onboarding') {
+    left.innerHTML = obAdim > 0
+      ? `<button class="sb-icon-btn" onclick="obGeri()" aria-label="Geri">
+           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+             <path d="M19 12H5M12 5l-7 7 7 7"/>
+           </svg>
+         </button>`
+      : '';
+    right.innerHTML = `<button class="ob-skip-btn" onclick="obAtla()">Atla</button>`;
+    return;
+  }
+
+  // Zil SVG — tüm ekranlarda sağda
+  const BELL_SVG = `
+    <div class="sb-bell-wrap" onclick="navTo('bildirimler')" aria-label="Bildirimler">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+           stroke="var(--green)" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="sb-bell-badge"></span>
+    </div>`;
+
+  // + ikonu — sadece fields ekranında
+  const PLUS_SVG = `
+    <button class="sb-icon-btn" onclick="tarlaSheetAc()" aria-label="Tarla Ekle">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="var(--green)" stroke-width="2.2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>`;
+
+  // Geri oku SVG
+  const BACK_SVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>`;
 
   if (screenId === 'home') {
-    left.innerHTML = `<div class="sb-avatar" id="sb-avatar" style="cursor:pointer" onclick="navTo('profil')">A</div>
-      <div id="sb-greeting" style="display:flex;flex-direction:column;margin-left:8px;">
-        <span style="font-size:11px;color:var(--text2)" id="sb-greeting-sub">Günaydın,</span>
-        <span style="font-size:15px;font-weight:600;color:var(--text)" id="sb-greeting-name">Ahmet</span>
+    left.innerHTML = `
+      <div class="sb-avatar-wrap" onclick="navTo('profil')" aria-label="Profil">
+        <div class="sb-avatar" id="sb-avatar">A</div>
+      </div>
+      <div class="sb-greeting">
+        <span class="sb-greeting-sub" id="sb-greeting-sub">Günaydın,</span>
+        <span class="sb-greeting-name" id="sb-greeting-name">Ahmet</span>
       </div>`;
+    right.innerHTML = BELL_SVG;
     updateHomeGreeting();
 
   } else if (screenId === 'fields') {
     left.innerHTML = `
       <button class="sb-icon-btn" onclick="navTo('home')" aria-label="Geri">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
+        ${BACK_SVG}
       </button>`;
-    if (right) right.innerHTML = `
-      <button class="sb-icon-btn" onclick="tarlaSheetAc()" aria-label="Tarla Ekle">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-      </button>`;
+    right.innerHTML = BELL_SVG + PLUS_SVG;
 
-  } else if (screenId === 'kayitlarim') {
+  } else if (screenId === 'kayitlarim' || screenId === 'kasa') {
     left.innerHTML = `
       <button class="sb-icon-btn" onclick="navTo('home')" aria-label="Geri">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
+        ${BACK_SVG}
       </button>`;
-
-  } else if (screenId === 'kasa') {
-    left.innerHTML = `
-      <button class="sb-icon-btn" onclick="navTo('home')" aria-label="Geri">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
-      </button>`;
+    right.innerHTML = BELL_SVG;
 
   } else if (DETAIL_SCREENS.includes(screenId)) {
     left.innerHTML = `
       <button class="sb-icon-btn" onclick="navBack()" aria-label="Geri">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
+        ${BACK_SVG}
       </button>`;
+    right.innerHTML = BELL_SVG;
+
   } else {
-    left.innerHTML = '';
+    left.innerHTML  = '';
+    right.innerHTML = BELL_SVG;
   }
 }
 
@@ -2765,11 +3066,14 @@ function updateGreeting() {
 
 /* ─── HEADER SCROLL ──────────────────────────────────────── */
 function setupHeaderScroll() {
-  document.querySelectorAll('.screen').forEach(screen => {
-    screen.addEventListener('scroll', () => {
-      const header = document.getElementById('sb-bar');
-      if (screen.classList.contains('active')) {
-        header.classList.toggle('scrolled', screen.scrollTop > 4);
+  const SCROLL_IDS = ['home-scroll','fields-scroll','kayit-scroll','kasa-scroll','profil-scroll'];
+  const header = document.getElementById('sb-bar');
+  SCROLL_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('scroll', () => {
+      if (el.closest('.screen.active')) {
+        header.classList.toggle('scrolled', el.scrollTop > 4);
       }
     });
   });
@@ -2948,13 +3252,7 @@ function obProgressGuncelle(adim) {
 }
 
 function obStep0Animate() {
-  const sun = document.querySelector('#ob-step-0 .ob-sun');
-  if (sun) {
-    setTimeout(() => {
-      sun.style.transition = 'opacity 0.5s ease';
-      sun.style.opacity = '1';
-    }, 1100);
-  }
+  /* Draw-on animasyonu CSS ile yönetiliyor — .ob-draw / .ob-fade sınıfları */
 }
 
 function obNext(hedef) {
@@ -2978,11 +3276,29 @@ function obNext(hedef) {
     obAdim = hedef;
     next.classList.add('active');
     obProgressGuncelle(hedef);
+    setSbLeft('onboarding');
   }, 260);
 }
 
 function obAtla() {
   obBitir();
+}
+
+function obGeri() {
+  if (obAdim === 0) return;
+  const hedef   = obAdim - 1;
+  const current = document.getElementById('ob-step-' + obAdim);
+  const prev    = document.getElementById('ob-step-' + hedef);
+  if (!current || !prev) return;
+
+  current.classList.add('ob-exiting');
+  setTimeout(() => {
+    current.classList.remove('active', 'ob-exiting');
+    obAdim = hedef;
+    prev.classList.add('active');
+    obProgressGuncelle(hedef);
+    setSbLeft('onboarding');
+  }, 260);
 }
 
 function obBitir() {
@@ -3010,19 +3326,28 @@ function obBitir() {
   setTimeout(() => {
     const obEl   = document.getElementById('screen-onboarding');
     const homeEl = document.getElementById('screen-home');
-    obEl.classList.add('ob-exiting');
+
+    // Home'u hazırla — active yap, cross-dissolve başlar
     _screenReset(homeEl);
     homeEl.classList.add('active', 'home-entering');
+
+    // Onboarding üstte kalarak solar
+    obEl.style.zIndex = '5';
+    obEl.classList.add('ob-exiting');
+
     currentScreen = 'home';
     fromScreen    = 'home';
     setSbLeft('home');
-    syncBnav('home');
-    _bnavShow(true);
-    _fabShow(true);
+
+    // Tab bar ve FAB — dissolve bittikten sonra belirsin (kırpma önlenir)
     setTimeout(() => {
+      syncBnav('home');
+      _bnavShow(true);
+      _fabShow(true);
       obEl.classList.remove('active', 'ob-exiting');
+      obEl.style.zIndex = '';
       homeEl.classList.remove('home-entering');
-    }, 360);
+    }, 420);
   }, 680);
 }
 
@@ -3084,13 +3409,15 @@ function updateHomeGreeting() {
   else if (h >= 18 && h < 22) selam = 'İyi akşamlar,';
   else                         selam = 'İyi geceler,';
 
-  const sub  = document.getElementById('lt-greeting-sub');
-  const name = document.getElementById('lt-greeting-name');
+  const sub  = document.getElementById('sb-greeting-sub');
+  const name = document.getElementById('sb-greeting-name');
   if (sub) sub.textContent = selam;
   try {
     const p = JSON.parse(localStorage.getItem('hasat_profil') || '{}');
-    if (name && p.isim) name.textContent = p.isim.split(' ')[0];
-  } catch(e) {}
+    if (name) name.textContent = p.isim ? p.isim.split(' ')[0] : 'Ahmet';
+  } catch(e) {
+    if (name) name.textContent = 'Ahmet';
+  }
 }
 
 
@@ -3420,8 +3747,12 @@ function kayitKaydet() {
 
   kayitlar.unshift(yeni);
   lsKayitlarKaydet();
-  kayitSheetKapat();
+  if (yeni.tarlaKey) tarlaMaliyetGuncelle(yeni.tarlaKey);
+  kasaHesapla();
+  homeRecentsGuncelle();
+  profilKayitSayisiGuncelle();
   if (currentScreen === 'kayitlarim') renderKayitlar(aktifFiltre);
+  kayitSheetKapat();
 }
 
 /* ─── LOCALSTORAGE ───────────────────────────────────────── */
@@ -3577,11 +3908,13 @@ function profilGuncelle() {
     const koEl = document.getElementById('profil-konum');
     const kvEl = document.getElementById('profil-konum-val');
     const sbAv = document.getElementById('sb-avatar');
+    const sbNm = document.getElementById('sb-greeting-name');
     if (avEl) avEl.textContent = harf;
     if (isEl) isEl.textContent = isim;
     if (koEl) koEl.textContent = konum;
     if (kvEl) kvEl.textContent = konum;
     if (sbAv) sbAv.textContent = harf;
+    if (sbNm) sbNm.textContent = isim.split(' ')[0];
 
     const ksEl = document.getElementById('profil-kayit-sayi');
     if (ksEl) ksEl.textContent = kayitlar.length + ' kayıt';
@@ -3635,10 +3968,252 @@ function renderKasaBar() {
   }).join('');
 }
 
+
+/* ─── KASA HESAPLA ──────────────────────────────────────── */
+function kasaHesapla() {
+  let toplamGelir = 0;
+  let toplamGider = 0;
+
+  kayitlar.forEach(k => {
+    if (k.toplam > 0) toplamGelir += k.toplam;
+    else toplamGider += Math.abs(k.toplam);
+  });
+
+  const net = toplamGelir - toplamGider;
+
+  const netEl   = document.getElementById('kasa-net-val');
+  const gelirEl = document.getElementById('kasa-gelir-val');
+  const giderEl = document.getElementById('kasa-gider-val');
+  if (netEl)   netEl.textContent   = net.toLocaleString('tr-TR');
+  if (gelirEl) gelirEl.textContent = '₺' + toplamGelir.toLocaleString('tr-TR');
+  if (giderEl) giderEl.textContent = '₺' + toplamGider.toLocaleString('tr-TR');
+
+  kasaBarGuncelle();
+}
+
+/* ─── KASA BAR GRAFİK GERÇEK VERİ ──────────────────────── */
+function kasaBarGuncelle() {
+  const area = document.getElementById('kasa-bar-area');
+  if (!area) return;
+
+  const aylar = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    aylar.push({
+      yil:   d.getFullYear(),
+      ay:    d.getMonth(),
+      lbl:   d.toLocaleDateString('tr-TR', { month: 'short' }),
+      gelir: 0,
+      gider: 0,
+    });
+  }
+
+  kayitlar.forEach(k => {
+    const d  = new Date(k.tarih);
+    const ay = aylar.find(a => a.yil === d.getFullYear() && a.ay === d.getMonth());
+    if (!ay) return;
+    if (k.toplam > 0) ay.gelir += k.toplam;
+    else ay.gider += Math.abs(k.toplam);
+  });
+
+  const maxVal = Math.max(...aylar.map(a => Math.max(a.gelir, a.gider)), 1);
+
+  area.innerHTML = aylar.map(a => {
+    const gH = Math.round(a.gelir / maxVal * 72);
+    const eH = Math.round(a.gider / maxVal * 72);
+    return `<div class="bar-col">
+      <div style="display:flex;align-items:flex-end;gap:2px;height:72px;">
+        <div class="bar-fill gelir" style="height:${Math.max(gH,2)}px;flex:1"></div>
+        <div class="bar-fill gider" style="height:${Math.max(eH,2)}px;flex:1"></div>
+      </div>
+      <div class="bar-ay">${a.lbl}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── TARLA MALİYET GÜNCELLE ────────────────────────────── */
+function tarlaMaliyetGuncelle(tarlaKey) {
+  if (!tarlaKey || !tarlalar[tarlaKey]) return;
+
+  const toplamGider = kayitlar
+    .filter(k => k.tarlaKey === tarlaKey && k.toplam < 0)
+    .reduce((sum, k) => sum + Math.abs(k.toplam), 0);
+
+  tarlalar[tarlaKey].maliyet = '₺' + toplamGider.toLocaleString('tr-TR');
+
+  const alanStr = tarlalar[tarlaKey].alan || '';
+  const alan = parseInt(alanStr);
+  if (alan > 0) {
+    const donumMal = Math.round(toplamGider / alan);
+    tarlalar[tarlaKey].donumMal = '₺' + donumMal.toLocaleString('tr-TR');
+  }
+
+  // Home kartını güncelle
+  document.querySelectorAll('#screen-home .hfc').forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(tarlaKey)) {
+      const costEl = el.querySelector('.hfc-cost-val');
+      if (costEl) costEl.textContent = tarlalar[tarlaKey].maliyet;
+    }
+  });
+
+  // Fields kartını güncelle
+  document.querySelectorAll('#screen-fields .fl-card').forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(tarlaKey)) {
+      const statEls = el.querySelectorAll('.fl-stat-val');
+      if (statEls[1]) statEls[1].textContent = tarlalar[tarlaKey].maliyet;
+      if (statEls[2]) statEls[2].textContent = tarlalar[tarlaKey].donumMal || '—';
+    }
+  });
+}
+
+/* ─── HOME SON İŞLEMLER GERÇEK VERİ ────────────────────── */
+function homeRecentsGuncelle() {
+  const recentsEl = document.querySelector('#screen-home .recents');
+  if (!recentsEl) return;
+
+  const son3 = kayitlar.slice(0, 3);
+  if (!son3.length) return;
+
+  recentsEl.innerHTML = son3.map(k => {
+    const tb  = tipBilgi[k.tip] || tipBilgi.not;
+    const pos = k.toplam > 0;
+    const tutar = pos
+      ? '+₺' + k.toplam.toLocaleString('tr-TR')
+      : '−₺' + Math.abs(k.toplam).toLocaleString('tr-TR');
+
+    const d     = new Date(k.tarih);
+    const bugun = new Date(); bugun.setHours(0,0,0,0);
+    const dun   = new Date(bugun); dun.setDate(dun.getDate()-1);
+    const kD    = new Date(k.tarih); kD.setHours(0,0,0,0);
+    const tarihLbl = kD.getTime() === bugun.getTime() ? 'Bugün'
+                   : kD.getTime() === dun.getTime()   ? 'Dün'
+                   : d.toLocaleDateString('tr-TR', {day:'numeric', month:'short'});
+
+    return `<div class="ri fu">
+      <div class="ri-ic" style="background:${tb.bg}">
+        <span style="font-size:16px">${tb.ic}</span>
+      </div>
+      <div class="ri-body">
+        <div class="ri-title">${tb.ad} — ${k.tarlaAd}</div>
+        <div class="ri-sub">${k.detay.slice(0,2).join(' · ')}</div>
+      </div>
+      <div class="ri-right">
+        <div class="ri-cost ${pos ? 'pos' : ''}">${tutar}</div>
+        <div class="ri-date">${tarihLbl}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── PROFİL KAYIT SAYISI ────────────────────────────────── */
+function profilKayitSayisiGuncelle() {
+  const el = document.getElementById('profil-kayit-sayi');
+  if (el) el.textContent = kayitlar.length + ' kayıt';
+}
+
 /* ─── INIT ───────────────────────────────────────────────── */
+
+/* ─── HAVA DURUMU İKON SİSTEMİ ──────────────────────────────
+   14 koşul kategorisi — big: 36×36 (wb-ic), small: 18×18 (fc-ic)
+   Kullanım: renderWxIcon(container, condition, size)
+   API hazır: data-condition + data-ic-size attribute ile bağlanabilir
+─────────────────────────────────────────────────────────────── */
+const WX_ICONS = {
+
+  'clear-day': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="7" fill="#FCD34D"/><circle cx="18" cy="18" r="9" fill="#F59E0B" fill-opacity="0.22"/><line x1="18" y1="3" x2="18" y2="7.5" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/><line x1="18" y1="28.5" x2="18" y2="33" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/><line x1="3" y1="18" x2="7.5" y2="18" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/><line x1="28.5" y1="18" x2="33" y2="18" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/><line x1="7" y1="7" x2="10.2" y2="10.2" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/><line x1="25.8" y1="25.8" x2="29" y2="29" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/><line x1="29" y1="7" x2="25.8" y2="10.2" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/><line x1="10.2" y1="25.8" x2="7" y2="29" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3.5" fill="#FCD34D"/><circle cx="9" cy="9" r="4.5" fill="#F59E0B" fill-opacity="0.22"/><line x1="9" y1="1" x2="9" y2="3.5" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round"/><line x1="9" y1="14.5" x2="9" y2="17" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round"/><line x1="1" y1="9" x2="3.5" y2="9" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round"/><line x1="14.5" y1="9" x2="17" y2="9" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round"/><line x1="3.2" y1="3.2" x2="5.2" y2="5.2" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round"/><line x1="12.8" y1="12.8" x2="14.8" y2="14.8" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round"/><line x1="14.8" y1="3.2" x2="12.8" y2="5.2" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round"/><line x1="5.2" y1="12.8" x2="3.2" y2="14.8" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round"/></svg>`
+  },
+
+  'clear-night': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M22 8C17 8 13 12 13 17s4 9 9 9c2 0 3.8-.6 5.3-1.6C25.5 27.5 22 30 18 30c-6.6 0-12-5.4-12-12S11.4 6 18 6c1.5 0 2.9.3 4.2.7C22.1 6.9 22 7.4 22 8z" fill="#818CF8"/><circle cx="28" cy="10" r="1.6" fill="#C7D2FE"/><circle cx="24" cy="6" r="1.1" fill="#C7D2FE"/><circle cx="31" cy="16" r="1.1" fill="#C7D2FE"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4C8.5 4 6.5 6 6.5 8.5S8.5 13 11 13c1 0 1.9-.3 2.7-.8C12.8 13.8 11 15 9 15c-3.3 0-6-2.7-6-6s2.7-6 6-6c.75 0 1.45.15 2.1.35C11.05 3.45 11 3.72 11 4z" fill="#818CF8"/><circle cx="14" cy="5" r=".9" fill="#C7D2FE"/><circle cx="12" cy="3" r=".65" fill="#C7D2FE"/><circle cx="15.5" cy="8" r=".65" fill="#C7D2FE"/></svg>`
+  },
+
+  'partly-cloudy-day': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="13" cy="13" r="5.5" fill="#FCD34D"/><circle cx="13" cy="13" r="7" fill="#F59E0B" fill-opacity="0.2"/><line x1="13" y1="3" x2="13" y2="6.5" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="13" x2="6.5" y2="13" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/><line x1="6.1" y1="6.1" x2="8.4" y2="8.4" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round"/><line x1="19.6" y1="8.4" x2="21.9" y2="6.1" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round"/><path d="M17 24c0-3.3 2.7-6 6-6 .5 0 1 .07 1.5.2C25 15.9 27.3 14 30 14c3.3 0 6 2.7 6 6 0 .4-.04.8-.1 1.2H17.4C17.15 20.8 17 20.1 17 19.4V24z" fill="#E2E8F0"/><rect x="15" y="22" width="20" height="9" rx="4.5" fill="#F1F5F9"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="7" r="3" fill="#FCD34D"/><line x1="6" y1="2" x2="6" y2="3.8" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="7" x2="3.2" y2="7" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round"/><line x1="2.9" y1="3.9" x2="4.1" y2="5.1" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round"/><line x1="9.1" y1="5.1" x2="10.3" y2="3.9" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round"/><path d="M8 12c0-2 1.6-3.5 3.5-3.5.3 0 .6.04.9.1C12.9 7 14.3 6 16 6c2 0 3.5 1.6 3.5 3.5 0 .2-.02.4-.05.6H8.24C8.08 9.6 8 9.1 8 8.7V12z" fill="#CBD5E1"/><rect x="7" y="11" width="11" height="5.5" rx="2.75" fill="#E2E8F0"/></svg>`
+  },
+
+  'partly-cloudy-night': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M16 8C13 8 10.5 10.5 10.5 13.5S13 19 16 19c1.2 0 2.3-.4 3.2-1C17.8 20.2 16 21 14 21c-4 0-7-3-7-7s3-7 7-7c.7 0 1.4.1 2 .3C16.05 7.45 16 7.72 16 8z" fill="#818CF8"/><path d="M20 26c0-3 2.4-5.5 5.5-5.5.45 0 .88.05 1.3.16C27.2 18.2 29.4 17 32 17c3 0 5.5 2.5 5.5 5.5 0 .32-.03.64-.09.94H20.4C20.14 22.8 20 22.1 20 21.4V26z" fill="#94A3B8"/><rect x="18" y="24" width="19" height="8" rx="4" fill="#CBD5E1"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M8 4C6.5 4 5.2 5.2 5.2 6.8S6.5 9.5 8 9.5c.6 0 1.15-.2 1.6-.52C9 9.9 8 10.3 7 10.3c-2 0-3.5-1.5-3.5-3.5S5 3.3 7 3.3c.35 0 .7.05 1 .15C8.02 3.5 8 3.65 8 3.8V4z" fill="#818CF8"/><path d="M10 13c0-1.8 1.4-3.2 3.2-3.2.27 0 .52.03.77.1C14.4 8.3 15.7 7.5 17.2 7.5c1.8 0 3.3 1.5 3.3 3.3 0 .19-.02.38-.06.56H10.25C10.09 11 10 10.5 10 10.1V13z" fill="#94A3B8"/><rect x="9" y="12" width="10.5" height="5" rx="2.5" fill="#CBD5E1"/></svg>`
+  },
+
+  'cloudy': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M6 20c0-4.4 3.6-8 8-8 .7 0 1.3.09 1.9.25C17.3 9.4 20.4 7.5 24 7.5c5 0 9 4 9 9 0 .5-.04 1-.12 1.5H6.5C6.18 17.4 6 16.7 6 16V20z" fill="#94A3B8"/><rect x="4" y="18.5" width="29" height="12" rx="6" fill="#CBD5E1"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 10c0-2.8 2.2-5 5-5 .4 0 .78.05 1.14.14C9.8 3.4 11.7 2.3 14 2.3c3.1 0 5.5 2.4 5.5 5.5 0 .3-.03.6-.08.88H2.82C2.62 8.2 2.5 7.6 2.5 7V10z" fill="#94A3B8"/><rect x="1.5" y="9" width="17" height="8" rx="4" fill="#CBD5E1"/></svg>`
+  },
+
+  'drizzle': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M5 17c0-4.4 3.6-8 8-8 .7 0 1.4.09 2 .25C16.5 6.5 19.8 4.5 23.5 4.5c5 0 9 4 9 9 0 .5-.04 1-.12 1.5H5.5C5.18 14.4 5 13.7 5 13V17z" fill="#94A3B8"/><rect x="3" y="16" width="28" height="10" rx="5" fill="#CBD5E1"/><line x1="10" y1="28" x2="9.2" y2="31.5" stroke="#93C5FD" stroke-width="1.8" stroke-linecap="round"/><line x1="16" y1="28" x2="15.2" y2="31.5" stroke="#93C5FD" stroke-width="1.8" stroke-linecap="round"/><line x1="22" y1="28" x2="21.2" y2="31.5" stroke="#93C5FD" stroke-width="1.8" stroke-linecap="round"/><line x1="13" y1="30.5" x2="12.2" y2="34" stroke="#93C5FD" stroke-width="1.6" stroke-linecap="round"/><line x1="19" y1="30.5" x2="18.2" y2="34" stroke="#93C5FD" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9c0-2.8 2.2-5 5-5 .4 0 .78.05 1.14.14C9.3 2.5 11.2 1.5 13.4 1.5c3 0 5.5 2.5 5.5 5.5 0 .3-.03.6-.08.88H2.32C2.12 7.3 2 6.7 2 6.1V9z" fill="#94A3B8"/><rect x="1" y="8.5" width="16" height="5.5" rx="2.75" fill="#CBD5E1"/><line x1="5" y1="15.5" x2="4.5" y2="17.5" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="15.5" x2="8.5" y2="17.5" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="15.5" x2="12.5" y2="17.5" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/></svg>`
+  },
+
+  'rain': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M5 17c0-4.4 3.6-8 8-8 .7 0 1.4.09 2 .25C16.5 6.5 19.8 4.5 23.5 4.5c5 0 9 4 9 9 0 .5-.04 1-.12 1.5H5.5C5.18 14.4 5 13.7 5 13V17z" fill="#64748B"/><rect x="3" y="16" width="28" height="10" rx="5" fill="#94A3B8"/><line x1="10" y1="28" x2="8.2" y2="33.5" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/><line x1="17" y1="28" x2="15.2" y2="33.5" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/><line x1="24" y1="28" x2="22.2" y2="33.5" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/><line x1="13.5" y1="30" x2="11.7" y2="35.5" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/><line x1="20.5" y1="30" x2="18.7" y2="35.5" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9c0-2.8 2.2-5 5-5 .4 0 .78.05 1.14.14C9.3 2.5 11.2 1.5 13.4 1.5c3 0 5.5 2.5 5.5 5.5 0 .3-.03.6-.08.88H2.32C2.12 7.3 2 6.7 2 6.1V9z" fill="#64748B"/><rect x="1" y="8.5" width="16" height="5.5" rx="2.75" fill="#94A3B8"/><line x1="5" y1="15.5" x2="3.6" y2="19" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/><line x1="9" y1="15.5" x2="7.6" y2="19" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/><line x1="13" y1="15.5" x2="11.6" y2="19" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/></svg>`
+  },
+
+  'heavy-rain': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M4 17.5c0-5 4-9 9-9 .8 0 1.6.1 2.3.3C17 5.8 20.6 4 24.5 4c5.8 0 10.5 4.7 10.5 10.5 0 .6-.06 1.2-.17 1.8H4.55C4.2 15.5 4 14.7 4 13.9v3.6z" fill="#475569"/><rect x="2" y="16" width="30" height="11" rx="5.5" fill="#64748B"/><line x1="8" y1="29" x2="5.8" y2="35.5" stroke="#1D4ED8" stroke-width="2.6" stroke-linecap="round"/><line x1="14.5" y1="29" x2="12.3" y2="35.5" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round"/><line x1="21" y1="29" x2="18.8" y2="35.5" stroke="#1D4ED8" stroke-width="2.6" stroke-linecap="round"/><line x1="27.5" y1="29" x2="25.3" y2="35.5" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round"/><line x1="11.5" y1="32" x2="9.3" y2="38" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/><line x1="24" y1="32" x2="21.8" y2="38" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9.5c0-3 2.4-5.5 5.5-5.5.5 0 1 .07 1.45.2C9.3 2.3 11.3 1.3 13.6 1.3c3.3 0 5.9 2.7 5.9 6 0 .34-.04.68-.1.99H1.85C1.63 7.7 1.5 7 1.5 6.3v3.2z" fill="#475569"/><rect x="0.5" y="9" width="17" height="6" rx="3" fill="#64748B"/><line x1="4" y1="16" x2="2.4" y2="19.5" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="16" x2="6.4" y2="19.5" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="10.4" y2="19.5" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="16" x2="14.4" y2="19.5" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/></svg>`
+  },
+
+  'thunderstorm': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M3 17.5c0-5.5 4.5-10 10-10 .9 0 1.7.11 2.5.32C17.5 4.5 21.5 2.5 26 2.5c6.6 0 11.5 5 11.5 11.5 0 .65-.07 1.28-.2 1.9H3.6C3.22 15.2 3 14.4 3 13.6v3.9z" fill="#334155"/><rect x="1" y="16" width="32" height="12" rx="6" fill="#475569"/><path d="M20 30l-5.5 9.5h4.5l-2.5 6 9-12h-5.5z" fill="#FCD34D" stroke="#F59E0B" stroke-width="0.6" stroke-linejoin="round"/><line x1="6" y1="30" x2="4" y2="36" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/><line x1="30" y1="30" x2="28" y2="36" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/><line x1="9" y1="32.5" x2="7" y2="38" stroke="#60A5FA" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1 9.5C1 6.5 3.5 4 6.5 4c.5 0 1 .07 1.44.2C8.7 2.1 10.8 1 13.2 1c3.3 0 5.8 2.7 5.8 6 0 .34-.04.68-.1.99H1.35C1.13 7.4 1 6.7 1 6V9.5z" fill="#334155"/><rect x="0" y="9" width="18" height="7" rx="3.5" fill="#475569"/><path d="M9.5 17l-2.8 5h2.3l-1.3 3 4.6-6.3H9.5z" fill="#FCD34D"/><line x1="2.5" y1="17" x2="1.5" y2="20" stroke="#3B82F6" stroke-width="1.6" stroke-linecap="round"/><line x1="15.5" y1="17" x2="14.5" y2="20" stroke="#3B82F6" stroke-width="1.6" stroke-linecap="round"/></svg>`
+  },
+
+  'snow': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M5 17c0-4.4 3.6-8 8-8 .7 0 1.4.09 2 .25C16.5 6.5 19.8 4.5 23.5 4.5c5 0 9 4 9 9 0 .5-.04 1-.12 1.5H5.5C5.18 14.4 5 13.7 5 13V17z" fill="#94A3B8"/><rect x="3" y="16" width="28" height="10" rx="5" fill="#CBD5E1"/><g transform="translate(9,29)"><line x1="0" y1="-4.5" x2="0" y2="4.5" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="-3.9" y1="-2.25" x2="3.9" y2="2.25" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="-3.9" y1="2.25" x2="3.9" y2="-2.25" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="0" y1="-4.5" x2="-1.6" y2="-3.2" stroke="#BAE6FD" stroke-width="1.4" stroke-linecap="round"/><line x1="0" y1="-4.5" x2="1.6" y2="-3.2" stroke="#BAE6FD" stroke-width="1.4" stroke-linecap="round"/><line x1="0" y1="4.5" x2="-1.6" y2="3.2" stroke="#BAE6FD" stroke-width="1.4" stroke-linecap="round"/><line x1="0" y1="4.5" x2="1.6" y2="3.2" stroke="#BAE6FD" stroke-width="1.4" stroke-linecap="round"/></g><g transform="translate(18,31)"><line x1="0" y1="-4" x2="0" y2="4" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="-3.46" y1="-2" x2="3.46" y2="2" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="-3.46" y1="2" x2="3.46" y2="-2" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/></g><g transform="translate(27,29)"><line x1="0" y1="-4.5" x2="0" y2="4.5" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="-3.9" y1="-2.25" x2="3.9" y2="2.25" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="-3.9" y1="2.25" x2="3.9" y2="-2.25" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/></g></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9c0-2.8 2.2-5 5-5 .4 0 .78.05 1.14.14C9.3 2.5 11.2 1.5 13.4 1.5c3 0 5.5 2.5 5.5 5.5 0 .3-.03.6-.08.88H2.32C2.12 7.3 2 6.7 2 6.1V9z" fill="#94A3B8"/><rect x="1" y="8.5" width="16" height="5.5" rx="2.75" fill="#CBD5E1"/><g transform="translate(5,15.5)"><line x1="0" y1="-2.5" x2="0" y2="2.5" stroke="#7DD3FC" stroke-width="1.6" stroke-linecap="round"/><line x1="-2.17" y1="-1.25" x2="2.17" y2="1.25" stroke="#7DD3FC" stroke-width="1.6" stroke-linecap="round"/><line x1="-2.17" y1="1.25" x2="2.17" y2="-1.25" stroke="#7DD3FC" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(13,15.5)"><line x1="0" y1="-2.5" x2="0" y2="2.5" stroke="#BAE6FD" stroke-width="1.6" stroke-linecap="round"/><line x1="-2.17" y1="-1.25" x2="2.17" y2="1.25" stroke="#BAE6FD" stroke-width="1.6" stroke-linecap="round"/><line x1="-2.17" y1="1.25" x2="2.17" y2="-1.25" stroke="#BAE6FD" stroke-width="1.6" stroke-linecap="round"/></g></svg>`
+  },
+
+  'sleet': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M5 17c0-4.4 3.6-8 8-8 .7 0 1.4.09 2 .25C16.5 6.5 19.8 4.5 23.5 4.5c5 0 9 4 9 9 0 .5-.04 1-.12 1.5H5.5C5.18 14.4 5 13.7 5 13V17z" fill="#64748B"/><rect x="3" y="16" width="28" height="10" rx="5" fill="#94A3B8"/><line x1="9" y1="28" x2="7.4" y2="33" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/><line x1="17" y1="28" x2="15.4" y2="33" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/><g transform="translate(26.5,30)"><line x1="0" y1="-4" x2="0" y2="4" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="-3.46" y1="-2" x2="3.46" y2="2" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="-3.46" y1="2" x2="3.46" y2="-2" stroke="#7DD3FC" stroke-width="2" stroke-linecap="round"/><line x1="0" y1="-4" x2="-1.5" y2="-2.8" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="-4" x2="1.5" y2="-2.8" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="4" x2="-1.5" y2="2.8" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="4" x2="1.5" y2="2.8" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/></g></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9c0-2.8 2.2-5 5-5 .4 0 .78.05 1.14.14C9.3 2.5 11.2 1.5 13.4 1.5c3 0 5.5 2.5 5.5 5.5 0 .3-.03.6-.08.88H2.32C2.12 7.3 2 6.7 2 6.1V9z" fill="#64748B"/><rect x="1" y="8.5" width="16" height="5.5" rx="2.75" fill="#94A3B8"/><line x1="4.5" y1="15.5" x2="3.2" y2="19" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/><g transform="translate(13,16)"><line x1="0" y1="-2.5" x2="0" y2="2.5" stroke="#7DD3FC" stroke-width="1.6" stroke-linecap="round"/><line x1="-2.17" y1="-1.25" x2="2.17" y2="1.25" stroke="#7DD3FC" stroke-width="1.6" stroke-linecap="round"/><line x1="-2.17" y1="1.25" x2="2.17" y2="-1.25" stroke="#7DD3FC" stroke-width="1.6" stroke-linecap="round"/></g></svg>`
+  },
+
+  'fog': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><line x1="4" y1="11" x2="32" y2="11" stroke="#94A3B8" stroke-width="2.8" stroke-linecap="round"/><line x1="7" y1="17" x2="30" y2="17" stroke="#94A3B8" stroke-width="2.8" stroke-linecap="round"/><line x1="4" y1="23" x2="32" y2="23" stroke="#CBD5E1" stroke-width="2.8" stroke-linecap="round"/><line x1="8" y1="29" x2="28" y2="29" stroke="#E2E8F0" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><line x1="2" y1="4.5" x2="16" y2="4.5" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round"/><line x1="3.5" y1="8.5" x2="14.5" y2="8.5" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round"/><line x1="2" y1="12.5" x2="16" y2="12.5" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round"/><line x1="4" y1="16.5" x2="14" y2="16.5" stroke="#E2E8F0" stroke-width="1.6" stroke-linecap="round"/></svg>`
+  },
+
+  'windy': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M3 10h20a5 5 0 000-10" stroke="#64748B" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M3 18h24a5 5 0 010 10H22" stroke="#94A3B8" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M3 26h16" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 5h10a2.5 2.5 0 000-5" stroke="#64748B" stroke-width="1.7" stroke-linecap="round" fill="none"/><path d="M1.5 9.5h12.5a2.5 2.5 0 010 5H12" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" fill="none"/><path d="M1.5 14h8" stroke="#CBD5E1" stroke-width="1.7" stroke-linecap="round"/></svg>`
+  },
+
+  'frost': {
+    big: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><g transform="translate(18,18)"><line x1="0" y1="-14" x2="0" y2="14" stroke="#7DD3FC" stroke-width="2.6" stroke-linecap="round"/><line x1="-12.12" y1="-7" x2="12.12" y2="7" stroke="#7DD3FC" stroke-width="2.6" stroke-linecap="round"/><line x1="-12.12" y1="7" x2="12.12" y2="-7" stroke="#7DD3FC" stroke-width="2.6" stroke-linecap="round"/><line x1="0" y1="-14" x2="-3" y2="-11" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="0" y1="-14" x2="3" y2="-11" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="0" y1="14" x2="-3" y2="11" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="0" y1="14" x2="3" y2="11" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="-12.12" y1="-7" x2="-9" y2="-10" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="-12.12" y1="-7" x2="-9.5" y2="-3.5" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="12.12" y1="7" x2="9" y2="10" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="12.12" y1="7" x2="9.5" y2="3.5" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="12.12" y1="-7" x2="9" y2="-10" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="12.12" y1="-7" x2="9.5" y2="-3.5" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="-12.12" y1="7" x2="-9" y2="10" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><line x1="-12.12" y1="7" x2="-9.5" y2="3.5" stroke="#BAE6FD" stroke-width="1.8" stroke-linecap="round"/><circle cx="0" cy="0" r="3.5" fill="#E0F2FE" stroke="#7DD3FC" stroke-width="1.6"/></g></svg>`,
+    small: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><g transform="translate(9,9)"><line x1="0" y1="-7.5" x2="0" y2="7.5" stroke="#7DD3FC" stroke-width="1.8" stroke-linecap="round"/><line x1="-6.5" y1="-3.75" x2="6.5" y2="3.75" stroke="#7DD3FC" stroke-width="1.8" stroke-linecap="round"/><line x1="-6.5" y1="3.75" x2="6.5" y2="-3.75" stroke="#7DD3FC" stroke-width="1.8" stroke-linecap="round"/><line x1="0" y1="-7.5" x2="-1.8" y2="-5.7" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="-7.5" x2="1.8" y2="-5.7" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="7.5" x2="-1.8" y2="5.7" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="7.5" x2="1.8" y2="5.7" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="-6.5" y1="-3.75" x2="-4.8" y2="-5.5" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="-6.5" y1="-3.75" x2="-5" y2="-1.8" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="3.75" x2="4.8" y2="5.5" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><line x1="6.5" y1="3.75" x2="5" y2="1.8" stroke="#BAE6FD" stroke-width="1.3" stroke-linecap="round"/><circle cx="0" cy="0" r="2" fill="#E0F2FE" stroke="#7DD3FC" stroke-width="1.2"/></g></svg>`
+  }
+
+};
+
+/* renderWxIcon — container'a koşula göre ikon yerleştirir */
+function renderWxIcon(containerEl, condition, size) {
+  if (!containerEl || !WX_ICONS[condition]) return;
+  containerEl.innerHTML = size === 'big'
+    ? WX_ICONS[condition].big
+    : WX_ICONS[condition].small;
+}
+
+/* initWxIcons — data-condition attribute'u ile otomatik render */
+function initWxIcons() {
+  document.querySelectorAll('[data-condition]').forEach(el => {
+    const cond = el.dataset.condition;
+    const size = el.dataset.icSize || 'small';
+    renderWxIcon(el, cond, size);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   setupBnav();
   setupHeaderScroll();
+  initWxIcons();
   _bnavShow(false);
   _fabShow(false);
   setSbLeft('splash');
@@ -3646,17 +4221,6 @@ document.addEventListener('DOMContentLoaded', () => {
   lsProfilYukle();
   profilGuncelle();
   updateHomeGreeting();
-
-  // Home scroll → header shadow
-  const homeScroll = document.getElementById('home-scroll');
-  if (homeScroll) {
-    homeScroll.addEventListener('scroll', () => {
-      const header = document.getElementById('sb-bar');
-      if (currentScreen === 'home') {
-        header.classList.toggle('scrolled', homeScroll.scrollTop > 4);
-      }
-    });
-  }
 
   lsKayitlarYukle();
   profilGuncelle();
@@ -3672,10 +4236,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const splashBtn = document.getElementById('splash-btn');
   if (splashBtn) {
     splashBtn.addEventListener('click', () => navTo('onboarding'));
-  }
-  const obSkipBtn = document.getElementById('ob-skip');
-  if (obSkipBtn) {
-    obSkipBtn.addEventListener('click', obAtla);
   }
 
   // İl/İlçe seçici
@@ -3701,6 +4261,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     ilceSel.addEventListener('change', () => { _obIlce = ilceSel.value; });
   }
+
+  homeRecentsGuncelle();
+  kasaHesapla();
 });
 </script>
 </body>
